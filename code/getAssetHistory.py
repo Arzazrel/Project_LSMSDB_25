@@ -92,7 +92,7 @@ def search_symbol(keyword, api_key):
 # ------------------------------------ main ------------------------------------        
 # main function
 if __name__ == '__main__':
-    YOUR_API_KEY =  # -- INSERT YOUR API KEY --
+    YOUR_API_KEY = "JE49UPG68YMWPD8S" # -- INSERT YOUR API KEY --
     if not YOUR_API_KEY:
         YOUR_API_KEY = input("Insert your API key from Alpha Vantage: ").strip()    # get API Key from user
         
