@@ -8,6 +8,7 @@ Description:
 """
 
 import csv
+import argparse
 import pandas as pd
 import yfinance as yf
 
@@ -85,11 +86,14 @@ def get_csv_delimiter(file_path: str, n_lines: int = 20) -> str:
 # ------------------------------------ end: methods ------------------------------------
 
 if __name__ == "__main__":
+    # get arguments
+    parser = argparse.ArgumentParser(description="Given a csv file containing asset symbols, download all historical (daily) data using Yahoo Finance.")
+    parser.add_argument("--name", type=str, default="SP_500.csv", help="CSV file name (default: SP_500.csv)")
+    args = parser.parse_args()
     
-    file_path = "top_50_us_etfs.csv"
-    delimiter = get_csv_delimiter(file_path)    # get delimiter
+    delimiter = get_csv_delimiter(args.name)    # get delimiter
     
-    df = pd.read_csv(file_path, sep = delimiter)# read csv
+    df = pd.read_csv(args.name, sep = delimiter)# read csv
     tickers = df["Symbol"].tolist()             # create the ticker list
 
     print(f"Loaded {len(tickers)} ticker.")     # UI print
