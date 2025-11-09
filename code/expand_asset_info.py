@@ -95,7 +95,8 @@ def enrich_asset_info(input_csv: str, output_csv: str = "enriched_assets.csv"):
     for i in iterator:
         row = df.iloc[i]
         symbol = str(row["symbol"]).strip().upper()
-        old_security = str(row.get("Security", "")).strip()
+        #old_security = str(row.get("Security", "")).strip()        # for SP_xxx.csv file
+        old_security = str(row.get("Company Name", "")).strip()     # for top_50_euro_company.csv file
         if not symbol:
             df.at[i, "Short Name"] = old_security   # default value
             df.at[i, "Long Name"] = ""              # default value
@@ -105,8 +106,8 @@ def enrich_asset_info(input_csv: str, output_csv: str = "enriched_assets.csv"):
         ok = is_valid_symbol(symbol)            # check if is a valid symbol
         if not ok:
             print(f"[WARN] {symbol}: no data / symbol invalid (marked as N/A)")
-            df.at[i, "Short Name"] = "N/A"
-            df.at[i, "Long Name"] = "N/A"
+            df.at[i, "Short Name"] = old_security   # default value
+            df.at[i, "Long Name"] = "N/A"           # default value
             continue                            # go to next rows
 
         # name fetching
@@ -124,7 +125,8 @@ def enrich_asset_info(input_csv: str, output_csv: str = "enriched_assets.csv"):
     if "Security" in cols:          # check if there is Security
         cols.remove("Security")     # remove security column
 
-    desired = ["symbol", "Short Name", "Long Name", "GICS Sector", "GICS Sub-Industry", "Headquarters Location"]    # shuffle the column in the new order
+    #desired = ["symbol", "Short Name", "Long Name", "GICS Sector", "GICS Sub-Industry", "Headquarters Location"]    # shuffle the column in the new order, for SP_xxx.csv file
+    desired = ["symbol", "Short Name", "Long Name", "Country"]    # shuffle the column in the new order, for top_50_euro_company.csv file
     
     df[desired].to_csv(output_csv, index=False, encoding="utf-8")   # save csv
     print(f"\n File saved as: {output_csv}")                        # UI print
