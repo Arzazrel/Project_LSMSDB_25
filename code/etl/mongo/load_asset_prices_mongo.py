@@ -11,10 +11,10 @@ import pandas as pd
 from pymongo import MongoClient
 from datetime import datetime
 from pathlib import Path
+# import from my codes
+from code.utils.mongoDB_conn import get_db
 
 # -- DB config parameters --
-MONGO_URI = "mongodb://localhost:27017"
-DB_NAME = "myfuture_db"
 COLLECTION_NAME = "asset_prices"
 
 # -- path --
@@ -92,8 +92,7 @@ def load_asset_prices():
     print(f"Documents to insert: {len(documents)}")     # UI print
 
     # Insert into MongoDB
-    client = MongoClient(MONGO_URI)
-    db = client[DB_NAME]
+    db = get_db()                   # get db connection
     prices_col = db[COLLECTION_NAME]
     # prices_col.delete_many({})    #if you want clean collection before inserting (ONLY FOR TESTING)
 

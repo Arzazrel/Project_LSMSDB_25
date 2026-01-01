@@ -9,11 +9,10 @@ from pymongo import MongoClient
 from datetime import datetime
 import os
 import csv
+# import from my codes
+from code.utils.mongoDB_conn import get_db
 
 # -- DB config parameters --
-
-MONGO_URI = "mongodb://localhost:27017/?replicaSet=rs0"
-DB_NAME = "myfuture_lsmsdb_2025"
 COLLECTION_NAME = "news"
 
 # -- path --
@@ -90,8 +89,7 @@ def load_news():
         return
 
     print("Connecting to MongoDB...")               # UI print
-    client = MongoClient(MONGO_URI)
-    db = client[DB_NAME]
+    db = get_db()                                   # get db connection
     collection = db[COLLECTION_NAME]
 
     print("Inserting documents...")                 # UI print
