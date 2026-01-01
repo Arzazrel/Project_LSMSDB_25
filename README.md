@@ -28,7 +28,8 @@ The ingestion order is designed to avoid logical inconsistencies and ensure corr
 
 Start MongoDB shell
 ```bash
-mongosh```
+mongosh
+```
 
 Create and select database
 ```MongoDB shell
