@@ -9,7 +9,7 @@ MongoDB is used as the primary operational database, while Redis is used for cac
 
 
 # Data Ingestion Pipeline
-The scripts used in this section are in the folder: '\code\etl\mongo'
+The scripts used in this section are in the folder: `\code\etl\mongo`
 
 Before running any script:
 - MongoDB must be running (standalone or replica set)
@@ -27,106 +27,120 @@ The ingestion order is designed to avoid logical inconsistencies and ensure corr
 ## Step 0 - Database Initialization
 
 Start MongoDB shell
-'''bash
-mongosh'''
+```bash
+mongosh```
 
 Create and select database
-'''MongoDB shell
-use myfuture_lsmsdb_2025'''
+```MongoDB shell
+use myfuture_lsmsdb_2025```
 
 Create collections
-'''MongoDB shell
+```MongoDB shell
 db.createCollection("users")
 db.createCollection("assets")
 db.createCollection("asset_prices")
 db.createCollection("transactions")
 db.createCollection("news")
-db.createCollection("counters")'''
+db.createCollection("counters")```
 
 Verify collections
-'''MongoDB shell
-show collections'''
+```MongoDB shell
+show collections```
 
 ## Step 1 - Counters Ingestion
 Initialize custom counters used for logical IDs. Use the python code: 
-'''bash
-python load_counters.py'''
+```bash
+python load_counters.py```
 
 Expected result -> counters collection populated with: user_id, and transaction_id.
 
 Verify:
-'''MongoDB shell
-db.counters.find().pretty()'''
+```MongoDB shell
+db.counters.find().pretty()```
 
 ## Step 2 – News Ingestion
 Use the python code:
-'''bash
-python load_news_mongo.py'''
+```bash
+python load_news_mongo.py```
 
 Test in MongoDB:
-'''MongoDB shell
+```MongoDB shell
 use myfuture_lsmsdb_2025
 db.news.countDocuments()
-db.news.findOne()'''
+db.news.findOne()```
 
 If you want to see the data entered in abse on the date of ingestion. Ex. of latest 5 ingestions: 
-'''MongoDB shell
-db.news.find().sort({ ingested_at: -1 }).limit(5)'''
+```MongoDB shell
+db.news.find().sort({ ingested_at: -1 }).limit(5)```
 
 ## Step 3 – Assets Ingestion
 Use the python code:
-'''bash
-python load_assets_mongo.py'''
+```bash
+python load_assets_mongo.py```
 
 Test in MongoDB:
-'''MongoDB shell
-db.assets.countDocuments()'''
+```MongoDB shell
+db.assets.countDocuments()```
 Count by type:
-'''MongoDB shell
+```MongoDB shell
 db.assets.aggregate([
   { $group: { _id: "$type", count: { $sum: 1 } } }
-])'''
+])```
 
 See some document filtred by category:
-'''MongoDB shell
+```MongoDB shell
 db.assets.find({ type: "share" }).limit(3).pretty()
 db.assets.find({ type: "ETF" }).limit(3).pretty()
-db.assets.find({ type: "crypto" }).limit(3).pretty()'''
+db.assets.find({ type: "crypto" }).limit(3).pretty()```
 
 ## Step 4 – Asset Prices Ingestion
 Use the python code:
-'''bash
-python load_asset_prices_mongo.py'''
+```bash
+python load_asset_prices_mongo.py```
 
 Test in MongoDB:
-'''MongoDB shell
+```MongoDB shell
 db.asset_prices.countDocuments()
 db.asset_prices.findOne()
-db.asset_prices.find({ Symbol: "AAPL" }).limit(5)'''
+db.asset_prices.find({ Symbol: "AAPL" }).limit(5)```
 
 ## Step 5 – Users Ingestion
 Use the python code:
-'''bash
-python load_users.py'''
+```bash
+python load_users.py```
 
 This step are done:
 1. reads users from CSV. For user_ids, the IDs in the CSV file are used for consistency and to link to the transaction dataset used.
 2. initializes wallets and balances
 
 Test in MongoDB
-'''MongoDB shell
+```MongoDB shell
 db.users.countDocuments()
-db.users.findOne()'''
+db.users.findOne()```
 
 Verify counter:
-'''MongoDB shell
-db.counters.findOne({ _id: "user_id" })'''
+```MongoDB shell
+db.counters.findOne({ _id: "user_id" })```
 
 ## Step 6 – Transactions Simulation & Ingestion
 Use the python code:
-'''bash
+```bash
 python validate_trades_dataset.py 		# if you want see statistics of the transaction
-python load_transactions.py'''
+python load_transactions.py```
 
+The step:
+- simulates realistic buy/sell/deposit transactions
+- uses historical prices
+- updates user wallets and balances consistently
 
+Test in MongoDB
+```MongoDB shell
+db.transactions.countDocuments()
+db.transactions.findOne()```
 
+Check user coherence (see some user's field with user_id = 1):
+```MongoDB shell
+db.users.findOne(
+  { user_id: 1 },
+  { cash: 1, shareWallet: 1, recentTransactions: 1 }
+)```
