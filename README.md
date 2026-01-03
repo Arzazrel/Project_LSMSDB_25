@@ -359,6 +359,10 @@ Verify collections
 show collections
 ```
 
+If you are using a MongoDB configuration with multiple replicas, ensure that you connect to the primary replica:
+```bash
+mongosh "mongodb://localhost:27017,localhost:27018,localhost:27019/?replicaSet=rs0"
+```
 To run the scripts for data ingestion, open the command line in the main project folder and follow the commands below.
 The commands for verifying data uploaded to MongoDB all refer to the myfuture_lsmsdb_2025 database.
 Therefore, it is essential to be in that database using that command:
@@ -387,7 +391,6 @@ python -m code.etl.mongo.load_news_mongo
 
 Test in MongoDB:
 ```MongoDB shell
-use myfuture_lsmsdb_2025
 db.news.countDocuments()
 db.news.findOne()
 ```
@@ -400,7 +403,7 @@ db.news.find().sort({ ingested_at: -1 }).limit(5)
 ## Step 3 – Assets Ingestion
 Use the python code:
 ```bash
-python load_assets_mongo.py
+python -m code.etl.mongo.load_assets_mongo
 ```
 
 Test in MongoDB:
@@ -424,7 +427,7 @@ db.assets.find({ type: "crypto" }).limit(3).pretty()
 ## Step 4 – Asset Prices Ingestion
 Use the python code:
 ```bash
-python load_asset_prices_mongo.py
+python -m code.etl.mongo.load_asset_prices_mongo
 ```
 
 Test in MongoDB:
