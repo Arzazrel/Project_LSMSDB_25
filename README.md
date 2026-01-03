@@ -171,7 +171,7 @@ If you want to allow connections from any IP address (only for secure local test
 Replace # bind 127.0.0.1 with # bind 0.0.0.0
 Note: After making this change, you must restart Redis.
 
-## Avvio e test
+## Start and test
 Start Redis as a service:
 ```bash
 sudo systemctl start redis-server
@@ -316,7 +316,7 @@ redis-cli -p 6381 shutdown
 ```
 (alternatively) Ctrl + C on each terminal
 
-# Data Ingestion Pipeline
+# - Data Ingestion Pipeline -
 The scripts used in this section are in the folder: `\code\etl\mongo`
 
 Before running any script:
@@ -334,7 +334,7 @@ The ingestion order is designed to avoid logical inconsistencies and ensure corr
 
 ## Step 0 - Database Initialization
 
-Start MongoDB shell
+Start MongoDB shell (enter in standalone mode or replica mode, with the command above).
 ```bash
 mongosh
 ```
@@ -359,10 +359,17 @@ Verify collections
 show collections
 ```
 
+To run the scripts for data ingestion, open the command line in the main project folder and follow the commands below.
+The commands for verifying data uploaded to MongoDB all refer to the myfuture_lsmsdb_2025 database.
+Therefore, it is essential to be in that database using that command:
+```MongoDB shell
+use myfuture_lsmsdb_2025
+```
+
 ## Step 1 - Counters Ingestion
 Initialize custom counters used for logical IDs. Use the python code: 
 ```bash
-python load_counters.py
+python -m code.etl.mongo.load_counters
 ```
 
 Expected result -> counters collection populated with: user_id, and transaction_id.
@@ -375,7 +382,7 @@ db.counters.find().pretty()
 ## Step 2 – News Ingestion
 Use the python code:
 ```bash
-python load_news_mongo.py
+python -m code.etl.mongo.load_news_mongo
 ```
 
 Test in MongoDB:
