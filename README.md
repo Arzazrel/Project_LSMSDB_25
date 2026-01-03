@@ -4,9 +4,317 @@ This project simulates a financial trading platform (MyFuture) developed for the
 MongoDB is used as the primary operational database, while Redis is used for caching and fast-access features.
 
 
-# MongoDB and Redis WSL2 Installation
+# MongoDB WSL2 Installation
+This guide shows you how to install MongoDB, start a standalone node or a local replica set, and manage nodes and replicas.
+Open the terminal and first update Ubuntu.
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+Import the MongoDB public key
+```bash
+wget -qO - https://www.mongodb.org/static/pgp/server-8.0.asc | sudo apt-key add -
+```
+Add the repository (MongoDB version 8):
+```bash
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/8.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list
+```
+Update repository:
+```bash
+sudo apt update
+```
+Instal MongoDB
+```bash
+sudo apt install -y mongodb-org
+```
+Start and test MongoDB Standalone. Start MongoDB as a service:
+```bash
+sudo systemctl start mongod
+```
+Enable automatic start-up at boot
+```bash
+sudo systemctl enable mongod
+```
+Check the status:
+```bash
+sudo systemctl status mongod
+```
+Open the MongoDB shell
+```bash
+mongosh
+```
+Test the database with the following commands:
+```mongosh
+use test
+db.myCollection.insertOne({ x: 1 })
+show collections
+db.myCollection.find()
+```
+Exit from mongosh
+```mongosh
+exit
+```
+Stop MongoDB Standalone:
+```bash
+sudo systemctl stop mongod
+```
+## MongoDB - Start Local Replica Set
+Prepare folders and permissions.
+Open a terminal and create directories for the three nodes, ensuring that mongodb has the correct permissions:
+```bash
+sudo mkdir -p /var/lib/mongo-rs/rs0-1 /var/lib/mongo-rs/rs0-2 /var/lib/mongo-rs/rs0-3
+sudo mkdir -p /var/log/mongodb
+sudo chown -R mongodb:mongodb /var/lib/mongo-rs
+sudo chown -R mongodb:mongodb /var/log/mongodb
+```
+Starting the three MongoDB nodes (MongoDB must be shut down):
+1.	Nodo 1 (PRIMARY)
+Open the first terminal and run:
+```bash
+sudo mongod --replSet rs0 --port 27017 \
+  --dbpath /var/lib/mongo-rs/rs0-1 \
+  --bind_ip localhost \
+  --logpath /var/log/mongodb/rs0-1.log
+```
+Stay in the foreground, leave this terminal open.
+If you want, you can add --fork to run it in the background, but in WSL2 this sometimes causes problems.
 
+2.	Nodo 2 (SECONDARY)
+Open a second terminal and run:
+```bash
+sudo mongod --replSet rs0 --port 27019 \
+  --dbpath /var/lib/mongo-rs/rs0-2 \
+  --bind_ip localhost \
+  --logpath /var/log/mongodb/rs0-2.log
+```
+Leave this terminal open as well.
 
+3.	Nodo 3 (SECONDARY)
+Open a third terminal and run:
+```bash
+sudo mongod --replSet rs0 --port 27018 \
+  --dbpath /var/lib/mongo-rs/rs0-3 \
+  --bind_ip localhost \
+  --logpath /var/log/mongodb/rs0-3.log
+```
+Leave this terminal open as well.
+
+## Initialising the Replica Set
+
+Open a fourth terminal to connect to the first node (PRIMARY):
+```bash
+mongosh "mongodb://localhost:27017"
+```
+Inside the MongoDB shell (initialize the replica set):
+```mongosh
+rs.initiate({
+  _id: "rs0",
+  members: [
+    { _id: 0, host: "localhost:27017" }, // nodo primario
+    { _id: 1, host: "localhost:27019" }, // nodo secondario
+    { _id: 2, host: "localhost:27018" }  // nodo secondario
+  ]
+})
+```
+Check the status of members:
+```mongosh
+rs.status().members.map(m => ({ name: m.name, stateStr: m.stateStr }))
+```
+The status should be:
+- PRIMARY → 27017
+- SECONDARY → 27019 e 27018
+Control, you can connect from the terminal to any SECONDARY node to read the data:
+mongo --port 27019
+mongo --port 27018
+Only the PRIMARY node accepts writes. SECONDARY nodes automatically replicate the data.
+Stopping nodes (Connect to each node via mongo shell and stop it).
+1.	db.getSiblingDB("admin").shutdownServer()
+2.	exit
+3.	mongosh "mongodb://localhost:27018"
+4.	db.getSiblingDB("admin").shutdownServer()
+5.	exit
+6.	mongosh "mongodb://localhost:27019"
+7.	db.getSiblingDB("admin").shutdownServer()
+8.	exit
+
+Or simply close the terminals where the processes are in the foreground with Ctrl+C.
+
+## Future start-up with replica set (without having to redo settings)
+MongoDB must not be running. Whenever you want to start the replica set:
+1.    Open three terminals and start the three mongod instances as above.
+2.    The set will retain the _id: rs0 configuration already registered, so rs.initiate() is not needed again.
+3.    Check with:
+```mongosh
+rs.status().members.map(m => ({ name: m.name, stateStr: m.stateStr }))
+```
+To close the nodes, use the same procedure as above.
+
+# Redis WSL2 Installation
+Update repository:
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+Install Redis
+```bash
+sudo apt install -y redis-server
+```
+Check the installed version
+```bash
+redis-server --version
+```
+
+## Base configuration
+To allow only local connections (default):
+```bash
+sudo nano /etc/redis/redis.conf
+```
+If you want to allow connections from any IP address (only for secure local testing):
+Replace # bind 127.0.0.1 with # bind 0.0.0.0
+Note: After making this change, you must restart Redis.
+
+## Avvio e test
+Start Redis as a service:
+```bash
+sudo systemctl start redis-server
+```
+Check service status:
+```bash
+sudo systemctl status redis-server
+```
+open Redis client
+```bash
+redis-cli
+```
+Base test:
+```redis-cli
+set testkey "ciao"
+get testkey
+```
+If everything works, get testkey returns hello. Clear the newly created key and close the Redis client. 
+```redis-cli
+del testkey
+exit
+```
+Stop the service:
+```bash
+sudo systemctl stop redis-server
+```
+
+## Initialising the Replica Set in local (WSL2)
+Node		Role		Port
+Redis-1		PRIMARY		6379
+Redis-2		REPLICA		6380
+Redis-3		REPLICA		6381
+
+Writings → on 6379
+Critical readings → 6379
+Non-critical readings → 6380 / 6381
+
+Create directories for nodes:
+```bash
+sudo mkdir -p /etc/redis/redis-6379
+sudo mkdir -p /etc/redis/redis-6380
+sudo mkdir -p /etc/redis/redis-6381
+sudo mkdir -p /var/lib/redis-6379 /var/lib/redis-6380 /var/lib/redis-6381
+sudo chown -R redis:redis /var/lib/redis-*
+```
+
+Configure PRIMARY (port 6379)
+```bash
+sudo cp /etc/redis/redis.conf /etc/redis/redis-6379/redis.conf
+sudo nano /etc/redis/redis-6379/redis.conf
+```
+Modify/check:
+
+port 6379
+bind 127.0.0.1
+dir /var/lib/redis-6379
+
+Save and exit.
+
+Configure REPLICA 1 (port 6380)
+```bash
+sudo cp /etc/redis/redis.conf /etc/redis/redis-6380/redis.conf
+sudo nano /etc/redis/redis-6380/redis.conf
+```
+Modify/check:
+
+port 6380
+replicaof 127.0.0.1 6379
+dir /var/lib/redis-6380
+
+Save and exit.
+
+Configure REPLICA 2 (port 6381)
+```bash
+sudo cp /etc/redis/redis.conf /etc/redis/redis-6381/redis.conf
+sudo nano /etc/redis/redis-6381/redis.conf
+```
+Modify/check:
+
+port 6381
+replicaof 127.0.0.1 6379
+dir /var/lib/redis-6381
+
+Save and exit.
+
+## Initial start-up of nodes (3 terminals)
+- Terminal A – PRIMARY
+```bash
+sudo redis-server /etc/redis/redis-6379/redis.conf
+```
+Leave open.
+- Terminal B – REPLICA 1
+```bash
+sudo redis-server /etc/redis/redis-6380/redis.conf
+```
+Leave open.
+
+- Terminal C – REPLICA 2
+```bash
+sudo redis-server /etc/redis/redis-6381/redis.conf
+```
+Leave open.
+- Terminal D - to check (optionally)
+```bash
+redis-cli -p 6379
+```
+```redis-cli
+INFO replication
+```
+You must see:
+- role:master
+- connected_slaves:2
+
+Quick test, write a key-value and then check in a replica set:
+```redis-cli
+SET hello world
+exit
+redis-cli -p 6380
+GET hello
+```
+
+## future start of replicas
+Open three terminals and start the nodes in the same order.
+- Terminal 1
+```bash
+redis-server /etc/redis/redis-6379/redis.conf
+```
+- Terminal 2
+```bash
+redis-server /etc/redis/redis-6380/redis.conf
+```
+- Terminal 3
+```bash
+redis-server /etc/redis/redis-6381/redis.conf
+```
+Replicas automatically connect to the primary.
+Stop the nodes:
+```bash
+redis-cli -p 6379 shutdown
+redis-cli -p 6380 shutdown
+redis-cli -p 6381 shutdown
+```
+(alternatively) Ctrl + C on each terminal
 
 # Data Ingestion Pipeline
 The scripts used in this section are in the folder: `\code\etl\mongo`
