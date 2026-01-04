@@ -102,7 +102,7 @@ Leave this terminal open as well.
 
 Open a fourth terminal to connect to the first node (PRIMARY):
 ```bash
-mongosh "mongodb://localhost:27017"
+mongosh "mongodb://localhost:27017,localhost:27018,localhost:27019/?replicaSet=rs0"
 ```
 Inside the MongoDB shell (initialize the replica set):
 ```mongosh
@@ -440,7 +440,7 @@ db.asset_prices.find({ Symbol: "AAPL" }).limit(5)
 ## Step 5 – Users Ingestion
 Use the python code:
 ```bash
-python load_users.py
+python -m code.etl.mongo.load_users
 ```
 
 This step are done:
@@ -461,8 +461,9 @@ db.counters.findOne({ _id: "user_id" })
 ## Step 6 – Transactions Simulation & Ingestion
 Use the python code:
 ```bash
-python validate_trades_dataset.py 		# if you want see statistics of the transaction
-python load_transactions.py
+# if you want see statistics of the transaction
+python validate_trades_dataset.py 		
+python -m code.etl.mongo.load_transactions
 ```
 
 The step:
