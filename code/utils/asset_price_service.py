@@ -37,10 +37,29 @@ def random_time_between_market_hours():
     return (start + timedelta(minutes=random_offset)).time()
 
 """
+    Returns the most recent datetime for which price data is available
+    for the given asset symbol.
+
+    Returns None if no data is available.
+"""
+def get_most_recent_price_date(symbol):
+    # get the most recent asset_prices for the selected symbol
+    prices = db.asset_prices.find(
+        {"symbol": symbol},
+        {"timestamp": 1}
+    ).sort("timestamp", -1).limit(1)
+
+    most_recent = list(prices)
+    if not most_recent:                     # control check
+        return None
+
+    return most_recent[0]["timestamp"]      # return timestamp
+
+"""
 Description: Picks a random asset from the assets collection. Optionally filtered by asset type.
 
 Input:
-    asset_type: indicate the type of asset to choose (optional) 
+    - asset_type: indicate the type of asset to choose (optional) 
     
 Output:
     - symbol: the identifier dor the assets 
@@ -65,30 +84,46 @@ def pick_random_asset(asset_type=None):
 
     # return a dictionary with te parameters
     return {
-        "symbol": asset["Symbol"],
-        "assetType": asset["Type"],
+        "symbol": asset["symbol"],
+        "assetType": asset["type"],
         "currency": asset.get("currency", "USD")
     }
     
-# Picks a random available date for a given asset symbol.
-def pick_random_price_date(symbol: str):
+"""
+Description: Picks a random available date for a given asset symbol.
+
+Input:
+    - symbol: indicate the asset to choose 
+    - start_date: indicates the start date for selecting the date (optional) 
+    
+Output:
+    - date
+"""
+def pick_random_price_date(symbol: str, start_date = None):
 
     db = get_db()           # get DB connection
     if db is None:          # check DB connection
         return None
 
-    # take the list of asset prices order by date
+    # create the query (the first parameter)
+    query = {"symbol": symbol}
+
+    # if a start_date is provided, select only more recent dates
+    if start_date is not None:
+        query["date"] = {"$gt": start_date} # add second parameters to the query
+
+    # take the list of asset prices order by date (and 
     prices = list(
         db.asset_prices.find(
-            {"Symbol": symbol},
-            {"Date": 1}
+            query,
+            {"date": 1}
         )
     )
 
     if not prices:          # control check
         return None
 
-    return random.choice(prices)["Date"]    # take and return one random date
+    return random.choice(prices)["date"]    # take and return one random date
 
 """
 Description: Selects a realistic transaction price from an OHLC candle based on trade time.
@@ -109,10 +144,10 @@ Output:
 def pick_price_from_candle(price_doc, trade_time=None):
     
     ohlc = {
-        "open": price_doc["Open"],
-        "close": price_doc["Close"],
-        "high": price_doc["High"],
-        "low": price_doc["Low"]
+        "open": price_doc["open"],
+        "close": price_doc["close"],
+        "high": price_doc["high"],
+        "low": price_doc["low"]
     }
 
     # Generate random trade time if not provided
@@ -125,10 +160,9 @@ def pick_price_from_candle(price_doc, trade_time=None):
             ])
         )
 
-    trade_t = trade_time.time()         # take the tiome from the data
+    trade_t = trade_time.time()         # take the time from the data
 
     # -- calculate the time windows -- see NOTE 0
-    
     # calculate the end of the open window
     open_limit = (datetime.combine(datetime.today(), MARKET_OPEN_TIME)
                   + timedelta(minutes=OPEN_WINDOW_MINUTES)).time()
@@ -150,7 +184,7 @@ def pick_price_from_candle(price_doc, trade_time=None):
 Description:
     Returns a realistic snapshot of an asset and its transaction price for simulation purposes.
 
-    The function:
+The function:
     - selects a random asset (optionally filtered by type)
     - selects a valid historical date for that asset
     - generates a realistic transaction time within market hours
@@ -187,7 +221,7 @@ def get_random_asset_price(asset_type=None):
     )
 
     price_doc = db.asset_prices.find_one(           # get the document relating to the prices for the chosen asset and date
-        {"Symbol": asset["symbol"], "Date": date}
+        {"symbol": asset["symbol"], "date": trade_time}
     )
 
     price, source = pick_price_from_candle(price_doc, date) # get the price per unit for the transaction
@@ -196,10 +230,9 @@ def get_random_asset_price(asset_type=None):
     return {
         "symbol": asset["symbol"],
         "assetType": asset["assetType"],
-        "date": date,
+        "date": trade_time,
         "price": price,
     }
-
 
 # ------------------------------------ end: utils methods ------------------------------------
 
