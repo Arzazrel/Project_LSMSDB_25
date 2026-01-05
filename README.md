@@ -455,14 +455,14 @@ db.users.findOne()
 
 Verify counter:
 ```MongoDB shell
-db.counters.findOne({ _id: "user_id" })
+db.users.findOne({ user_id: "user_id" })
 ```
 
 ## Step 6 – Transactions Simulation & Ingestion
 Use the python code:
 ```bash
 # if you want see statistics of the transaction
-python validate_trades_dataset.py 		
+python -m code.etl.mongo.validate_trades_dataset	
 python -m code.etl.mongo.load_transactions
 ```
 
