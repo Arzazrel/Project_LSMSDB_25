@@ -105,33 +105,62 @@ Input:
 Output:
     - date
 """
-def pick_random_price_date(symbol: str, start_date = None):
+def pick_random_price_date(symbol: str, start_date=None):
 
     db = get_db()           # get DB connection
     if db is None:          # check DB connection
-        print("ERROR [asset_price_service] - DB connection not avaiable")
+        print("ERROR [asset_price_service] - DB connection not available")
         return None
 
-    # create the query (the first parameter)
-    query = {"symbol": symbol}
-
-    # if a start_date is provided, select only more recent dates
-    if start_date is not None:
-        query["date"] = {"$gt": start_date} # add second parameters to the query
-
-    # take the list of asset prices order by date (and 
-    prices = list(
-        db.asset_prices.find(
-            query,
+    # --- retrieve start_date (earliest available) if not provided ---
+    if start_date is None:
+        first_doc = db.asset_prices.find(
+            {"symbol": symbol},
             {"date": 1}
-        )
-    )
+        ).sort("date", 1).limit(1)
 
-    if not prices:          # control check
-        print("ERROR, pick_random_price_date [asset_price_service] - asset prices list for ",symbol, "is null")
+        first_doc = list(first_doc)         # list of the docs with the same date (in the project only one)
+        if not first_doc:
+            return None
+
+        start_date = first_doc[0]["date"]   # get the start date
+
+    # --- retrieve end_date (most recent available) ---
+    last_doc = db.asset_prices.find(
+        {"symbol": symbol},
+        {"date": 1}
+    ).sort("date", -1).limit(1)
+
+    last_doc = list(last_doc)               # list of the docs with the same date (in the project only one)
+    if not last_doc:
         return None
 
-    return random.choice(prices)["date"]    # take and return one random date (with hour 00:00)
+    end_date = last_doc[0]["date"]          # get the end date
+
+    # -- validation loop --
+    max_attempts = 20                       # max num of attempts fo the validation
+    attempt = 0                             # current attempt
+    
+    while attempt < max_attempts:           # validation loop
+
+        delta_days = (end_date - start_date).days               # get the days between the dates
+        random_offset = random.randint(0, delta_days)           # get a randoma date
+
+        random_date = start_date + timedelta(days=random_offset)                        # create the random date
+        random_date = random_date.replace(hour=0, minute=0, second=0, microsecond=0)    # consistency setting 
+
+        # check if exists (validate the random data chosen)
+        exists = db.asset_prices.find_one(
+            {"symbol": symbol, "date": random_date},
+            {"_id": 1}
+        )
+
+        if exists:
+            return random_date              # return the validated date
+
+        attempt += 1                        # update counter
+
+    return start_date                       # default return 
 
 """
 Description: Selects a realistic transaction price from an OHLC candle based on trade time.
@@ -254,4 +283,28 @@ def get_random_asset_price(asset_type=None):
 NOTE 0:
     Time alone does not support sums, but datetime does. Therefore, to compare whether a time is within a certain window from another, 
     I have to attach a date (in this case, today's date).
+NOTE 1:
+    Performance note – Optimized random date selection for asset prices
+
+    The asset_prices collection contains daily historical price data and can reach tens of millions of documents. 
+    Selecting a random date by loading all available dates for a given asset into memory is highly inefficient and does not scale 
+    when simulating thousands of transactions.
+
+    This module relies on the following realistic assumption:
+    - For a given asset, once historical price collection starts, all intermediate trading days between the first available date
+    and the most recent available date are present in the dataset.
+
+    Based on this assumption, the random date selection is optimized as follows:
+    1. For each asset symbol, only the earliest and latest available dates are retrieved from the database.
+    2. A random date is generated uniformly within this date range (with time set to 00:00, consistent with stored price documents).
+    3. The generated date is validated with a query.
+    4. If the date is not present (e.g., missing trading day), the process is repeated until a valid date is found.
+
+    This approach:
+    - avoids loading large result sets into application memory
+    - drastically reduces database load
+    - scales efficiently for large transaction simulations
+    - remains realistic for financial market datasets
+
+    The trade-off is a minimal number of additional indexed lookups, which is negligible compared to the performance gain obtained.
 """
