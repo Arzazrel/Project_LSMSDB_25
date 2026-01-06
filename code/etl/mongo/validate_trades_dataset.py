@@ -42,7 +42,7 @@ invalid_rows = 0                # number of invalid rows in the csv file
 
 user_ids = set()                # containing the user_id
 payment_methods = Counter()     # counter of occurrency for each payment type
-quantities = []                 # cointanining the quantity of each transaction
+quantities = []                 # cointanining the quantity (num of items) of each transaction
 account_ages = []               # cointanining the account_ages of each transaction
 
 # ---- READ CSV ----
@@ -87,10 +87,14 @@ print("\n--- PAYMENT METHODS ---")
 for method, count in payment_methods.items():
     print(f"{method}: {count}")
 
-print("\n--- QUANTITIES ---")
-print(f"Min quantity: {min(quantities)}")
-print(f"Max quantity: {max(quantities)}")
-print(f"Average quantity: {mean(quantities):.2f}")
+print("\n--- NUMBER OF ITEMS ---")
+print(f"Min number of items: {min(quantities)}")
+print(f"Max number of items: {max(quantities)}")
+print(f"Average number of items: {mean(quantities):.2f}")
+print("Distint value and occurrency for number of items:")
+quantities_counts = Counter(quantities)
+for value, count in quantities_counts.most_common():        # scrolls in descending order
+    print("- value: ",value," , occurrency: ", count)
 
 """
 

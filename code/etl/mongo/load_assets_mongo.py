@@ -86,14 +86,14 @@ def load_assets():
     print("Check csv delimiter...")                                     # UI print
     delimiter = get_csv_delimiter(BASE_PATH / FILES["ETF"])             # get delimiter
     print("Reading in: ",BASE_PATH / FILES["ETF"], " CSV file...")      # UI print
-    df_etf = pd.read_csv(BASE_PATH / FILES["ETF"] sep = delimiter, encoding="utf-8")    # read csv file
+    df_etf = pd.read_csv(BASE_PATH / FILES["ETF"], sep = delimiter, encoding="utf-8")    # read csv file
     
     for _, row in df_etf.iterrows():                                    # scroll all the rows in the csv file
         documents.append({
             "symbol": clean_value(row.get("symbol")),
             "shortName": clean_value(row.get("shortName")),
             "longName": clean_value(row.get("longName")),
-            "type": "ETF",
+            "type": "etf",
             "country": clean_value(row.get("country")),
             "fundFamily": clean_value(row.get("fundFamily")),
             "annualReportExpenseRatio": clean_value(row.get("annualReportExpenseRatio")),
@@ -105,7 +105,7 @@ def load_assets():
     print("Check csv delimiter...")                                     # UI print
     delimiter = get_csv_delimiter(BASE_PATH / FILES["crypto"])          # get delimiter
     print("Reading in: ",BASE_PATH / FILES["crypto"], " CSV file...")   # UI print
-    df_crypto = pd.read_csv(BASE_PATH / FILES["crypto"] sep = delimiter, encoding="utf-8")  # read csv file
+    df_crypto = pd.read_csv(BASE_PATH / FILES["crypto"], sep = delimiter, encoding="utf-8")  # read csv file
 
 
     for _, row in df_crypto.iterrows():

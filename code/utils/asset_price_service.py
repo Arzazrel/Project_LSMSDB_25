@@ -43,17 +43,22 @@ def random_time_between_market_hours():
     Returns None if no data is available.
 """
 def get_most_recent_price_date(symbol):
+    db = get_db()           # get DB connection
+    if db is None:          # check DB connection
+        print("ERROR [asset_price_service] - DB connection not avaiable")
+        return None
+        
     # get the most recent asset_prices for the selected symbol
     prices = db.asset_prices.find(
         {"symbol": symbol},
-        {"timestamp": 1}
-    ).sort("timestamp", -1).limit(1)
+        {"date": 1}
+    ).sort("date", -1).limit(1)
 
     most_recent = list(prices)
     if not most_recent:                     # control check
         return None
 
-    return most_recent[0]["timestamp"]      # return timestamp
+    return most_recent[0]["date"]           # return date
 
 """
 Description: Picks a random asset from the assets collection. Optionally filtered by asset type.
@@ -70,6 +75,7 @@ def pick_random_asset(asset_type=None):
 
     db = get_db()           # get DB connection
     if db is None:          # check DB connection
+        print("ERROR [asset_price_service] - DB connection not avaiable")
         return None
 
     query = {}
@@ -103,6 +109,7 @@ def pick_random_price_date(symbol: str, start_date = None):
 
     db = get_db()           # get DB connection
     if db is None:          # check DB connection
+        print("ERROR [asset_price_service] - DB connection not avaiable")
         return None
 
     # create the query (the first parameter)
@@ -121,9 +128,10 @@ def pick_random_price_date(symbol: str, start_date = None):
     )
 
     if not prices:          # control check
+        print("ERROR, pick_random_price_date [asset_price_service] - asset prices list for ",symbol, "is null")
         return None
 
-    return random.choice(prices)["date"]    # take and return one random date
+    return random.choice(prices)["date"]    # take and return one random date (with hour 00:00)
 
 """
 Description: Selects a realistic transaction price from an OHLC candle based on trade time.
@@ -204,24 +212,30 @@ def get_random_asset_price(asset_type=None):
     
     db = get_db()           # get DB connection
     if db is None:          # check DB connection
+        print("ERROR [asset_price_service] - DB connection not avaiable")
         return None
 
     asset = pick_random_asset(asset_type)   # get the random asset for the transaction
     if asset is None:                       # security check
+        print("ERROR [asset_price_service] - failed selection of asset for transaction")
         return None
 
-    date = pick_random_price_date(asset["symbol"])  # get the random date for the transaction
+    date = pick_random_price_date(asset["symbol"])  # get the random date for the transaction (with hour 00:00)
     if date is None:                                # security check
+        print("ERROR [asset_price_service] - failed selection of the date for the transaction for the symbol: ",asset["symbol"])
         return None
         
+    price_doc = db.asset_prices.find_one(           # get the document relating to the prices for the chosen asset and date
+        {"symbol": asset["symbol"], "date": date}
+    )
+    if price_doc is None:
+        print("ERROR [asset_price_service] - failed the recovery of the asset price for the transaction")
+        return None
+
     # generate a realistic trade datetime (during stock exchange opening hours) on that date
     trade_time = datetime.combine(
         date.date(),
         random_time_between_market_hours()
-    )
-
-    price_doc = db.asset_prices.find_one(           # get the document relating to the prices for the chosen asset and date
-        {"symbol": asset["symbol"], "date": trade_time}
     )
 
     price, source = pick_price_from_candle(price_doc, date) # get the price per unit for the transaction

@@ -16,7 +16,7 @@ from code.utils.mongoDB_conn import get_db
 COLLECTION_NAME = "news"
 
 # -- path --
-CSV_PATH = "../../dataset/news/processed_ds/final_news_ds.csv"
+CSV_PATH = "dataset/news/processed_ds/final_news_ds.csv"
 
 # ------------------------------------ start: utils methods ------------------------------------
 
@@ -66,7 +66,7 @@ def load_news():
     delimiter = get_csv_delimiter(CSV_PATH)         # get delimiter
     print("Reading in: ",CSV_PATH, " CSV file...")  # UI print
     df = pd.read_csv(CSV_PATH, sep = delimiter, encoding="utf-8")   # read csv file
-    print("Rows found: {len(df)}")                  # UI print
+    print(f"Rows found: {len(df)}")                 # UI print
 
     documents = []              # contains formatted documents to be inserted into MongoDB
 

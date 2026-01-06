@@ -7,12 +7,17 @@ Description:
 - Adds ingestion timestamp for traceability and auditing
 """
 
+import csv
+import time
 import pandas as pd
 from pymongo import MongoClient
 from datetime import datetime
 from pathlib import Path
 # import from my codes
 from code.utils.mongoDB_conn import get_db
+
+BATCH_SIZE = 1000                   # max number of document for each insert.many()
+SLEEP_TIME = 0.05                   # sleep time between the insert.many(), expressed in seconds
 
 # -- DB config parameters --
 COLLECTION_NAME = "asset_prices"
@@ -21,6 +26,7 @@ COLLECTION_NAME = "asset_prices"
 BASE_DIR = Path("dataset/assets")
 
 # -- inpt files --
+""" # SEE NOTE 0
 INPUT_FOLDERS = [
     "crypto",
     "etf",
@@ -28,7 +34,56 @@ INPUT_FOLDERS = [
     "SP_500_DS",
     "SP_600_DS",
     "top_50_euro_company"
+]"""
+"""
+# step 1 ->  874381 documents
+INPUT_FOLDERS = [
+    "crypto",
+    "etf",
+    "SP_400_DS_0"
+]"""
+"""
+# step 2 ->  2253064 documents
+INPUT_FOLDERS = [
+    "SP_400_DS_1",
+    "SP_400_DS_2",
+    "SP_400_DS_3"
+]"""
+"""
+# step 3 -> 1362478 documents
+INPUT_FOLDERS = [
+    "SP_500_DS_0",
+    "SP_500_DS_1"
+]"""
+"""
+# step 4 -> 1294101 documents
+INPUT_FOLDERS = [
+    "SP_500_DS_2",
+    "SP_500_DS_3"
+]"""
+"""
+# step 5 -> 1669364 documents
+INPUT_FOLDERS = [
+    "SP_500_DS_4"
+]]"""
+
+# step 7 ->  770535 documents
+INPUT_FOLDERS = [
+    "SP_600_DS_0"
 ]
+"""
+# step 7 -> 2996730 documents
+INPUT_FOLDERS = [
+    "SP_600_DS_1",
+    "SP_600_DS_2",
+    "SP_600_DS_3",
+    "SP_600_DS_4",
+]"""
+"""
+# step 8 -> 300249 documents
+INPUT_FOLDERS = [
+    "top_50_euro_company"
+]"""
 
 # ------------------------------------ start: utils methods ------------------------------------
 
@@ -65,6 +120,8 @@ def load_asset_prices():
     
     documents = []              # contains formatted documents to be inserted into MongoDB
     files_processed = 0         # indicate the number of input files (history of an assets) processed
+    tot_files_proc = 0
+    tot_documents = 0
 
     for folder in INPUT_FOLDERS:            # scroll all input folders
         folder_path = BASE_DIR / folder     # take the current path
@@ -72,6 +129,7 @@ def load_asset_prices():
 
         for csv_file in folder_path.glob("*.csv"):  # scroll all csv files in the current folder
             files_processed += 1                    # update processed file counter
+            tot_files_proc += 1
                                              
             delimiter = get_csv_delimiter(csv_file)                         # get delimiter            
             df = pd.read_csv(csv_file, sep = delimiter, encoding="utf-8")   # read csv file
@@ -88,19 +146,33 @@ def load_asset_prices():
                     "ingested_at": datetime.utcnow()
                 })
     
-    print(f"CSV files processed: {files_processed}")    # UI print
-    print(f"Documents to insert: {len(documents)}")     # UI print
+        print(f"CSV files processed in this folder: {files_processed}")    # UI print
+        print(f"Documents to insert: {len(documents)}")     # UI print
+        
+        files_processed = 0
 
-    # Insert into MongoDB
-    db = get_db()                   # get db connection
-    prices_col = db[COLLECTION_NAME]
-    # prices_col.delete_many({})    #if you want clean collection before inserting (ONLY FOR TESTING)
+        # Insert into MongoDB
+        db = get_db(False)              # get db connection
+        prices_col = db[COLLECTION_NAME]
+        # prices_col.delete_many({})    #if you want clean collection before inserting (ONLY FOR TESTING)
 
-    if documents:
-        result = prices_col.insert_many(documents, ordered=False)           # add insert command
-        print(f"Inserted {len(result.inserted_ids)} asset price records")   # UI print
-    else:
-        print("No documents to insert")                                     # UI print
+        if documents:
+            count = 0
+            for i in range(0, len(documents), BATCH_SIZE):
+                result = prices_col.insert_many(
+                    documents[i:i + BATCH_SIZE],
+                    ordered=False
+                )
+                count += len(result.inserted_ids)
+                print(f"Inserted {len(result.inserted_ids)} asset price records. -- [{count}|{len(documents)}]")   # UI print
+                time.sleep(SLEEP_TIME)                          # sleep time
+        else:
+            print("No documents to insert")                     # UI print
+            
+        tot_documents += len(documents)
+        documents.clear() 
+    
+    print(f"In total:\n- CSV files processed: {tot_files_proc}\n- inserted {tot_documents} asset price records.")   # UI print
    
 # ------------------------------------ end: load method ------------------------------------
 
@@ -108,7 +180,7 @@ if __name__ == "__main__":
     load_asset_prices()   
     
 """
-istruction to use and test this script.
+Istruction to use and test this script.
 Execute:
 python load_assets_prices_mongo.py
 
@@ -138,4 +210,11 @@ db.asset_prices.aggregate([
     }
   }
 ])
+
+NOTE 0:
+    Ingesting all asset_prices can be very heavy; a document will be created for each row of the CSV (price data for an asset for one day).
+
+In total, for all CSV files, the documents to be created are ...
+
+The best way to manage this load is to split the CSV files. For this reason, the input files can be commented and uncommented by following the various steps to divide the server's workload.
 """

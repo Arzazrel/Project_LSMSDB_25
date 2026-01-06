@@ -16,7 +16,7 @@ import csv
 from datetime import datetime
 # import from my codes
 from code.utils.mongoDB_conn import get_db
-from code.utils import counter_services
+from code.utils import counter_service
 
 CSV_PATH = "dataset/user/generated_users.csv"
 COUNTER_NAME = "user_id"
@@ -70,8 +70,8 @@ def ingest_users():
 
         for row in reader:                              # scroll all rows
             
-            if row["id"] > max_user_id:                 # check for current max user_id
-                max_user_id = row["id"]                 # update current max user_id
+            if int(row["id"]) > max_user_id:            # check for current max user_id
+                max_user_id = int(row["id"])            # update current max user_id
             
             # create the document for the current row (user or admin)
             if row["role"] == "admin":  # admin case
