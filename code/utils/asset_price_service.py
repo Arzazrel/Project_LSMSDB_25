@@ -133,6 +133,7 @@ def pick_random_price_date(symbol: str, start_date=None):
 
     last_doc = list(last_doc)               # list of the docs with the same date (in the project only one)
     if not last_doc:
+        print("ERROR in pick_random_price_date [asset_price_service] - failed retrieve last_doc for end_date")
         return None
 
     end_date = last_doc[0]["date"]          # get the end date
@@ -268,7 +269,7 @@ def get_random_asset_price(asset_type=None):
     )
 
     price, source = pick_price_from_candle(price_doc, date) # get the price per unit for the transaction
-    
+
     # return the usefull information generated for the transaction
     return {
         "symbol": asset["symbol"],

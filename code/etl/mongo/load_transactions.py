@@ -38,7 +38,10 @@ step_print_UI = 100
 
 # insert a transaction (passed as parameter) in the db (passed as paramter)
 def insert_transaction(db, tx):
-    db.transactions.insert_one(tx)      # insert into DB
+    try:
+        db.transactions.insert_one(tx)          # insert into DB
+    except Exception as e:
+        print("ERROR inserting transaction:", tx["transaction_id"], e)
     
 # update the user (document) into MongoDB
 def update_user(db, user):
@@ -197,7 +200,6 @@ def apply_sell(db, user, tx):
         if asset["symbol"] == tx["symbol"]:     # the same asset of the transaction is already in the portfolio
             if asset["quantity"] < tx["quantity"]:
                 asset["quantity"] = 0
-                tx["quantity"]
                 
             asset["quantity"] -= tx["quantity"] # decrease quantity of asset
             if asset["quantity"] <= 0:
@@ -295,17 +297,18 @@ def ingest_transactions():
             if transaction_count % 100 == 0:                                
                 print(f"Creating transaction number: {transaction_count}")  # UI print to see progression
             
-            user_id = int(row["accountAgeDays"])                # the user_id of the logged-in user (who made) the transaction will be equal to the "accountAgeDays"
+            user_id = str(row["accountAgeDays"])                # the user_id of the logged-in user (who made) the transaction will be equal to the "accountAgeDays"
             quantity = int(row["numItems"])                     # get the quantity of the asset purchased in the transaction
             payment_method = row["paymentMethod"]               # can be : 'storecredit', 'paypal', 'creditcard'
 
-            user = db.users.find_one({"user_id": str(user_id)}) # get the related user
+            user = db.users.find_one({"user_id": user_id})      # get the related user
             if not user:                                        # control check
-                print("ERROR - User with user_id: ",user_id, " isn't in the DB.")
+                print("ERROR in ingest_transactions [load_transactions] - User with user_id: ",user_id, " isn't in the DB.")
                 continue
 
             snapshot = asset_price_service.get_random_asset_price() # get a random asset, a realistic date and time and the corresponding price - SEE NOTE 0
             if snapshot is None:                                # control check
+                print("ERROR in ingest_transactions [load_transactions] - failed selection of symbol, assetType, date,price")
                 null_transaction_count += 1                     # update failed transation counter
                 continue
 
