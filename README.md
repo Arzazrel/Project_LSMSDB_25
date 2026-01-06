@@ -383,6 +383,13 @@ Verify:
 db.counters.find().pretty()
 ```
 
+If you want reset or modify a counter (ex.):
+```MongoDB shell
+db.counters.updateOne(
+  { _id: "transaction_id" },
+  { $set: { seq: 0 } }
+)```
+
 ## Step 2 – News Ingestion
 Use the python code:
 ```bash
@@ -483,4 +490,20 @@ db.users.findOne(
   { user_id: 1 },
   { cash: 1, shareWallet: 1, recentTransactions: 1 }
 )
+```
+
+# - Create indexes --
+Now you can proceed to create the indexes on MongoDB that are useful for the project application.
+```bash
+python -m code.db.create_indexes
+```
+If you want to use other indexes that have not been deemed essential or truly effective, or add other indexes for other reasons, simply add them to the code section for optional indexes and run the script  passing the following parameter.
+Optional indexes are not necessary for the project and may actually slow down performance, so only use them during testing and with full awareness.
+```bash
+python -m code.db.create_indexes --extra_index
+```
+
+If you want delete all the indexes applied use this script:
+```bash
+python -m code.db.drop_all_indexes
 ```
