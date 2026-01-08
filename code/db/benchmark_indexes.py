@@ -135,6 +135,11 @@ def drop_collection_indexes(collection):
     """
 def wait_for_indexes(collection, expected_indexes: set[str], timeout: float = 600.0, poll_interval: float = 0.2):
     
+    if isinstance(expected_indexes, str):
+        expected_indexes = {expected_indexes}
+    elif not isinstance(expected_indexes, set):
+        expected_indexes = set(expected_indexes)
+    
     start = time.time()     # take the current time
 
     while True:             # waiting loop
@@ -142,7 +147,7 @@ def wait_for_indexes(collection, expected_indexes: set[str], timeout: float = 60
             info = collection.index_information()   # get information about the indexes avaiable
             current = set(info.keys())              # get the name of the indexes avaiable
 
-            if current == expected_indexes:         # check
+            if expected_indexes.issubset(current):  # check
                 return                              # return
 
         except PyMongoError as e:
