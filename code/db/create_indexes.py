@@ -23,56 +23,84 @@ def create_indexes(extra_index: bool = False):
     # -- USERS --
     print("Creating indexes working on users collection...")    # UI print
     print("- Index: email , (unique)")                      # UI print
-    db.users.create_index(
-        [("email", 1)],
-        unique=True,
-        name="idx_users_email_unique"
-    )
+    users_indexes = db.users.index_information()
+    if "email_1" not in users_indexes:
+        db.users.create_index(
+            [("email", 1)],
+            unique=True,
+            name="email_1"
+        )
+    else:
+        print("  -> Index already exists, skipped.")
 
     # -- ASSET PRICES --
     print("Creating indexes working on asset_prices collection...") # UI print
     print("- Index: symbol (1) , date (-1)")                        # UI print
-    db.asset_prices.create_index(
-        [("symbol", 1), ("date", -1)],
-        name="idx_asset_prices_symbol_date"
-    )
+    asset_prices_indexes = db.asset_prices.index_information()
+    if "symbol_1_date_-1" not in asset_prices_indexes:
+        db.asset_prices.create_index(
+            [("symbol", 1), ("date", -1)],
+            name="symbol_1_date_-1"
+        )
+    else:
+        print("  -> Index already exists, skipped.")
 
     # -- TRANSACTIONS --
     print("Creating indexes working on transaction collection...")  # UI print
-    print("- Index: user_id(1) , date(-1)")                         # UI print
-    db.transactions.create_index(
-        [("user_id", 1), ("date", -1)],
-        name="idx_transactions_user_date"
-    )
+    
+    transactions_indexes = db.transactions.index_information()      # get index informations for the transaction collection
+    
+    if "user_id_1_date_-1" not in transactions_indexes:
+        db.transactions.create_index(
+            [("user_id", 1), ("date", -1)],
+            name="user_id_1_date_-1"
+        )
+    else:
+        print("  -> Index already exists, skipped.")
 
-    print("- Index: type(1) , date(-1)")                            # UI print
-    db.transactions.create_index(
-        [("type", 1), ("date", -1)],
-        name="idx_transactions_type_date"
-    )
+    print("- Index: type (1), date (-1)")                              # UI print
+    if "type_1_date_-1" not in transactions_indexes:
+        db.transactions.create_index(
+            [("type", 1), ("date", -1)],
+            name="type_1_date_-1"
+        )
+    else:
+        print("  -> Index already exists, skipped.")
 
-    print("- Index: status(1) , date(1)")                           # UI print
-    db.transactions.create_index(
-        [("status", 1), ("date", 1)],
-        name="idx_transactions_status_date"
-    )
+    print("- Index: status (1), date (1)")                             # UI print
+    if "status_1_date_1" not in transactions_indexes:
+        db.transactions.create_index(
+            [("status", 1), ("date", 1)],
+            name="status_1_date_1"
+        )
+    else:
+        print("  -> Index already exists, skipped.")
 
     # -- NEWS --
     print("Creating indexes working on news collection...") # UI print
     print("- Index: date(-1) , category(-1)")               # UI print
-    db.news.create_index(
-        [("date", -1), ("category", 1)],
-        name="idx_news_date_category"
-    )
+    news_indexes = db.news.index_information()
+    if "date_-1_category_1" not in news_indexes:
+        db.news.create_index(
+            [("date", -1), ("category", 1)],
+            name="date_-1_category_1"
+        )
+    else:
+        print("  -> Index already exists, skipped.")
 
     # -- OPTIONAL --
-    if with_asset_extra_index:
+    if extra_index:
         print("Create optional indexes...")                                         # UI print
         print("On asset collection -> Index: assets.type(1) , assets.sector(1)")    # UI print
-        db.assets.create_index(
-            [("type", 1), ("sector", 1)],
-            name="idx_assets_type_sector"
-        )
+        
+        assets_indexes = db.assets.index_information()
+        if "type_1_sector_1" not in assets_indexes:
+            db.assets.create_index(
+                [("type", 1), ("sector", 1)],
+                name="type_1_sector_1"
+            )
+        else:
+            print("  -> Optional index already exists, skipped.")
 
     print("Indexes creation completed.")                # UI print
 

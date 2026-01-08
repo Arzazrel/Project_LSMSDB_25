@@ -268,7 +268,8 @@ def generate_sell_transaction(db, user, purchase_tx):
         "status": "EXECUTED",
         "assetType": purchase_tx["assetType"],
         "pricePerUnit": price,
-        "quantity": qty
+        "quantity": qty,
+        "updated_at": sell_time
     }
    
    
@@ -332,7 +333,8 @@ def ingest_transactions():
                     "currency": "USD",
                     "status": "EXECUTED",
                     "totalPrice": deposit_amount,
-                    "paymentMethod": deposit_pay_method
+                    "paymentMethod": deposit_pay_method,
+                    "updated_at": snapshot["date"] - timedelta(minutes=5)
                 }
 
                 insert_transaction(db, deposit_tx)              # insert the transaction into MongoDB
@@ -354,7 +356,8 @@ def ingest_transactions():
                 "status": "EXECUTED",
                 "assetType": snapshot["assetType"],
                 "pricePerUnit": snapshot["price"],
-                "quantity": quantity
+                "quantity": quantity,
+                "updated_at": snapshot["date"]
             }
 
             insert_transaction(db, purchase_tx)                 # insert the transaction into MongoDB
