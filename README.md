@@ -466,7 +466,18 @@ db.users.findOne({ user_id: "user_id" })
 ```
 
 ## Step 6 – Transactions Simulation & Ingestion
-Use the python code:
+Before inserting transactions into the DB, it is recommended to apply the index on asset_prices. The algorithm for creating and inserting transactions inserts into the ‘transactions’ collection and modifies the “users” collection, but makes many queries on the ‘asset_prices’ collection.
+The index allows for a significant reduction in time (from approximately 4 days and 12 hours without the index to just one hour with the index).
+```MongoDB shell
+db.asset_prices.createIndex({ symbol: 1, date: -1 })
+```
+
+To verify if the index is applied or not:
+```MongoDB shell
+db.asset_prices.getIndexes()
+```
+
+For start the injection of the transactions use the python code:
 ```bash
 # if you want see statistics of the transaction
 python -m code.etl.mongo.validate_trades_dataset	
@@ -506,4 +517,32 @@ python -m code.db.create_indexes --extra_index
 If you want delete all the indexes applied use this script:
 ```bash
 python -m code.db.drop_all_indexes
+```
+
+## test indexes
+If you want to test the effectiveness of indexes and obtain performance data relating to basic queries with and without indexes, you can use the Python script `code\db\benchmark_indexes`.
+This script allows you to run tests and obtain results (including MongoDB explain) for an index, passed as a parameter.
+Examples of commands for its operation are shown below:
+
+```MongoDB shell
+python -m code.db.benchmark_indexes --list-tests
+    
+python -m code.db.benchmark_indexes --test asset_prices --write-res 
+python -m code.db.benchmark_indexes --test asset_prices --iterations 20 --insert_batch_size 10000
+    
+python -m code.db.benchmark_indexes --test transactions_user_date
+python -m code.db.benchmark_indexes --test transactions_type_date
+python -m code.db.benchmark_indexes --test transactions_status_date
+    
+python -m code.db.benchmark_indexes --test users_email  
+    
+python -m code.db.benchmark_indexes --test news_date_category
+    
+python -m code.db.benchmark_indexes --run-all
+python -m code.db.benchmark_indexes --run-all --write-res 
+```
+	
+If the tests on the indexes have been completed, I recommend running the programme again to enter all the indexes designed for the project.
+```bash
+python -m code.db.create_indexes
 ```
