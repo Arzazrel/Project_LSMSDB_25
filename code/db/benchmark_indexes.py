@@ -31,6 +31,9 @@ from code.db.create_indexes import create_indexes
 
 BENCHMARK_OUTPUT_FILE = "mongodb_indexes_benchmark.txt" # name of the output file
 OUTPUT_FILE_HANDLE = None                               # ref to output file
+BENCHMARK_START_TIME = None
+output_header_mex = "MongoDB Index Benchmark Report"    #
+line_length = 120                                       # length for the header and footer separation lines
 documents = []                                          # contains the documents that must be inserted with insertmany
 
 # ------------------------------------ start: utilities methods ------------------------------------
@@ -140,6 +143,7 @@ def wait_for_indexes(collection, expected_indexes: set[str], timeout: float = 60
     elif not isinstance(expected_indexes, set):
         expected_indexes = set(expected_indexes)
     
+    print("Waiting indexes...")
     start = time.time()     # take the current time
 
     while True:             # waiting loop
@@ -148,6 +152,7 @@ def wait_for_indexes(collection, expected_indexes: set[str], timeout: float = 60
             current = set(info.keys())              # get the name of the indexes avaiable
 
             if expected_indexes.issubset(current):  # check
+                print("Indexes ready...")
                 return                              # return
 
         except PyMongoError as e:
@@ -160,6 +165,23 @@ def wait_for_indexes(collection, expected_indexes: set[str], timeout: float = 60
             )
 
         time.sleep(poll_interval)                   # sleep
+        
+# format in a clear way the elapsed time for the benchmarks
+def format_elapsed_time(start: datetime, end: datetime) -> str:
+    delta = end - start
+    total_seconds = int(delta.total_seconds())
+
+    days = total_seconds // 86400
+    remainder = total_seconds % 86400
+
+    hours = remainder // 3600
+    remainder %= 3600
+
+    minutes = remainder // 60
+    seconds = remainder % 60
+
+    return f"{days}d {hours}h {minutes}m {seconds}s"
+
     
 # ------------------------------------ end: utilities methods ------------------------------------
 
@@ -168,7 +190,7 @@ def wait_for_indexes(collection, expected_indexes: set[str], timeout: float = 60
 # open the output file
 def open_output_file():
     global OUTPUT_FILE_HANDLE
-    OUTPUT_FILE_HANDLE = open(BENCHMARK_OUTPUT_FILE, "w")
+    OUTPUT_FILE_HANDLE = open(BENCHMARK_OUTPUT_FILE, "a")
     
 # close the output file
 def close_output_file():
@@ -181,27 +203,73 @@ def close_output_file():
 def log(msg: str = "", file: bool = False):
     if file and OUTPUT_FILE_HANDLE:
         OUTPUT_FILE_HANDLE.write(msg + "\n")    # write in the output file
+        OUTPUT_FILE_HANDLE.flush() 
     else:
         print(msg)                              # print on the screen
   
 # print the standard header when want to write into output file  
 def print_report_header():
+    global BENCHMARK_START_TIME  
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")   # get curren date and time
+    BENCHMARK_START_TIME = datetime.utcnow()
+    
+    log("=" * line_length, True)                            # start header line
+    
+    if len(output_header_mex) + 2 < line_length:            # put side *
+        side_len_sx = int((line_length - len(output_header_mex) - 2)/2)
+        side_len_dx = line_length - len(output_header_mex) - side_len_sx - 2
+        header_line_0 = "*" * side_len_sx + " " + output_header_mex + " " + "*" * side_len_dx
+        
+        log(header_line_0, True)
+        
+        side_len_sx = int((line_length - len(f"Started at: {now}") - 2)/2)
+        side_len_dx = line_length - len(f"Started at: {now}") - side_len_sx - 2
+        header_line_1 = "*" * side_len_sx + " " + f"Started at: {now}" + " " + "*" * side_len_dx
+        
+        log(header_line_1, True)
+    else:                                                   # don't put side *
+        log(output_header_mex, True)
+        log(f"Started at: {now}", True)
 
-    log("=" * 50, True)                                     # start header line
-    log("MongoDB Index Benchmark Report", True)
-    log(f"Started at: {now}", True)
-    log("-" * 50, True)                                     # end header line   
-    log("", True)                                           # equal to write \n
+    log("-" * line_length, True)                            # end header line   
    
 # print the standard footer when want to write into output file    
 def print_report_footer():
+    global BENCHMARK_START_TIME
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")   # get curren date and time
-
-    log("-" * 50, True)                                     # end header line 
-    log(f"Ended at: {now}", True)
-    log("=" * 50, True)                                     # start header line
+    base_line = f"Ended at: {now}"
+    
+    log("", True)                                           # equal to \n
+    log("-" * line_length, True)                            # end header line 
+    
+    if len(base_line) + 2 < line_length:            # put side *
+        
+        side_len_sx = int((line_length - len(base_line) - 2)/2)
+        side_len_dx = line_length - len(base_line) - side_len_sx - 2
+        footer_line_0 = "*" * side_len_sx + " " + base_line + " " + "*" * side_len_dx
+        
+        log(footer_line_0, True)
+        
+        if BENCHMARK_START_TIME != None:
+            end_time = datetime.utcnow()
+            elapsed = format_elapsed_time(BENCHMARK_START_TIME, end_time)
+            base_line_1 = f"Benchmarks done in: {elapsed}"
+            
+            side_len_sx = int((line_length - len(base_line_1) - 2)/2)
+            side_len_dx = line_length - len(base_line_1) - side_len_sx - 2
+            footer_line_1 = "*" * side_len_sx + " " + base_line_1 + " " + "*" * side_len_dx
+            
+            log(footer_line_1, True)
+    else:       
+        log(base_line, True)
+        if BENCHMARK_START_TIME != None:
+            end_time = datetime.utcnow()
+            elapsed = format_elapsed_time(BENCHMARK_START_TIME, end_time)
+            log(f"Benchmarks done in: {elapsed}", True)
+    
+    log("=" * line_length, True)                            # start header line
     log("", True)                                           # equal to write \n
+    BENCHMARK_START_TIME = None
 
 # ------------------------------------ end: file handle methods ------------------------------------
 
@@ -359,11 +427,9 @@ def test_transactions_status_query(db):
         # all pending transactions in order (query performed at the start of each trading day)
         list(
             db.transactions.find(
-                {
-                    "status": "pending",
-                    "date": 1
-                }.sort("date", 1)
-            )
+                {"status": "pending"},
+                {"date": 1}
+            ).sort("date", 1)
         )
     return query
 
@@ -618,7 +684,7 @@ def test_news_query(db):
     return query
 
 # function to test the write and the deletes
-def test_news_insert(db):
+def test_news_insert(db, insert_batch_size):
     def insert():
         now = datetime.utcnow()
         # test single insert and delete
@@ -744,7 +810,21 @@ TESTS = {
 
 # ------------------------------------ benchmark function ------------------------------------
 
-# handle the setting, how and what shown for the benchmarks
+"""
+Handle benchmark execution configuration and orchestration based on user settings:
+    - whether to run a single test or all available tests,
+    - whether to drop existing indexes or keep them,
+    - whether to write benchmark results to an output file.
+It also handles opening and closing the output file and printing standard report headers and footers when file logging is enabled.
+
+Parameters:
+    - test_name (str): Name of the benchmark test to execute (used when run_all is False).
+    - iterations (int): Number of iterations used to measure query and insert execution times.
+    - insert_batch_size (int): Number of documents inserted per insert benchmark iteration.
+    - drop_indexes (bool, default=True): If True, all indexes on the target collection are dropped before testing. If False, all indexes are kept except the one under test.
+    - run_all (bool, default=False): If True, all benchmark tests are executed sequentially, each in both configurations (drop_indexes=True and drop_indexes=False).
+    - write_file (bool, default=False): If True, benchmark results are written to an output file in addition to being printed on screen.
+"""
 def handle_benchmark(test_name: str, iterations: int, insert_batch_size: int, drop_indexes: bool = True, run_all: bool = False, write_file: bool = False):
     
     if write_file:
@@ -765,7 +845,21 @@ def handle_benchmark(test_name: str, iterations: int, insert_batch_size: int, dr
         print_report_footer()       # write footer
         close_output_file()         # close output file
 
-# handel indexes (drop and creat indexes in a collections)
+"""
+Manage index state for a collection before running a benchmark, depending on the selected configuration, this function either:
+    - drops all indexes on the collection, or
+    - ensures all application indexes are present and then drops only the index under test.
+
+This allows fair performance comparisons between:
+    - a collection with no indexes, and
+    - a collection with all indexes except the one being evaluated.
+
+Parameters:
+    - drop_indexes (bool): If True, all indexes on the collection are dropped. If False, all standard indexes are created (if missing) and only the tested index is removed.
+    - collection (pymongo.collection.Collection): MongoDB collection on which index operations are performed.
+    - name_collection (str): Human-readable name of the collection (used for logging).
+    - index_name (str): Name of the index under test.
+"""
 def handle_indexes(drop_indexes, collection, name_collection, index_name):
     
     if drop_indexes:                        # delete all indexes in this collection - SEE NOTE 0
@@ -781,7 +875,22 @@ def handle_indexes(drop_indexes, collection, name_collection, index_name):
         except Exception:
             pass
             
-# calculate, put in better format and show/write the results
+"""
+Process, format, and display benchmark results. This function:
+    - computes performance metrics (min, max, average, percentiles),
+    - calculates query improvement and insert penalty percentages,
+    - formats time values using the most appropriate time unit,
+    - prints or writes the results and MongoDB explain statistics.
+
+Parameters:
+    - q_no_idx (dict): Timing statistics for queries executed without indexes.
+    - i_no_idx (dict): Timing statistics for inserts executed without indexes.
+    - e_no_idx (dict): MongoDB explain execution statistics for queries without indexes.
+    - q_idx (dict): Timing statistics for queries executed with the tested index.
+    - i_idx (dict): Timing statistics for inserts executed with the tested index.
+    - e_idx (dict): MongoDB explain execution statistics for queries with the tested index.
+    - write_file (bool, default=False): If True, results are written to the benchmark output file. Otherwise, results are printed to standard output.
+"""
 def handle_results(q_no_idx, i_no_idx, e_no_idx, q_idx, i_idx, e_idx, write_file: bool = False):
     
     # calculate results
@@ -816,7 +925,47 @@ def handle_results(q_no_idx, i_no_idx, e_no_idx, q_idx, i_idx, e_idx, write_file
     log(f"- totalKeysExamined (number of entries in the index read): {e_idx['totalKeysExamined']}",write_file)
     log(f"- stage (main stage of the implementation plan): {e_idx['stage']}",write_file)
 
-# execute all the test and show the results
+"""
+Execute a complete benchmark cycle for a single test.
+
+This function performs the full benchmark workflow:
+1. Prepares test data.
+2. Configures collection indexes.
+3. Measures query and insert performance without the index.
+4. Collects MongoDB explain statistics without the index.
+5. Creates the tested index and waits for completion.
+6. Measures query and insert performance with the index.
+7. Collects MongoDB explain statistics with the index.
+8. Cleans up temporary data and reports results.
+
+Parameters:
+    test_name (str):
+        Name of the benchmark test to execute (key of the TESTS dictionary).
+
+    iterations (int):
+        Number of iterations for each timing measurement.
+
+    insert_batch_size (int):
+        Number of documents inserted per iteration.
+
+    drop_indexes (bool, default=True):
+        Determines how indexes are handled before the test:
+        - True: all indexes are removed.
+        - False: all indexes are kept except the one under test.
+
+    write_file (bool, default=False):
+        If True, benchmark output is written to a file in addition
+        to console output.
+
+Output:
+    None
+
+Side effects:
+    - Performs database read/write operations.
+    - Creates and drops indexes.
+    - Generates timing and explain statistics.
+    - Writes benchmark results to screen and/or file.
+"""
 def benchmark(test_name: str, iterations: int, insert_batch_size: int, drop_indexes: bool = True, write_file: bool = False):
     db = get_db()
     if db is None:
