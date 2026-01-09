@@ -1,0 +1,298 @@
+========================================================================================================================
+******************************************** MongoDB Index Benchmark Report ********************************************
+******************************************* Started at: 2026-01-09 11:01:08 ********************************************
+------------------------------------------------------------------------------------------------------------------------
+
+-------- Benchmark: asset_prices , iterations: 10 , insert_batch_size: 100, drop_indexes: True --------
+
+---- RESULTS ----
+Query no index  -> min: 10.565, max: 20.359, avg: 11.818, p50: 10.977 , p95: 16.230, p99: 19.533 s
+Query with idx  -> min: 1.277, max: 8.224, avg: 2.185, p50: 1.481 , p95: 5.416, p99: 7.662 ms
+Insert no idx   -> min: 355.246, max: 426.970, avg: 376.115, p50: 366.648 , p95: 422.685, p99: 426.113 s
+Insert with idx -> min: 112.868, max: 126.179, avg: 118.617, p50: 118.474 , p95: 124.338, p99: 125.811 ms
+
+---- COMPARISONS (50 percentile)----
+Query improvement (if positive -> index better than no index): 99.99%
+Insert penalty (if positive -> no index better than index): -99.97%
+
+---- EXPLAIN (SEE MONGODB STATS) ----
+- executionTimeMillis (internal query execution time): 3416
+- totalDocsExamined (total number of documents read by the engine): 11520902
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): COLLSCAN
+
+-- WITH INDEX --
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 20
+- totalKeysExamined (number of entries in the index read): 20
+- stage (main stage of the implementation plan): FETCH
+
+-------- Benchmark: asset_prices , iterations: 10 , insert_batch_size: 100, drop_indexes: False --------
+
+---- RESULTS ----
+Query no index  -> min: 1.440, max: 3.456, avg: 2.157, p50: 1.808 , p95: 3.377, p99: 3.440 ms
+Query with idx  -> min: 1.112, max: 2.859, avg: 1.882, p50: 1.652 , p95: 2.844, p99: 2.856 ms
+Insert no idx   -> min: 130.253, max: 201.707, avg: 171.254, p50: 169.622 , p95: 196.415, p99: 200.648 ms
+Insert with idx -> min: 181.698, max: 221.362, avg: 200.943, p50: 200.888 , p95: 218.389, p99: 220.767 ms
+
+---- COMPARISONS (50 percentile)----
+Query improvement (if positive -> index better than no index): 8.60%
+Insert penalty (if positive -> no index better than index): 18.43%
+
+---- EXPLAIN (SEE MONGODB STATS) ----
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 20
+- totalKeysExamined (number of entries in the index read): 20
+- stage (main stage of the implementation plan): FETCH
+
+-- WITH INDEX --
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 20
+- totalKeysExamined (number of entries in the index read): 20
+- stage (main stage of the implementation plan): FETCH
+
+-------- Benchmark: transactions_user_date , iterations: 10 , insert_batch_size: 100, drop_indexes: True --------
+
+---- RESULTS ----
+Query no index  -> min: 31.121, max: 47.861, avg: 33.826, p50: 32.003 , p95: 41.554, p99: 46.600 ms
+Query with idx  -> min: 16.342, max: 19.680, avg: 17.944, p50: 17.877 , p95: 19.300, p99: 19.604 ms
+Insert no idx   -> min: 1.845, max: 2.042, avg: 1.911, p50: 1.912 , p95: 2.002, p99: 2.034 s
+Insert with idx -> min: 1.876, max: 2.001, avg: 1.943, p50: 1.941 , p95: 1.997, p99: 2.000 s
+
+---- COMPARISONS (50 percentile)----
+Query improvement (if positive -> index better than no index): 44.14%
+Insert penalty (if positive -> no index better than index): 1.53%
+
+---- EXPLAIN (SEE MONGODB STATS) ----
+- executionTimeMillis (internal query execution time): 18
+- totalDocsExamined (total number of documents read by the engine): 42915
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): COLLSCAN
+
+-- WITH INDEX --
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 6
+- totalKeysExamined (number of entries in the index read): 6
+- stage (main stage of the implementation plan): FETCH
+
+-------- Benchmark: transactions_user_date , iterations: 10 , insert_batch_size: 100, drop_indexes: False --------
+
+---- RESULTS ----
+Query no index  -> min: 13.997, max: 22.633, avg: 15.953, p50: 14.822 , p95: 21.237, p99: 22.354 ms
+Query with idx  -> min: 15.399, max: 18.317, avg: 15.861, p50: 15.574 , p95: 17.275, p99: 18.109 ms
+Insert no idx   -> min: 1.728, max: 1.768, avg: 1.747, p50: 1.747 , p95: 1.767, p99: 1.768 s
+Insert with idx -> min: 1.731, max: 1.825, avg: 1.760, p50: 1.757 , p95: 1.798, p99: 1.820 s
+
+---- COMPARISONS (50 percentile)----
+Query improvement (if positive -> index better than no index): -5.08%
+Insert penalty (if positive -> no index better than index): 0.58%
+
+---- EXPLAIN (SEE MONGODB STATS) ----
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 6
+- totalKeysExamined (number of entries in the index read): 6
+- stage (main stage of the implementation plan): FETCH
+
+-- WITH INDEX --
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 6
+- totalKeysExamined (number of entries in the index read): 6
+- stage (main stage of the implementation plan): FETCH
+
+-------- Benchmark: transactions_type_date , iterations: 10 , insert_batch_size: 100, drop_indexes: True --------
+
+---- RESULTS ----
+Query no index  -> min: 26.581, max: 29.951, avg: 28.304, p50: 28.615 , p95: 29.459, p99: 29.852 ms
+Query with idx  -> min: 665.753, max: 2478.814, avg: 1044.782, p50: 757.232 , p95: 2130.672, p99: 2409.186 µs
+Insert no idx   -> min: 1.721, max: 1.796, avg: 1.765, p50: 1.770 , p95: 1.793, p99: 1.795 s
+Insert with idx -> min: 1.741, max: 1.794, avg: 1.772, p50: 1.771 , p95: 1.793, p99: 1.794 s
+
+---- COMPARISONS (50 percentile)----
+Query improvement (if positive -> index better than no index): 97.35%
+Insert penalty (if positive -> no index better than index): 0.11%
+
+---- EXPLAIN (SEE MONGODB STATS) ----
+- executionTimeMillis (internal query execution time): 17
+- totalDocsExamined (total number of documents read by the engine): 42915
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): COLLSCAN
+
+-- WITH INDEX --
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 0
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): FETCH
+
+-------- Benchmark: transactions_type_date , iterations: 10 , insert_batch_size: 100, drop_indexes: False --------
+
+---- RESULTS ----
+Query no index  -> min: 810.707, max: 1488.534, avg: 998.485, p50: 930.940 , p95: 1402.208, p99: 1471.269 µs
+Query with idx  -> min: 766.023, max: 2462.550, avg: 1196.737, p50: 983.213 , p95: 2067.799, p99: 2383.600 µs
+Insert no idx   -> min: 1.719, max: 1.787, avg: 1.741, p50: 1.739 , p95: 1.772, p99: 1.784 s
+Insert with idx -> min: 1.751, max: 1.857, avg: 1.785, p50: 1.774 , p95: 1.842, p99: 1.854 s
+
+---- COMPARISONS (50 percentile)----
+Query improvement (if positive -> index better than no index): -5.62%
+Insert penalty (if positive -> no index better than index): 2.04%
+
+---- EXPLAIN (SEE MONGODB STATS) ----
+- executionTimeMillis (internal query execution time): 1
+- totalDocsExamined (total number of documents read by the engine): 0
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): FETCH
+
+-- WITH INDEX --
+- executionTimeMillis (internal query execution time): 1
+- totalDocsExamined (total number of documents read by the engine): 0
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): FETCH
+
+-------- Benchmark: transactions_status_date , iterations: 10 , insert_batch_size: 100, drop_indexes: True --------
+
+---- RESULTS ----
+Query no index  -> min: 16.022, max: 18.024, avg: 16.402, p50: 16.129 , p95: 17.541, p99: 17.928 ms
+Query with idx  -> min: 330.309, max: 1616.026, avg: 505.180, p50: 379.510 , p95: 1109.380, p99: 1514.697 µs
+Insert no idx   -> min: 1.742, max: 1.769, avg: 1.750, p50: 1.746 , p95: 1.765, p99: 1.768 s
+Insert with idx -> min: 1.753, max: 1.779, avg: 1.765, p50: 1.765 , p95: 1.778, p99: 1.779 s
+
+---- COMPARISONS (50 percentile)----
+Query improvement (if positive -> index better than no index): 97.65%
+Insert penalty (if positive -> no index better than index): 1.08%
+
+---- EXPLAIN (SEE MONGODB STATS) ----
+- executionTimeMillis (internal query execution time): 17
+- totalDocsExamined (total number of documents read by the engine): 42915
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): SORT
+
+-- WITH INDEX --
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 0
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): FETCH
+
+-------- Benchmark: transactions_status_date , iterations: 10 , insert_batch_size: 100, drop_indexes: False --------
+
+---- RESULTS ----
+Query no index  -> min: 726.023, max: 1014.861, avg: 825.524, p50: 807.329 , p95: 959.409, p99: 1003.771 µs
+Query with idx  -> min: 451.264, max: 1040.759, avg: 628.484, p50: 527.353 , p95: 970.745, p99: 1026.756 µs
+Insert no idx   -> min: 1.718, max: 1.802, avg: 1.758, p50: 1.757 , p95: 1.787, p99: 1.799 s
+Insert with idx -> min: 1.757, max: 1.815, avg: 1.783, p50: 1.783 , p95: 1.812, p99: 1.815 s
+
+---- COMPARISONS (50 percentile)----
+Query improvement (if positive -> index better than no index): 34.68%
+Insert penalty (if positive -> no index better than index): 1.49%
+
+---- EXPLAIN (SEE MONGODB STATS) ----
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 0
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): FETCH
+
+-- WITH INDEX --
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 0
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): FETCH
+
+-------- Benchmark: users_email , iterations: 10 , insert_batch_size: 100, drop_indexes: True --------
+
+---- RESULTS ----
+Query no index  -> min: 1.263, max: 116.120, avg: 12.834, p50: 1.313 , p95: 64.617, p99: 105.820 ms
+Query with idx  -> min: 336.537, max: 1961.616, avg: 647.539, p50: 490.999 , p95: 1461.449, p99: 1861.583 µs
+Insert no idx   -> min: 186.399, max: 201.143, avg: 193.799, p50: 194.168 , p95: 200.302, p99: 200.975 ms
+Insert with idx -> min: 108.660, max: 126.995, avg: 115.936, p50: 116.004 , p95: 123.862, p99: 126.369 ms
+
+---- COMPARISONS (50 percentile)----
+Query improvement (if positive -> index better than no index): 62.61%
+Insert penalty (if positive -> no index better than index): -40.26%
+
+---- EXPLAIN (SEE MONGODB STATS) ----
+- executionTimeMillis (internal query execution time): 2
+- totalDocsExamined (total number of documents read by the engine): 2960
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): COLLSCAN
+
+-- WITH INDEX --
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 0
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): FETCH
+
+-------- Benchmark: users_email , iterations: 10 , insert_batch_size: 100, drop_indexes: False --------
+
+---- RESULTS ----
+Query no index  -> min: 392.803, max: 1985.394, avg: 742.317, p50: 580.734 , p95: 1551.230, p99: 1898.561 µs
+Query with idx  -> min: 325.562, max: 684.487, avg: 439.922, p50: 415.578 , p95: 608.772, p99: 669.344 µs
+Insert no idx   -> min: 140.331, max: 218.201, avg: 175.183, p50: 173.573 , p95: 207.694, p99: 216.099 ms
+Insert with idx -> min: 171.439, max: 377.742, avg: 233.935, p50: 213.195 , p95: 341.744, p99: 370.543 ms
+
+---- COMPARISONS (50 percentile)----
+Query improvement (if positive -> index better than no index): 28.44%
+Insert penalty (if positive -> no index better than index): 22.83%
+
+---- EXPLAIN (SEE MONGODB STATS) ----
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 0
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): FETCH
+
+-- WITH INDEX --
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 0
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): FETCH
+
+-------- Benchmark: news_date_category , iterations: 10 , insert_batch_size: 100, drop_indexes: True --------
+
+---- RESULTS ----
+Query no index  -> min: 5.909, max: 194.538, avg: 26.537, p50: 7.478 , p95: 112.216, p99: 178.074 ms
+Query with idx  -> min: 652.157, max: 2656.350, avg: 964.551, p50: 757.873 , p95: 1917.234, p99: 2508.527 µs
+Insert no idx   -> min: 367.330, max: 473.075, avg: 417.265, p50: 410.994 , p95: 467.341, p99: 471.928 ms
+Insert with idx -> min: 362.686, max: 688.106, avg: 451.514, p50: 406.942 , p95: 653.833, p99: 681.252 ms
+
+---- COMPARISONS (50 percentile)----
+Query improvement (if positive -> index better than no index): 89.86%
+Insert penalty (if positive -> no index better than index): -0.99%
+
+---- EXPLAIN (SEE MONGODB STATS) ----
+- executionTimeMillis (internal query execution time): 3
+- totalDocsExamined (total number of documents read by the engine): 5263
+- totalKeysExamined (number of entries in the index read): 0
+- stage (main stage of the implementation plan): SORT
+
+-- WITH INDEX --
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 0
+- totalKeysExamined (number of entries in the index read): 1
+- stage (main stage of the implementation plan): FETCH
+
+-------- Benchmark: news_date_category , iterations: 10 , insert_batch_size: 100, drop_indexes: False --------
+
+---- RESULTS ----
+Query no index  -> min: 713.321, max: 4726.792, avg: 1350.723, p50: 1089.758 , p95: 3135.253, p99: 4408.484 µs
+Query with idx  -> min: 740.378, max: 1523.409, avg: 913.405, p50: 834.565 , p95: 1325.245, p99: 1483.776 µs
+Insert no idx   -> min: 308.658, max: 325.496, avg: 316.527, p50: 316.211 , p95: 324.670, p99: 325.331 ms
+Insert with idx -> min: 325.242, max: 342.569, avg: 332.768, p50: 330.950 , p95: 342.164, p99: 342.488 ms
+
+---- COMPARISONS (50 percentile)----
+Query improvement (if positive -> index better than no index): 23.42%
+Insert penalty (if positive -> no index better than index): 4.66%
+
+---- EXPLAIN (SEE MONGODB STATS) ----
+- executionTimeMillis (internal query execution time): 0
+- totalDocsExamined (total number of documents read by the engine): 0
+- totalKeysExamined (number of entries in the index read): 1
+- stage (main stage of the implementation plan): FETCH
+
+-- WITH INDEX --
+- executionTimeMillis (internal query execution time): 1
+- totalDocsExamined (total number of documents read by the engine): 0
+- totalKeysExamined (number of entries in the index read): 1
+- stage (main stage of the implementation plan): FETCH
+
+------------------------------------------------------------------------------------------------------------------------
+******************************************** Ended at: 2026-01-09 13:08:20 *********************************************
+******************************************* Benchmarks done in: 0d 2h 7m 11s *******************************************
+========================================================================================================================
+
