@@ -126,6 +126,10 @@ Control, you can connect from the terminal to any SECONDARY node to read the dat
 mongo --port 27019
 mongo --port 27018
 Only the PRIMARY node accepts writes. SECONDARY nodes automatically replicate the data.
+Connect with the project DB:
+```mongosh
+use myfuture_lsmsdb_2025
+```
 Stopping nodes (Connect to each node via mongo shell and stop it).
 1.	db.getSiblingDB("admin").shutdownServer()
 2.	exit
