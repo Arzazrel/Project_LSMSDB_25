@@ -91,7 +91,9 @@ def ingest_users():
                     "registration_date": parse_date(row["registration_date"]),
                     
                     "created_at": datetime.utcnow(),
-                    "updated_at": datetime.utcnow()
+                    "updated_at": datetime.utcnow(),
+                    "suspended": False,
+                    "deletedAt": False
                 }
             else:                       # user case
                 user_doc = {
@@ -119,7 +121,9 @@ def ingest_users():
                     "recentTransactions": [],
 
                     "created_at": datetime.utcnow(),
-                    "updated_at": datetime.utcnow()
+                    "updated_at": datetime.utcnow(),
+                    "suspended": False,
+                    "deletedAt": False
                 }
             
             db.users.insert_one(user_doc)               # insert the document into DB
