@@ -30,8 +30,4 @@ public class AssetPrice {
     private long volume;
 
     private Instant ingestedAt;
-
-    // Soft delete
-    private boolean deleted;
-    private Instant deletedAt;
 }

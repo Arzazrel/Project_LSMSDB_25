@@ -51,7 +51,7 @@ public class User {
 
     // soft delete
     private Boolean deleted;
-    private Date deletedAt;
+    private Instant deletedAt;
 
     private double cash;
     private double blockedCash;
