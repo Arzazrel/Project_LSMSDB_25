@@ -18,9 +18,7 @@ import java.time.Instant;
 public class AssetPrice {
     @Id
     private String id;              // MongoDB _id
-
-    private Instant date;   // Price date (UTC, time usually set to 00:00)
-
+    private Instant timestamp;      // Price date (UTC, time usually set to 00:00)
     private String symbol;
 
     private double open;

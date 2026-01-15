@@ -25,17 +25,14 @@ import java.util.List;
 public class User {
 
     @Id
-    private String id; // MongoDB _id
+    private String id;              // MongoDB _id
 
-    private Long userId; // application-level ID (from counters)
-
+    private Long userId;            // application-level ID (from counters)
     private String firstName;
     private String lastName;
     private String email;
     private String passwordHash;
-
-    private UserRole role;
-
+    private UserRole role;          // user or admin
     private LocalDate birthDate;
     private String phone;
 

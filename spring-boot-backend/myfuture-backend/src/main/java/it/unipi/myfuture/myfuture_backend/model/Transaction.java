@@ -24,11 +24,10 @@ public class Transaction {
 
     private Long transactionId;         // application-level ID (from counters)
     private Long userId;
-
     private TransactionType type;       // purchase, sell, deposit, withdrawal
     private Instant date;
 
-    private UserCurrency currency;      // USD
+    private UserCurrency currency;      // default: USD (for now is supported USD only)
 
     /**
      * Total amount of the transaction.

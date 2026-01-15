@@ -19,8 +19,9 @@ public class News {
     private String sector;
     private String index;
     private String company;
+
     private Instant ingestedAt;
-    // Soft delete
+    // fields for soft delete
     private boolean deleted;
     private Instant deletedAt;
 }

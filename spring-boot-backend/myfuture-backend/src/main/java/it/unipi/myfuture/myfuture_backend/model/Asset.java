@@ -46,5 +46,5 @@ public class Asset {
     private Instant deletedAt;
 
     // ingested at (for tracking when the asset was added to DB)
-    private Date ingestedAt = new Date();
+    private Instant ingestedAt;
 }
