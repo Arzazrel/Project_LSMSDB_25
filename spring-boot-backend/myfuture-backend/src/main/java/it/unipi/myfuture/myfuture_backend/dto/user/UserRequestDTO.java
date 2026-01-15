@@ -1,8 +1,15 @@
-package it.unipi.myfuture.myfuture_backend.dto;
+package it.unipi.myfuture.myfuture_backend.dto.user;
 
+import it.unipi.myfuture.myfuture_backend.enums.UserCurrency;
+import it.unipi.myfuture.myfuture_backend.enums.UserRole;
+import it.unipi.myfuture.myfuture_backend.model.RecentTransaction;
+import it.unipi.myfuture.myfuture_backend.model.SuspensionInfo;
+import it.unipi.myfuture.myfuture_backend.model.WalletItem;
 import lombok.Data;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * DTO used to receive user data from client during registration or profile update.
@@ -15,7 +22,6 @@ public class UserRequestDTO {
     private String lastName;
     private String email;
     private String password;
-
     private LocalDate birthDate;
     private String phone;
 
