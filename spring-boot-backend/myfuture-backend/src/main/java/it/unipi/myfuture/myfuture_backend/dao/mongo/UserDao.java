@@ -67,7 +67,7 @@ public class UserDao {
      *
      * @return list of the users
      */
-    public List<User> findAllActiveUsers() {
+    public List<User> findAllActive() {
         Query query = new Query(
                 Criteria.where("deleted").ne(true)
         );
@@ -110,6 +110,7 @@ public class UserDao {
 
     /**
      * Undo Soft delete a user by symbol.
+     * Restores a previously soft-deleted user by resetting the deleted flag and removing the deletion timestamp.
      *
      * @param userId the id that identify the news
      */

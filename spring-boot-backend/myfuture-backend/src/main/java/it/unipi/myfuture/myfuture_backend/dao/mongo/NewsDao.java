@@ -113,6 +113,7 @@ public class NewsDao {
 
     /**
      * Undo Soft delete a news by symbol.
+     * Restores a previously soft-deleted news by resetting the deleted flag and removing the deletion timestamp.
      *
      * @param id the id that identify the news
      */

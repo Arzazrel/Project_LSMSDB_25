@@ -111,6 +111,7 @@ public class AssetDao {
 
     /**
      * Undo Soft delete an asset by symbol.
+     * Restores a previously soft-deleted assets by resetting the deleted flag and removing the deletion timestamp.
      *
      * @param symbol the symbol that identify the asset
      */
