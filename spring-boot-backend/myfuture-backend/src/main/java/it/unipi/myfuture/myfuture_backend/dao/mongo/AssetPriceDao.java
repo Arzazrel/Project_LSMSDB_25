@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.time.Instant;
 import java.util.List;
@@ -71,4 +72,16 @@ public class AssetPriceDao {
         );
         return Optional.ofNullable(mongoTemplate.findOne(query, AssetPrice.class));
     }
+
+    /**
+     * Delete all asset prices associated with a symbol.
+     * Used only for extraordinary administrative operations.
+     */
+    public void deleteBySymbol(String symbol) {
+
+        Query query = new Query(Criteria.where("symbol").is(symbol));
+        mongoTemplate.remove(query, AssetPrice.class);
+    }
+
+
 }

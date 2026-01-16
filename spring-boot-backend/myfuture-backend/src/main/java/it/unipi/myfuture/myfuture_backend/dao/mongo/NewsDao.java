@@ -42,7 +42,7 @@ public class NewsDao {
      * @param id MongoDB _id of the news
      * @return Optional containing the News if found and not deleted, otherwise empty
      */
-    public Optional<News> findById(String id) {
+    public Optional<News> findByIdActive(String id) {
         Query query = new Query(
                 Criteria.where("_id").is(id)
                         .and("deleted").ne(true)
@@ -57,7 +57,7 @@ public class NewsDao {
      * @param id MongoDB _id of the news
      * @return Optional containing the News if found, otherwise empty
      */
-    public Optional<News> findByIdAdmin(String id) {
+    public Optional<News> findById(String id) {
         return Optional.ofNullable(mongoTemplate.findById(id, News.class));
     }
 
@@ -73,13 +73,22 @@ public class NewsDao {
     }
 
     /**
+     * Retrieves all news documents without any filtering (both active and soft-deleted news). Admin only.
+     *
+     * @return list of all News documents
+     */
+    public List<News> findAll() {
+        return mongoTemplate.findAll(News.class);
+    }
+
+    /**
      * Retrieves all active (non-deleted) news belonging to a specific sector.
      * This method supports filtering news by sector for users and unregistered visitors (soft-deleted news are excluded).
      *
      * @param sector sector name used to filter news
      * @return list of active News documents matching the given sector
      */
-    public List<News> findBySector(String sector) {
+    public List<News> findBySectorActive(String sector) {
         Query query = new Query(
                 Criteria.where("sector").is(sector)
                         .and("deleted").ne(true)
@@ -88,13 +97,18 @@ public class NewsDao {
     }
 
     /**
-     * Retrieves all news documents without any filtering (both active and soft-deleted news). Admin only.
+     * Retrieves all active news belonging to a specific sector. This method supports filtering news by sector for admin.
      *
-     * @return list of all News documents
+     * @param sector sector name used to filter news
+     * @return list of active News documents matching the given sector
      */
-    public List<News> findAllAdmin() {
-        return mongoTemplate.findAll(News.class);
+    public List<News> findBySector(String sector) {
+        Query query = new Query(
+                Criteria.where("sector").is(sector)
+        );
+        return mongoTemplate.find(query, News.class);
     }
+
 
     /**
      * Performs a soft delete on a news document. Instead of physically removing the document from the database,

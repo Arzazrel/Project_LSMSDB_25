@@ -38,7 +38,7 @@ public class AssetDao {
     /**
      * Find an asset by its unique symbol. Used by users, customers and admins.
      */
-    public Optional<Asset> findBySymbol(String symbol) {
+    public Optional<Asset> findBySymbolActive(String symbol) {
         Query query = new Query(
                 Criteria.where("symbol").is(symbol)
                         .and("deleted").ne(true)
@@ -52,7 +52,7 @@ public class AssetDao {
      * @param symbol the symbol that identify the asset
      * @return Optional containing the News if found, otherwise empty
      */
-    public Optional<Asset> findBySymbolAdmin(String symbol) {
+    public Optional<Asset> findBySymbol(String symbol) {
         Query query = new Query(
                 Criteria.where("symbol").is(symbol)
         );
@@ -72,11 +72,20 @@ public class AssetDao {
     }
 
     /**
-     * Retrieve all assets of a specific type.
+     * Retrieve all assets including soft-deleted ones (admin only).
+     *
+     * @return list of assets documents
+     */
+    public List<Asset> findAll() {
+        return mongoTemplate.findAll(Asset.class);
+    }
+
+    /**
+     * Retrieve all assets of a specific type (not deleted one).
      *
      * @return list of assets documents by type (share, crypto, etf)
      */
-    public List<Asset> findByType(AssetType type) {
+    public List<Asset> findByTypeActive(AssetType type) {
         Query query = new Query(
                 Criteria.where("type").is(type)
                         .and("deleted").ne(true)
@@ -85,12 +94,13 @@ public class AssetDao {
     }
 
     /**
-     * Retrieve all assets including soft-deleted ones (admin only).
+     * Retrieve all assets of a specific type (included deleted one).
      *
-     * @return list of assets documents
+     * @return list of assets documents by type (share, crypto, etf)
      */
-    public List<Asset> findAllAdmin() {
-        return mongoTemplate.findAll(Asset.class);
+    public List<Asset> findByType(AssetType type) {
+        Query query = new Query(Criteria.where("type").is(type));
+        return mongoTemplate.find(query, Asset.class);
     }
 
     /**

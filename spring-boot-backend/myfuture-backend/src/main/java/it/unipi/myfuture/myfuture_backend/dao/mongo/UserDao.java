@@ -44,6 +44,7 @@ public class UserDao {
         Query query = new Query(
                 Criteria.where("userId").is(userId)
                         .and("deleted").ne(true)
+                        .and("suspended").ne(true)
         );
         return Optional.ofNullable(mongoTemplate.findOne(query, User.class));
     }
@@ -58,6 +59,7 @@ public class UserDao {
         Query query = new Query(
                 Criteria.where("email").is(email)
                         .and("deleted").ne(true)
+                        .and("suspended").ne(true)
         );
         return Optional.ofNullable(mongoTemplate.findOne(query, User.class));
     }
@@ -70,6 +72,7 @@ public class UserDao {
     public List<User> findAllActive() {
         Query query = new Query(
                 Criteria.where("deleted").ne(true)
+                        .and("suspended").ne(true)
         );
         return mongoTemplate.find(query, User.class);
     }
@@ -86,24 +89,6 @@ public class UserDao {
         if (user != null) {
             user.setDeleted(true);
             user.setDeletedAt(java.time.Instant.now());
-            mongoTemplate.save(user);
-        }
-    }
-
-    /**
-     * Suspend a user account.
-     *
-     * @param userId id of the user
-     * @param reason contain the data and the reason of the suspension
-     */
-    public void suspendUser(Long userId, SuspendReason reason) {
-        Query query = new Query(Criteria.where("userId").is(userId));
-        User user = mongoTemplate.findOne(query, User.class);
-
-        if (user != null) {
-            user.setSuspended(true);
-            user.getSuspensionInfo().setSuspendedAt(java.time.Instant.now());
-            user.getSuspensionInfo().setSuspendReason(reason);
             mongoTemplate.save(user);
         }
     }
@@ -126,4 +111,40 @@ public class UserDao {
 
         mongoTemplate.updateFirst(query, update, User.class);
     }
+
+    /**
+     * Suspend a user account.
+     *
+     * @param userId id of the user
+     * @param reason contain the data and the reason of the suspension
+     */
+    public void suspendUser(Long userId, SuspendReason reason) {
+        Query query = new Query(Criteria.where("userId").is(userId));
+        User user = mongoTemplate.findOne(query, User.class);
+
+        if (user != null) {
+            user.setSuspended(true);
+            user.getSuspensionInfo().setSuspendedAt(java.time.Instant.now());
+            user.getSuspensionInfo().setSuspendReason(reason);
+            mongoTemplate.save(user);
+        }
+    }
+
+    /**
+     * Remove suspension from a user. Used by admin operations.
+     */
+    public void undoSuspendUser(Long userId) {
+
+        Query query = new Query(
+                Criteria.where("userId").is(userId)
+                        .and("suspended").is(true)
+        );
+
+        Update update = new Update()
+                .set("suspended", false)
+                .unset("suspensionInfo");
+
+        mongoTemplate.updateFirst(query, update, User.class);
+    }
+
 }

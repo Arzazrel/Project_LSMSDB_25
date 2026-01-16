@@ -1,5 +1,6 @@
 package it.unipi.myfuture.myfuture_backend.dao.mongo;
 
+import it.unipi.myfuture.myfuture_backend.model.AssetPrice;
 import it.unipi.myfuture.myfuture_backend.model.Transaction;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionStatus;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionType;
@@ -7,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
@@ -41,7 +43,7 @@ public class TransactionDao {
      * @return Optional containing the transaction if found, otherwise empty
      */
     public Optional<Transaction> findByTransactionId(Long transactionId) {
-        Query query = new Query(Criteria.where("transactionId").is(transactionId));
+        Query query = new Query(Criteria.where("transaction_id").is(transactionId));
         return Optional.ofNullable(mongoTemplate.findOne(query, Transaction.class));
     }
 
@@ -53,7 +55,7 @@ public class TransactionDao {
      */
     public List<Transaction> findByUserId(Long userId) {
         Query query = new Query(
-                Criteria.where("userId").is(userId)
+                Criteria.where("user_id").is(userId)
                         .and("deleted").ne(true)
         );
         return mongoTemplate.find(query, Transaction.class);
@@ -69,7 +71,7 @@ public class TransactionDao {
      */
     public List<Transaction> findByUserIdAndDateRange(Long userId, Instant from, Instant to){
         Query query = new Query(
-                Criteria.where("userId").is(userId)
+                Criteria.where("user_id").is(userId)
                         .and("date").gte(from).lte(to)
         );
         return mongoTemplate.find(query, Transaction.class);
@@ -107,4 +109,15 @@ public class TransactionDao {
         );
         return mongoTemplate.find(query, Transaction.class);
     }
+
+    /**
+     * Permanently delete a transaction.
+     * Admin only – extraordinary maintenance operation.
+     */
+    public void deleteById(String transactionId)
+    {
+        Query query = new Query(Criteria.where("transaction_id").is(transactionId));
+        mongoTemplate.remove(query, Transaction.class);
+    }
+
 }
