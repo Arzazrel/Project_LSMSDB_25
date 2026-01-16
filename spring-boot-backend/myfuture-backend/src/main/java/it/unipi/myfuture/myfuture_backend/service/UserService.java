@@ -1,91 +1,87 @@
 package it.unipi.myfuture.myfuture_backend.service;
 
-import it.unipi.myfuture.myfuture_backend.dao.mongo.UserDao;
+import it.unipi.myfuture.myfuture_backend.dto.user.*;
 import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
-import it.unipi.myfuture.myfuture_backend.model.User;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
- * Service layer for User entity.
- * Handles registration, suspension, account management and user-related validations.
+ * Service interface for User entity.
  *
- * Used by: UserController, AdminController
+ * Defines business operations related to users:
+ * registration, authentication, account management and admin controls.
  */
-@Service
-public class UserService {
+public interface UserService {
 
-    @Autowired
-    private UserDao userDao;
+    // ----------------------------------------------- start: user API --------------------------------------------------
 
     /**
      * Register a new user.
+     * Initializes wallet, portfolio and default values.
      *
-     * @param user the user to register
-     * @return the created user
+     * @param request registration data
+     * @return created user
      */
-    public User registerUser(User user) {
-        return userDao.save(user);
-    }
+    UserResponseDTO registerUser(UserRequestDTO  request);
 
     /**
-     * Retrieve an active user by application-level userId.
+     * Authenticate user credentials.
      *
-     * @param userId application user ID
-     * @return Optional containing the user if found and not deleted
+     * @param request login data
+     * @return authenticated user
      */
-    public Optional<User> getUserByUserId(Long userId) {
-        return userDao.findByUserId(userId);
-    }
+    UserResponseDTO login(String email, String psw);
 
     /**
-     * Retrieve a user by email (used during login).
+     * Retrieve user by application-level ID.
      *
-     * @param email user email
-     * @return Optional containing the user
+     * @param userId user ID
+     * @return user data
      */
-    public Optional<User> getUserByEmail(String email) {
-        return userDao.findByEmail(email);
-    }
+    UserResponseDTO getUserById(Long userId);
 
     /**
-     * Retrieve all active users (admin operation).
+     * Retrieve all active users.
+     * Admin only.
      *
-     * @return list of active users
+     * @return list of users
      */
-    public List<User> getAllActiveUsers() {
-        return userDao.findAllActive();
-    }
+    List<UserResponseDTO> getAllUsers();
 
     /**
      * Update user account information.
+     * Customer only.
      *
-     * @param user updated user object
+     * @param userId user ID
+     * @param request update data
      * @return updated user
      */
-    public User updateUser(User user) {
-        return userDao.save(user);
-    }
+    UserResponseDTO updateAccount(Long userId, UserRequestDTO request);
 
     /**
-     * Suspend a user account.
+     * Suspend a user.
+     * Admin only.
      *
-     * @param userId application user ID
+     * @param userId user ID
      * @param reason suspension reason
      */
-    public void suspendUser(Long userId, SuspendReason reason) {
-        userDao.suspendUser(userId, reason);
-    }
+    void suspendUser(Long userId, SuspendReason reason);
 
     /**
-     * Soft delete a user account.
+     * Remove suspension from a user.
+     * Admin only.
      *
-     * @param userId application user ID
+     * @param userId user ID
      */
-    public void deleteUser(Long userId) {
-        userDao.softDelete(userId);
-    }
+    void unsuspendUser(Long userId);
+
+    /**
+     * Soft delete a user.
+     * Admin only.
+     *
+     * @param userId user ID
+     */
+    void softDeleteUser(Long userId);
+
+    // ----------------------------------------------- end: user API --------------------------------------------------
 }

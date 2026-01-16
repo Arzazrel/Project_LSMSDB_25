@@ -1,80 +1,80 @@
 package it.unipi.myfuture.myfuture_backend.service;
 
-import it.unipi.myfuture.myfuture_backend.dao.mongo.AssetDao;
+import it.unipi.myfuture.myfuture_backend.dto.asset.AssetRequestDTO;
+import it.unipi.myfuture.myfuture_backend.dto.asset.AssetResponseDTO;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
-import it.unipi.myfuture.myfuture_backend.model.Asset;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
- * Service layer for Asset entity.
+ * Asset Service interface.
  *
- * Handles asset catalog operations, including creation, update,
- * retrieval and soft deletion. Used by users and administrators.
+ * Defines all business operations related to asset management.
+ * Controllers interact ONLY with this interface.
  */
-@Service
-public class AssetService {
+public interface AssetService {
 
-    @Autowired
-    private AssetDao assetDao;
+    // ------------------------------------------------ start: asset API --------------------------------------------------
 
     /**
-     * Create or update an asset.
+     * Create a new asset.
+     * Used by admin.
      *
-     * @param asset asset metadata
-     * @return saved asset
+     * @param request asset data
+     * @return created asset
      */
-    public Asset saveAsset(Asset asset) {
-        return assetDao.save(asset);
-    }
+    AssetResponseDTO createAsset(AssetRequestDTO request);
+
+    /**
+     * Update asset metadata.
+     * Used by admin.
+     *
+     * @param symbol asset symbol
+     * @param request updated data
+     * @return updated asset
+     */
+    AssetResponseDTO updateAsset(String symbol, AssetRequestDTO request);
 
     /**
      * Retrieve an active asset by symbol.
+     * Used by users and customers.
      *
      * @param symbol asset symbol
-     * @return Optional containing the asset if found and not deleted
+     * @return asset data
      */
-    public Optional<Asset> getAssetBySymbol(String symbol) {
-        return assetDao.findBySymbol(symbol);
-    }
+    AssetResponseDTO getAssetBySymbol(String symbol);
 
     /**
      * Retrieve all active assets.
+     * Used by users and customers.
      *
-     * @return list of active assets
+     * @return list of assets
      */
-    public List<Asset> getAllAssets() {
-        return assetDao.findAllActive();
-    }
+    List<AssetResponseDTO> getAllAssets();
 
     /**
-     * Retrieve all assets of a specific type (share, ETF, crypto).
+     * Retrieve assets filtered by type.
      *
      * @param type asset type
      * @return list of assets
      */
-    public List<Asset> getAssetsByType(AssetType type) {
-        return assetDao.findByType(type);
-    }
+    List<AssetResponseDTO> getAssetsByType(AssetType type);
 
     /**
-     * Soft delete an asset (admin operation).
+     * Soft delete an asset.
+     * Used by admin.
      *
      * @param symbol asset symbol
      */
-    public void deleteAsset(String symbol) {
-        assetDao.softDelete(symbol);
-    }
+    void deleteAsset(String symbol);
 
     /**
      * Restore a previously soft-deleted asset.
+     * Used by admin.
      *
      * @param symbol asset symbol
      */
-    public void restoreAsset(String symbol) {
-        assetDao.undoSoftDelete(symbol);
-    }
+    void restoreAsset(String symbol);
+
+    // ------------------------------------------------ end: asset API --------------------------------------------------
 }

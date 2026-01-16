@@ -1,78 +1,69 @@
 package it.unipi.myfuture.myfuture_backend.service;
 
-import it.unipi.myfuture.myfuture_backend.dao.mongo.NewsDao;
-import it.unipi.myfuture.myfuture_backend.model.News;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import it.unipi.myfuture.myfuture_backend.dto.news.NewsResponseDTO;
+import it.unipi.myfuture.myfuture_backend.dto.news.NewsRequestDTO;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
- * Service layer for News entity.
+ * Service interface for News domain.
  *
- * Manages news browsing, filtering and administrative operations.
+ * Defines the business operations related to financial news.
+ * This layer exposes application use cases and hides persistence details.
+ *
+ * Controllers interact ONLY with this interface using DTOs.
  */
-@Service
-public class NewsService {
-
-    @Autowired
-    private NewsDao newsDao;
+public interface NewsService {
 
     /**
-     * Insert or update news.
+     * Create or update a news entry.
+     * Admin operation.
      *
-     * @param news news to save
-     * @return saved news
+     * @param requestDTO data of the news to be created or updated
+     * @return saved news as response DTO
      */
-    public News saveNews(News news) {
-        return newsDao.save(news);
-    }
+    NewsResponseDTO saveNews(NewsRequestDTO requestDTO);
 
     /**
-     * Retrieve active news by ID.
+     * Retrieve an active news by its ID.
+     * Used by users and customers.
      *
-     * @param id MongoDB ID
-     * @return Optional containing the news if found
+     * @param id MongoDB identifier
+     * @return news DTO
+     * @throws RuntimeException if news is not found or soft-deleted
      */
-    public Optional<News> getNewsById(String id) {
-        return newsDao.findById(id);
-    }
+    NewsResponseDTO getActiveNewsById(String id);
 
     /**
-     * Retrieve all active news.
+     * Retrieve all active (non-deleted) news.
+     * Used by users and customers.
      *
-     * @return list of news
+     * @return list of active news DTOs
      */
-    public List<News> getAllNews() {
-        return newsDao.findAllActive();
-    }
+    List<NewsResponseDTO> getAllActiveNews();
 
     /**
-     * Retrieve news by sector.
+     * Retrieve all news, including soft-deleted ones.
+     * Admin operation.
+     *
+     * @return list of all news DTOs
+     */
+    List<NewsResponseDTO> getAllNews();
+
+    /**
+     * Retrieve active news filtered by sector.
+     * Used by users and customers.
      *
      * @param sector sector name
-     * @return list of news
+     * @return list of news DTOs
      */
-    public List<News> getNewsBySector(String sector) {
-        return newsDao.findBySector(sector);
-    }
+    List<NewsResponseDTO> getActiveNewsBySector(String sector);
 
     /**
-     * Retrieve all news including soft-deleted ones (admin).
+     * Soft delete a news entry.
+     * Admin operation.
      *
-     * @return list of all news
+     * @param id MongoDB identifier
      */
-    public List<News> getAllNewsAdmin() {
-        return newsDao.findAllAdmin();
-    }
-
-    /**
-     * Soft delete a news document.
-     *
-     * @param id MongoDB ID
-     */
-    public void deleteNews(String id) {
-        newsDao.softDelete(id);
-    }
+    void deleteNews(String id);
 }
