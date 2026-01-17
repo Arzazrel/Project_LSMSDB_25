@@ -56,65 +56,72 @@ public class TransactionDao {
     public List<Transaction> findByUserId(Long userId) {
         Query query = new Query(
                 Criteria.where("user_id").is(userId)
-                        .and("deleted").ne(true)
         );
         return mongoTemplate.find(query, Transaction.class);
     }
 
     /**
-     * Get the list of a transaction related to the user passed as parameter between the dates passed as parameters.
+     * Search transactions applying optional filters. This method builds a dynamic MongoDB query based on the parameters
+     * provided. Each parameter is considered optional:
+     * - if a parameter is null, the corresponding filter is not applied
+     * - if a parameter is not null, it is added as a filtering condition
+     * This method is used by both customer and admin services.
      *
-     * @param userId id of the user related the transactions
-     * @param from start date
-     * @param to end date
-     * @return list of transactions
+     * @param status transaction status to filter by (optional)
+     * @param type transaction type to filter by (optional)
+     * @param userId user identifier to filter by (optional)
+     * @param from start date of the time range (optional, requires {@code to})
+     * @param to end date of the time range (optional, requires {@code from})
+     * @return list of transactions matching the provided filters
      */
-    public List<Transaction> findByUserIdAndDateRange(Long userId, Instant from, Instant to){
-        Query query = new Query(
-                Criteria.where("user_id").is(userId)
-                        .and("date").gte(from).lte(to)
-        );
+    public List<Transaction> search(TransactionStatus status, TransactionType type, Long userId, Instant from, Instant to) {
+
+        Criteria criteria = new Criteria();
+        // set the parameters
+        if (status != null)
+            criteria.and("status").is(status);
+
+        if (type != null)
+            criteria.and("type").is(type);
+
+        if (userId != null)
+            criteria.and("user_id").is(userId);
+
+        if (from != null && to != null)
+            criteria.and("date").gte(from).lte(to);
+
+        Query query = new Query(criteria);
         return mongoTemplate.find(query, Transaction.class);
     }
 
-
     /**
-     *  Get the list of a transaction belonging to the status passed as parameter.
+     * Update the status of a transaction. This method is intended for internal system operations only
+     * (e.g. batch jobs that process pending transactions at market opening).
+     * It updates:
+     * - transaction status
+     * - updatedAt timestamp
      *
-     * @param status
-     * @return list of the transaction belonging to the status passed as parameter
+     * @param transactionId application-level transaction identifier
+     * @param status new transaction status
      */
-    public List<Transaction> findByStatus(TransactionStatus status) {
-        Query query = new Query(
-                Criteria.where("status").is(status)
-                        .and("deleted").ne(true)
-        );
-        return mongoTemplate.find(query, Transaction.class);
-    }
-
-    /**
-     * Get the list of a transaction belonging to the status passed as parameter between the date passed as parameters.
-     *
-     * @param type the type of transactions requested
-     * @param from start date
-     * @param to end date
-     * @return list of transactions
-     */
-    public List<Transaction> findByTypeAndDateRange(TransactionType type, Instant from, Instant to) {
+    public void updateTransactionStatus(Long transactionId, TransactionStatus status) {
 
         Query query = new Query(
-                Criteria.where("type").is(type)
-                        .and("date").gte(from).lte(to)
-                        .and("deleted").ne(true)
+                Criteria.where("transactionId").is(transactionId)
         );
-        return mongoTemplate.find(query, Transaction.class);
+
+        Update update = new Update()
+                .set("status", status)
+                .set("updatedAt", Instant.now());
+
+        mongoTemplate.updateFirst(query, update, Transaction.class);
     }
 
     /**
      * Permanently delete a transaction.
      * Admin only – extraordinary maintenance operation.
      */
-    public void deleteById(String transactionId)
+    public void deleteById(Long transactionId)
     {
         Query query = new Query(Criteria.where("transaction_id").is(transactionId));
         mongoTemplate.remove(query, Transaction.class);
