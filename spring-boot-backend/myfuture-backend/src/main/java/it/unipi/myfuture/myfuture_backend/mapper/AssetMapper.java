@@ -12,7 +12,7 @@ import java.time.Instant;
  */
 public class AssetMapper {
 
-    // ---------------------------------------------- start: create mapping ----------------------------------------------
+    //----------------------------------------- start: create mapping (request) ----------------------------------------
 
     /**
      * Build a new Asset entity from AssetRequestDTO. Used ONLY for create operations.
@@ -54,10 +54,9 @@ public class AssetMapper {
         return asset;
     }
 
-    // ---------------------------------------------- end: create mapping ------------------------------------------------
+    //------------------------------------------ end: create mapping (request) -----------------------------------------
 
-
-    // ---------------------------------------------- start: update mapping ----------------------------------------------
+    //------------------------------------------ start: update mapping (request) ---------------------------------------
 
     /**
      * Update an existing Asset entity using data from AssetRequestDTO. Used ONLY for update operations.
@@ -89,9 +88,9 @@ public class AssetMapper {
         asset.setMaxSupply(AssetRequest.getMaxSupply());
     }
 
-    // ---------------------------------------------- end: update mapping ------------------------------------------------
+    //----------------------------------------- end: update mapping (request) ------------------------------------------
 
-    // ---------------------------------------------- start: response mapping --------------------------------------------
+    //---------------------------------------------- start: response mapping -------------------------------------------
 
     /**
      * Convert Asset entity to AssetResponseDTO. Used to expose asset data to controllers.
@@ -135,5 +134,5 @@ public class AssetMapper {
         return response;
     }
 
-    // ---------------------------------------------- end: response mapping ----------------------------------------------
+    //---------------------------------------------- end: response mapping ---------------------------------------------
 }

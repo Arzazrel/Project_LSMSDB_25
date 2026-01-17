@@ -11,7 +11,7 @@ import java.time.Instant;
  */
 public class TransactionMapper {
 
-    // -------------------------------------- request → entity --------------------------------------
+    //----------------------------------------- start: create mapping (request) ----------------------------------------
 
     /**
      * Convert TransactionRequestDTO to Transaction entity.
@@ -40,7 +40,45 @@ public class TransactionMapper {
         return tx;
     }
 
-    // -------------------------------------- entity → response --------------------------------------
+    //------------------------------------------ end: create mapping (request) -----------------------------------------
+
+    //------------------------------------------ start: update mapping (request) ---------------------------------------
+    /**
+     * Update an existing Transaction entity using data from TransactionRequestDTO.
+     *
+     * This method is intended for ADMIN operations only.
+     *
+     * It performs a partial update:
+     * - Only fields present in the DTO are overwritten
+     * - Immutable fields (transactionId, userId, date) are NOT modified
+     *
+     * Business rules (status transitions, validation, permissions)
+     * must be enforced at service layer.
+     *
+     * @param tx existing transaction entity
+     * @param dto DTO containing updated values
+     */
+    public static void updateEntityFromDTO(Transaction tx, TransactionRequestDTO dto) {
+
+        // Update mutable business fields
+        tx.setType(dto.getType());
+        tx.setCurrency(dto.getCurrency());
+        tx.setTotalPrice(dto.getTotalPrice());
+        tx.setPaymentMethod(dto.getPaymentMethod());
+
+        // Update trading-related fields (BUY / SELL)
+        tx.setSymbol(dto.getSymbol());
+        tx.setAssetType(dto.getAssetType());
+        tx.setPricePerUnit(dto.getPricePerUnit());
+        tx.setQuantity(dto.getQuantity());
+
+        // Always update last modification timestamp
+        tx.setUpdatedAt(Instant.now());
+    }
+
+    //----------------------------------------- end: update mapping (request) ------------------------------------------
+
+    //---------------------------------------------- start: response mapping -------------------------------------------
 
     /**
      * Convert Transaction entity to TransactionResponseDTO.
@@ -70,4 +108,5 @@ public class TransactionMapper {
 
         return dto;
     }
+    //---------------------------------------------- end: response mapping ---------------------------------------------
 }
