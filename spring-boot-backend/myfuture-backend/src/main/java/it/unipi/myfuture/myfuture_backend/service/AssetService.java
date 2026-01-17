@@ -8,17 +8,12 @@ import java.util.List;
 
 /**
  * Asset Service interface.
- *
- * Defines all business operations related to asset management.
- * Controllers interact ONLY with this interface.
+ * Defines all business operations related to asset management. (Controllers interact ONLY with this interface layer)
  */
 public interface AssetService {
 
-    // ------------------------------------------------ start: asset API --------------------------------------------------
-
     /**
-     * Create a new asset.
-     * Used by admin.
+     * Create a new asset. Used by admin.
      *
      * @param request asset data
      * @return created asset
@@ -26,8 +21,7 @@ public interface AssetService {
     AssetResponseDTO createAsset(AssetRequestDTO request);
 
     /**
-     * Update asset metadata.
-     * Used by admin.
+     * Update asset metadata. Used by admin.
      *
      * @param symbol asset symbol
      * @param request updated data
@@ -36,8 +30,7 @@ public interface AssetService {
     AssetResponseDTO updateAsset(String symbol, AssetRequestDTO request);
 
     /**
-     * Retrieve an active asset by symbol.
-     * Used by users and customers.
+     * Retrieve an active asset by symbol. Used by users and customers.
      *
      * @param symbol asset symbol
      * @return asset data
@@ -45,8 +38,7 @@ public interface AssetService {
     AssetResponseDTO getAssetBySymbol(String symbol);
 
     /**
-     * Retrieve all active assets.
-     * Used by users and customers.
+     * Retrieve all active assets. Used by users and customers.
      *
      * @return list of assets
      */
@@ -61,20 +53,17 @@ public interface AssetService {
     List<AssetResponseDTO> getAssetsByType(AssetType type);
 
     /**
-     * Soft delete an asset.
-     * Used by admin.
+     * Soft delete an asset. Used by admin.
      *
      * @param symbol asset symbol
      */
     void deleteAsset(String symbol);
 
     /**
-     * Restore a previously soft-deleted asset.
-     * Used by admin.
+     * Restore a previously soft-deleted asset. Used by admin.
      *
      * @param symbol asset symbol
      */
     void restoreAsset(String symbol);
 
-    // ------------------------------------------------ end: asset API --------------------------------------------------
 }

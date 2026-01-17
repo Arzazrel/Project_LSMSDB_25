@@ -6,18 +6,16 @@ import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
 import java.util.List;
 
 /**
- * Service interface for User entity.
- *
- * Defines business operations related to users:
+ * Service interface for User entity. Defines business operations related to users:
  * registration, authentication, account management and admin controls.
+ * (Controllers interact ONLY with this interface layer)
  */
 public interface UserService {
 
     // ----------------------------------------------- start: user API --------------------------------------------------
 
     /**
-     * Register a new user.
-     * Initializes wallet, portfolio and default values.
+     * Register a new user. Initializes wallet, portfolio and default values.
      *
      * @param request registration data
      * @return created user
@@ -27,7 +25,8 @@ public interface UserService {
     /**
      * Authenticate user credentials.
      *
-     * @param request login data
+     * @param email email of the user
+     * @param psw psw of the user
      * @return authenticated user
      */
     UserResponseDTO login(String email, String psw);
@@ -41,16 +40,14 @@ public interface UserService {
     UserResponseDTO getUserById(Long userId);
 
     /**
-     * Retrieve all active users.
-     * Admin only.
+     * Retrieve all active users. Admin only.
      *
      * @return list of users
      */
     List<UserResponseDTO> getAllUsers();
 
     /**
-     * Update user account information.
-     * Customer only.
+     * Update user account information. Customer only.
      *
      * @param userId user ID
      * @param request update data
@@ -59,8 +56,7 @@ public interface UserService {
     UserResponseDTO updateAccount(Long userId, UserRequestDTO request);
 
     /**
-     * Suspend a user.
-     * Admin only.
+     * Suspend a user.  Admin only.
      *
      * @param userId user ID
      * @param reason suspension reason
@@ -68,16 +64,14 @@ public interface UserService {
     void suspendUser(Long userId, SuspendReason reason);
 
     /**
-     * Remove suspension from a user.
-     * Admin only.
+     * Remove suspension from a user. Admin only.
      *
      * @param userId user ID
      */
     void unsuspendUser(Long userId);
 
     /**
-     * Soft delete a user.
-     * Admin only.
+     * Soft delete a user. Admin only.
      *
      * @param userId user ID
      */

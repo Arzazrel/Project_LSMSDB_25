@@ -1,56 +1,48 @@
 package it.unipi.myfuture.myfuture_backend.service;
 
-import it.unipi.myfuture.myfuture_backend.dao.mongo.AssetPriceDao;
-import it.unipi.myfuture.myfuture_backend.model.AssetPrice;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import it.unipi.myfuture.myfuture_backend.dto.assetPrice.AssetPriceRequestDTO;
+import it.unipi.myfuture.myfuture_backend.dto.assetPrice.AssetPriceResponseDTO;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 
 /**
- * Service layer for AssetPrice entity.
- *
- * Used to retrieve historical price data for charts,
- * analytics and asset visualization.
+ * Service interface for AssetPrice entity. Defines business operations related to historical asset prices.
+ * (Controllers interact ONLY with this interface layer)
  */
-@Service
-public class AssetPriceService {
-
-    @Autowired
-    private AssetPriceDao assetPriceDao;
+public interface AssetPriceService {
 
     /**
-     * Insert or update an asset price.
+     * Insert or update an asset price entry. Used by admin.
      *
-     * @param assetPrice asset price entry
+     * @param request asset price data
      * @return saved asset price
      */
-    public AssetPrice savePrice(AssetPrice assetPrice) {
-        return assetPriceDao.save(assetPrice);
-    }
+    AssetPriceResponseDTO savePrice(AssetPriceRequestDTO request);
 
     /**
-     * Retrieve price history for an asset within a date range.
+     * Retrieve asset price history within a date range.
      *
      * @param symbol asset symbol
      * @param from start date
      * @param to end date
-     * @return list of prices
+     * @return list of asset prices
      */
-    public List<AssetPrice> getPricesBySymbolAndDateRange(
-            String symbol, Instant from, Instant to) {
-        return assetPriceDao.findBySymbolAndDateRange(symbol, from, to);
-    }
+    List<AssetPriceResponseDTO> getPricesBySymbolAndDateRange(String symbol, Instant from, Instant to);
 
     /**
-     * Retrieve the latest price for an asset.
+     * Retrieve latest available asset price.
      *
      * @param symbol asset symbol
      * @return latest asset price
      */
-    public Optional<AssetPrice> getLatestPrice(String symbol) {
-        return assetPriceDao.findLatestBySymbol(symbol);
-    }
+    AssetPriceResponseDTO getLatestPrice(String symbol);
+
+    /**
+     * Delete all asset prices associated with a symbol. Used only for extraordinary administrative operations.
+     *
+     * @param symbol asset symbol
+     */
+    void deletePrices(String symbol);
+
 }
