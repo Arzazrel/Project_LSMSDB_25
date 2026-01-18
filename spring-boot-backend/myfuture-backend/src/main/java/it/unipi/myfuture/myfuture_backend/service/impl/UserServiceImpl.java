@@ -3,12 +3,15 @@ package it.unipi.myfuture.myfuture_backend.service.impl;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.UserDao;
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
 import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
+import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
 import it.unipi.myfuture.myfuture_backend.mapper.UserMapper;
+import it.unipi.myfuture.myfuture_backend.model.SuspensionInfo;
 import it.unipi.myfuture.myfuture_backend.model.User;
 import it.unipi.myfuture.myfuture_backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -105,8 +108,34 @@ public class UserServiceImpl implements UserService {
      * @param reason suspension reason
      */
     @Override
-    public void suspendUser(Long userId, SuspendReason reason) {
-        userDao.suspendUser(userId, reason);
+    public void suspendUser(Long userId, SuspendReason reason, Instant timestamp) throws BusinessException {
+
+        // Validate suspend reason
+        if (reason == null) {
+            throw new BusinessException("Suspend reason is required");
+        }
+
+        // Retrieve user
+        User user = userDao.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("User not found"));
+
+        if (user.isSuspended()) {
+            throw new BusinessException("User is already suspended");
+        }
+
+        // Create suspension info
+        SuspensionInfo suspensionInfo = new SuspensionInfo();
+        suspensionInfo.setSuspendReason(reason);
+        suspensionInfo.setSuspendedAt(
+                timestamp != null ? timestamp : Instant.now()
+        );
+
+        // Update user suspension state
+        user.setSuspended(true);
+        user.setSuspensionInfo(suspensionInfo);
+
+        // Persist changes
+        userDao.save(user);
     }
 
     /**
@@ -115,7 +144,7 @@ public class UserServiceImpl implements UserService {
      * @param userId user ID
      */
     @Override
-    public void unsuspendUser(Long userId) {
+    public void unSuspendUser(Long userId) {
         userDao.undoSuspendUser(userId);
     }
 

@@ -3,6 +3,7 @@ package it.unipi.myfuture.myfuture_backend.service;
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
 import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -61,14 +62,14 @@ public interface UserService {
      * @param userId user ID
      * @param reason suspension reason
      */
-    void suspendUser(Long userId, SuspendReason reason);
+    void suspendUser(Long userId, SuspendReason reason, Instant timestamp);
 
     /**
      * Remove suspension from a user. Admin only.
      *
      * @param userId user ID
      */
-    void unsuspendUser(Long userId);
+    void unSuspendUser(Long userId);
 
     /**
      * Soft delete a user. Admin only.
