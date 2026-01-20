@@ -57,6 +57,45 @@ Stop MongoDB Standalone:
 ```bash
 sudo systemctl stop mongod
 ```
+## MongoDB - standalone setup
+
+Since this project uses MongoTemplate without a Replica Set requirement for local development, follow these steps to configure and run a standalone MongoDB instance on WSL2/Linux.
+
+1. Create a Dedicated Data Directory
+Create a new directory to isolate this instance's data and ensure the correct permissions are set:
+
+```Bash
+# Create the directory
+sudo mkdir -p /var/lib/mongo-standalone
+
+# Set ownership to the mongodb user
+sudo chown -R mongodb:mongodb /var/lib/mongo-standalone
+```
+2. Clean Up Existing Locks (Optional)
+If MongoDB crashed previously or didn't shut down correctly, you might need to remove the lock file to prevent startup errors:
+
+```Bash
+sudo rm -f /var/lib/mongo-standalone/mongod.lock
+```
+3. Run MongoDB in Standalone Mode
+Terminal 1: Start the Daemon Open a WSL2 terminal and run the following command. Note that we bind to 127.0.0.1 for local security and use a custom log path:
+
+```Bash
+sudo mongod \
+  --port 27017 \
+  --dbpath /var/lib/mongo-standalone \
+  --bind_ip 127.0.0.1 \
+  --logpath /var/log/mongodb-standalone.log \
+  --logappend \
+  --fork
+```
+(Note: I added the --fork flag so it runs in the background, but if you prefer to see the logs in real-time, remove --fork and --logpath).
+
+Terminal 2: Verify Connection Open a second terminal to check if the instance is reachable:
+```Bash
+mongosh --port 27017
+```
+
 ## MongoDB - Start Local Replica Set
 Prepare folders and permissions.
 Open a terminal and create directories for the three nodes, ensuring that mongodb has the correct permissions:
@@ -550,3 +589,47 @@ If the tests on the indexes have been completed, I recommend running the program
 ```bash
 python -m code.db.create_indexes
 ```
+
+## Backend Setup and API Documentation
+Follow these steps to compile and run the Spring Boot application on WSL2 and access the Swagger documentation from your Windows browser.
+
+1. Build and Run the Application
+Navigate to the backend project directory and use the Maven Wrapper to clean and start the service:
+
+```Bash
+# Navigate to the backend folder
+cd Project_LSMSDB_25/spring-boot-backend/myfuture-backend
+
+# Clean previous builds and compile
+./mvnw clean compile
+
+# Run the Spring Boot application
+./mvnw spring-boot:run
+```
+Keep this terminal open. The backend is ready when you see: Started MyfutureBackendApplication in X.XXX seconds
+
+(If you connect by windows through WSL2 Networking) Connect from Windows
+Since the backend is running inside WSL2, you need the virtual machine's IP address to access it from a Windows browser.
+Find your WSL2 IP: Open a new WSL2 terminal and run:
+
+```Bash
+hostname -I
+```
+Example Output: 172.24.234.210
+
+2. Access Swagger UI
+Once you have the IP, open your browser on Windows and navigate to the following URL (replacing <WSL2_IP> with the address found in the previous step):
+
+URL Format: http://<WSL2_IP>:8080/swagger-ui/index.html
+Example: http://172.24.234.210:8080/swagger-ui/index.html
+
+Note: Ensure you use http and not https, as the local development server is not configured for SSL.
+
+3. Health Check (Verification)
+To verify the service is responding correctly without using a browser, you can run a curl command from a second terminal:
+
+```Bash
+# Check the API documentation JSON
+curl -I http://localhost:8080/v3/api-docs
+```
+A successful connection will return a HTTP/1.1 200 OK response.
