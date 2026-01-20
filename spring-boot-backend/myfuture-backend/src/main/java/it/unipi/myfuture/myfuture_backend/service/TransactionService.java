@@ -64,7 +64,7 @@ public interface TransactionService {
      * @param transactionId
      * @param request
      */
-    void updateTransaction(Long transactionId, TransactionRequestDTO request);
+    TransactionResponseDTO updateTransaction(Long transactionId, TransactionRequestDTO request);
 
     /**
      * Permanently delete a transaction.

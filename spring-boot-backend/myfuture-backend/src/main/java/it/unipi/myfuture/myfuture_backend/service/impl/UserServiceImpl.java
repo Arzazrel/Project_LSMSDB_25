@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
     public UserResponseDTO login(String email, String psw) {
 
         User user = userDao.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
+                .orElseThrow(() -> new BusinessException("Invalid credentials"));
 
         return UserMapper.toResponseDTO(user);
     }
@@ -65,7 +65,7 @@ public class UserServiceImpl implements UserService {
     public UserResponseDTO getUserById(Long userId) {
 
         User user = userDao.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new BusinessException("User not found"));
 
         return UserMapper.toResponseDTO(user);
     }
@@ -95,7 +95,7 @@ public class UserServiceImpl implements UserService {
     public UserResponseDTO updateAccount(Long userId, UserRequestDTO request) {
 
         User user = userDao.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new BusinessException("User not found"));
 
         UserMapper.updateEntity(user, request);
         return UserMapper.toResponseDTO(userDao.save(user));
@@ -114,11 +114,10 @@ public class UserServiceImpl implements UserService {
         if (reason == null) {
             throw new BusinessException("Suspend reason is required");
         }
-
         // Retrieve user
         User user = userDao.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException("User not found"));
-
+        // check if the user is suspended
         if (user.isSuspended()) {
             throw new BusinessException("User is already suspended");
         }
@@ -134,8 +133,7 @@ public class UserServiceImpl implements UserService {
         user.setSuspended(true);
         user.setSuspensionInfo(suspensionInfo);
 
-        // Persist changes
-        userDao.save(user);
+        userDao.save(user);                         // save changes
     }
 
     /**

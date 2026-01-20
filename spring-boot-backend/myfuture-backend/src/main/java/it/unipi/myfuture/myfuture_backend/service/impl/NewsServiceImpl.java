@@ -3,6 +3,7 @@ package it.unipi.myfuture.myfuture_backend.service.impl;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.NewsDao;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsResponseDTO;
+import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
 import it.unipi.myfuture.myfuture_backend.mapper.NewsMapper;
 import it.unipi.myfuture.myfuture_backend.service.NewsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,8 +48,7 @@ public class NewsServiceImpl implements NewsService {
     public NewsResponseDTO getActiveNewsById(String id) {
 
         return NewsMapper.toResponseDTO(
-                newsDao.findById(id)
-                        .orElseThrow(() -> new IllegalArgumentException("News not found or deleted"))
+                newsDao.findById(id).orElseThrow(() -> new BusinessException("News not found or deleted"))
         );
     }
 
@@ -102,6 +102,10 @@ public class NewsServiceImpl implements NewsService {
      */
     @Override
     public void deleteNews(String id) {
-        newsDao.softDelete(id);
+        // control check
+        if (newsDao.existsById(id)) {
+            throw new BusinessException("Cannot delete: News not found with id " + id);
+        }
+        newsDao.softDelete(id);         // soft delete the retrieved news
     }
 }

@@ -33,11 +33,10 @@ public class AssetServiceImpl implements AssetService {
     @Override
     public AssetResponseDTO createAsset(AssetRequestDTO request) {
 
-        Asset asset = AssetMapper.toEntityForCreate(request);
+        Asset asset = AssetMapper.toEntityForCreate(request);   // create new entity from request data
+        Asset savedAsset = assetDao.save(asset);                // save new asset entity
 
-        Asset savedAsset = assetDao.save(asset);
-
-        return AssetMapper.toResponseDTO(savedAsset);
+        return AssetMapper.toResponseDTO(savedAsset);           // return saved asset
     }
 
     /**
@@ -50,14 +49,11 @@ public class AssetServiceImpl implements AssetService {
     @Override
     public AssetResponseDTO updateAsset(String symbol, AssetRequestDTO request) {
 
-        Asset asset = assetDao.findBySymbolActive(symbol)
-                .orElseThrow(() -> new BusinessException("Asset not found"));
+        Asset asset = assetDao.findBySymbolActive(symbol).orElseThrow(() -> new BusinessException("Asset not found"));  // get asset
+        AssetMapper.updateEntityFromDTO(asset, request);        // update the retrieved asset with request data
+        Asset savedAsset = assetDao.save(asset);                // update asset
 
-        AssetMapper.updateEntityFromDTO(asset, request);
-
-        Asset savedAsset = assetDao.save(asset);
-
-        return AssetMapper.toResponseDTO(savedAsset);
+        return AssetMapper.toResponseDTO(savedAsset);           // return updated asset
     }
 
     /**
@@ -69,8 +65,7 @@ public class AssetServiceImpl implements AssetService {
     @Override
     public AssetResponseDTO getAssetBySymbol(String symbol) {
 
-        Asset asset = assetDao.findBySymbolActive(symbol)
-                .orElseThrow(() -> new BusinessException("Asset not found"));
+        Asset asset = assetDao.findBySymbolActive(symbol).orElseThrow(() -> new BusinessException("Asset not found"));
 
         return AssetMapper.toResponseDTO(asset);
     }
@@ -83,6 +78,7 @@ public class AssetServiceImpl implements AssetService {
     @Override
     public List<AssetResponseDTO> getAllAssets() {
 
+        // retrieve all active asset and convert in AssetResponseDTO and put in a list
         return assetDao.findAllActive()
                 .stream()
                 .map(AssetMapper::toResponseDTO)
@@ -98,6 +94,7 @@ public class AssetServiceImpl implements AssetService {
     @Override
     public List<AssetResponseDTO> getAssetsByType(AssetType type) {
 
+        // retrieve all active asset filtered by type and convert in AssetResponseDTO and put in a list
         return assetDao.findByTypeActive(type)
                 .stream()
                 .map(AssetMapper::toResponseDTO)
@@ -115,7 +112,7 @@ public class AssetServiceImpl implements AssetService {
         // check: asset must exist and be active
         assetDao.findBySymbolActive(symbol).orElseThrow(() -> new BusinessException("Asset not found"));
 
-        assetDao.softDelete(symbol);
+        assetDao.softDelete(symbol);            // soft delete the asset
     }
 
     /**
@@ -128,7 +125,7 @@ public class AssetServiceImpl implements AssetService {
         // check: asset must exist and be deleted
         assetDao.findBySymbol(symbol).orElseThrow(() -> new BusinessException("No price available for symbol: " + symbol));
 
-        assetDao.undoSoftDelete(symbol);
+        assetDao.undoSoftDelete(symbol);        // removes soft delete
     }
 
     // ------------------------------------------------ end: asset API --------------------------------------------------

@@ -143,4 +143,15 @@ public class NewsDao {
 
         mongoTemplate.updateFirst(query, update, News.class);
     }
+
+    /**
+     * Check if a news identified by id exist or not
+     *
+     * @param id the id that identify the news
+     * @return true if the news exist or false if th news doesn't exist
+     */
+    public boolean existsById(String id) {
+        Query query = new Query(Criteria.where("_id").is(id));
+        return mongoTemplate.exists(query, News.class);
+    }
 }

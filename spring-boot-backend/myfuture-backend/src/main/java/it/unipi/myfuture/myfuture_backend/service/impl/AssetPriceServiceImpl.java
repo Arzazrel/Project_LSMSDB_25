@@ -50,6 +50,7 @@ public class AssetPriceServiceImpl implements AssetPriceService {
     @Override
     public List<AssetPriceResponseDTO> getPricesBySymbolAndDateRange(String symbol, Instant from, Instant to) {
 
+        // retrieve all assetPrices and convert in AssetPriceResponseDTO and put in a list
         return assetPriceDao.findBySymbolAndDateRange(symbol, from, to)
                 .stream()
                 .map(AssetPriceMapper::toResponseDTO)
@@ -78,7 +79,7 @@ public class AssetPriceServiceImpl implements AssetPriceService {
      */
     @Override
     public void deletePrices(String symbol) {
-        assetPriceDao.deleteBySymbol(symbol);
+        assetPriceDao.deleteBySymbol(symbol);   // real delete, not a soft delete
     }
 
     // ---------------------------------------------- end: asset_price API ------------------------------------------------

@@ -1,10 +1,12 @@
 package it.unipi.myfuture.myfuture_backend.service.impl;
 
 import it.unipi.myfuture.myfuture_backend.dao.mongo.TransactionDao;
+import it.unipi.myfuture.myfuture_backend.dto.asset.AssetResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionResponseDTO;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionStatus;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionType;
+import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
 import it.unipi.myfuture.myfuture_backend.mapper.AssetMapper;
 import it.unipi.myfuture.myfuture_backend.mapper.TransactionMapper;
 import it.unipi.myfuture.myfuture_backend.model.Asset;
@@ -45,6 +47,35 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     /**
+     * Update the status of a transaction. (used form the system)
+     *
+     * @param id transaction id
+     * @param status new status
+     */
+    @Override
+    public void updateTransactionStatus(Long id, TransactionStatus status) {
+        transactionDao.updateTransactionStatus(id, status);
+    }
+
+    /**
+     * Update a transaction. (non-routine operation)
+     *
+     * @param transactionId the identifier of the transaction
+     * @param request TransactionRequestDTO containing the data for the upload
+     */
+    @Override
+    public TransactionResponseDTO updateTransaction(Long transactionId, TransactionRequestDTO request) {
+        // get transaction
+        Transaction transaction = transactionDao.findByTransactionId(transactionId)
+                .orElseThrow(() -> new BusinessException("Transaction not found"));
+
+        TransactionMapper.updateEntityFromDTO(transaction, request);        // modify the data of the retrieved transaction
+        Transaction savedTransaction = transactionDao.save(transaction);    // update
+        return TransactionMapper.toResponseDTO(savedTransaction);           // return the ResponseDTO of the transaction
+    }
+
+
+    /**
      * Retrieve a transaction by its id. Used by both customers and admin.
      *
      * @param id transaction id
@@ -54,7 +85,7 @@ public class TransactionServiceImpl implements TransactionService {
     public TransactionResponseDTO getTransactionById(Long id) {
 
         Transaction transaction = transactionDao.findByTransactionId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
+                .orElseThrow(() -> new BusinessException("Transaction not found"));
 
         return TransactionMapper.toResponseDTO(transaction);
     }
@@ -68,6 +99,7 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public List<TransactionResponseDTO> getTransactionsByUser(Long userId) {
 
+        // retrieve all transaction belonging to a specific user and convert in TransactionResponseDTO and put in a list
         return transactionDao.findByUserId(userId)
                 .stream()
                 .map(TransactionMapper::toResponseDTO)
@@ -93,38 +125,11 @@ public class TransactionServiceImpl implements TransactionService {
             Instant from,
             Instant to) {
 
+        // retrieve all transaction belonging to a specific user and convert in TransactionResponseDTO and put in a list
         return transactionDao.search(status, type, userId, from, to)
                 .stream()
                 .map(TransactionMapper::toResponseDTO)
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * Update the status of a transaction. (used form the system)
-     *
-     * @param id transaction id
-     * @param status new status
-     */
-    @Override
-    public void updateTransactionStatus(Long id, TransactionStatus status) {
-        transactionDao.updateTransactionStatus(id, status);
-    }
-
-    /**
-     * Update a transaction. (non-routine operation)
-     *
-     * @param transactionId
-     * @param request
-     */
-    @Override
-    public void updateTransaction(Long transactionId, TransactionRequestDTO request) {
-        Transaction transaction = transactionDao.findByTransactionId(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("Asset not found"));
-
-        TransactionMapper.updateEntityFromDTO(transaction, request);
-
-        Transaction savedTransaction = transactionDao.save(transaction);
-        TransactionMapper.toResponseDTO(savedTransaction);
     }
 
     /**

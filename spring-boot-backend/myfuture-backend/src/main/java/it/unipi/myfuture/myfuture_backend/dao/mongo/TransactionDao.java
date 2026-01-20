@@ -1,5 +1,7 @@
 package it.unipi.myfuture.myfuture_backend.dao.mongo;
 
+import com.mongodb.client.result.UpdateResult;
+import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
 import it.unipi.myfuture.myfuture_backend.model.AssetPrice;
 import it.unipi.myfuture.myfuture_backend.model.Transaction;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionStatus;
@@ -57,6 +59,7 @@ public class TransactionDao {
         Query query = new Query(
                 Criteria.where("user_id").is(userId)
         );
+
         return mongoTemplate.find(query, Transaction.class);
     }
 
@@ -77,7 +80,7 @@ public class TransactionDao {
     public List<Transaction> search(TransactionStatus status, TransactionType type, Long userId, Instant from, Instant to) {
 
         Criteria criteria = new Criteria();
-        // set the parameters
+        // set the parameters for the query
         if (status != null)
             criteria.and("status").is(status);
 
@@ -90,8 +93,8 @@ public class TransactionDao {
         if (from != null && to != null)
             criteria.and("date").gte(from).lte(to);
 
-        Query query = new Query(criteria);
-        return mongoTemplate.find(query, Transaction.class);
+        Query query = new Query(criteria);                      // create query
+        return mongoTemplate.find(query, Transaction.class);    // make the query
     }
 
     /**
@@ -106,20 +109,20 @@ public class TransactionDao {
      */
     public void updateTransactionStatus(Long transactionId, TransactionStatus status) {
 
-        Query query = new Query(
-                Criteria.where("transactionId").is(transactionId)
-        );
+        Query query = new Query(Criteria.where("transactionId").is(transactionId));    // get transaction
 
         Update update = new Update()
                 .set("status", status)
-                .set("updatedAt", Instant.now());
+                .set("updatedAt", Instant.now());                                           // make the query
 
-        mongoTemplate.updateFirst(query, update, Transaction.class);
+        UpdateResult result = mongoTemplate.updateFirst(query, update, Transaction.class);  // update transaction
+
+        if (result.getMatchedCount() == 0)                                                  // control check
+            throw new BusinessException("Transaction not found: " + transactionId);
     }
 
     /**
-     * Permanently delete a transaction.
-     * Admin only – extraordinary maintenance operation.
+     * Permanently delete a transaction. Admin only, extraordinary maintenance operation.
      */
     public void deleteById(Long transactionId)
     {
