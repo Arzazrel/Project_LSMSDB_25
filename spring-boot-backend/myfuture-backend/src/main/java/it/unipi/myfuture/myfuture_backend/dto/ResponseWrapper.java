@@ -1,5 +1,7 @@
 package it.unipi.myfuture.myfuture_backend.dto;
 
+import lombok.Data;
+
 import java.time.Instant;
 
 /**
@@ -7,27 +9,21 @@ import java.time.Instant;
  *
  * @param <T> the type of the response payload
  */
+@Data
 public class ResponseWrapper<T> {
 
     private String message;     // message
     private T data;             // data of the payload
     private Instant timestamp;  // creation timestamp of the mex
 
+    // is needed for Jackson / Spring
+    public ResponseWrapper() {
+        this.timestamp = Instant.now();
+    }
+
     public ResponseWrapper(String message, T data) {
         this.message = message;
         this.data = data;
         this.timestamp = Instant.now();
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public T getData() {
-        return data;
-    }
-
-    public Instant getTimestamp() {
-        return timestamp;
     }
 }

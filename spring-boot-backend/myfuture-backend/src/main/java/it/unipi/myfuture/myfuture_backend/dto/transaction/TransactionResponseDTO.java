@@ -1,7 +1,9 @@
 package it.unipi.myfuture.myfuture_backend.dto.transaction;
 
 import it.unipi.myfuture.myfuture_backend.enums.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
@@ -9,6 +11,8 @@ import java.time.Instant;
  * DTO used to expose transaction details via REST API.
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class TransactionResponseDTO {
 
     private Long transactionId;         // application-level ID (from counters)

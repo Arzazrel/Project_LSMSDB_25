@@ -4,6 +4,7 @@ import it.unipi.myfuture.myfuture_backend.dao.mongo.AssetDao;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetResponseDTO;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
+import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
 import it.unipi.myfuture.myfuture_backend.mapper.AssetMapper;
 import it.unipi.myfuture.myfuture_backend.model.Asset;
 import it.unipi.myfuture.myfuture_backend.service.AssetService;
@@ -50,7 +51,7 @@ public class AssetServiceImpl implements AssetService {
     public AssetResponseDTO updateAsset(String symbol, AssetRequestDTO request) {
 
         Asset asset = assetDao.findBySymbolActive(symbol)
-                .orElseThrow(() -> new IllegalArgumentException("Asset not found"));
+                .orElseThrow(() -> new BusinessException("Asset not found"));
 
         AssetMapper.updateEntityFromDTO(asset, request);
 
@@ -69,7 +70,7 @@ public class AssetServiceImpl implements AssetService {
     public AssetResponseDTO getAssetBySymbol(String symbol) {
 
         Asset asset = assetDao.findBySymbolActive(symbol)
-                .orElseThrow(() -> new IllegalArgumentException("Asset not found"));
+                .orElseThrow(() -> new BusinessException("Asset not found"));
 
         return AssetMapper.toResponseDTO(asset);
     }
@@ -112,7 +113,7 @@ public class AssetServiceImpl implements AssetService {
     public void deleteAsset(String symbol) {
 
         // check: asset must exist and be active
-        assetDao.findBySymbolActive(symbol).orElseThrow(() -> new IllegalArgumentException("Asset not found"));
+        assetDao.findBySymbolActive(symbol).orElseThrow(() -> new BusinessException("Asset not found"));
 
         assetDao.softDelete(symbol);
     }
@@ -125,7 +126,7 @@ public class AssetServiceImpl implements AssetService {
     @Override
     public void restoreAsset(String symbol) {
         // check: asset must exist and be deleted
-        assetDao.findBySymbol(symbol).orElseThrow(() -> new IllegalArgumentException("Asset not found"));
+        assetDao.findBySymbol(symbol).orElseThrow(() -> new BusinessException("No price available for symbol: " + symbol));
 
         assetDao.undoSoftDelete(symbol);
     }

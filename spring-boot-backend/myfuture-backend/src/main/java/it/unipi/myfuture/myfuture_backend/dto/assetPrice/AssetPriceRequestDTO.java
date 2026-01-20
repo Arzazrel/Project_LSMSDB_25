@@ -1,6 +1,8 @@
 package it.unipi.myfuture.myfuture_backend.dto.assetPrice;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
@@ -10,6 +12,8 @@ import java.time.Instant;
  * Used only by admin APIs.
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AssetPriceRequestDTO {
 
     private Instant timestamp;          // Price date (UTC, time usually set to 00:00)

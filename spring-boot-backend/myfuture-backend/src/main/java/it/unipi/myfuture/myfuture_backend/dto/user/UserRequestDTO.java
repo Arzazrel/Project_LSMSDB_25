@@ -5,7 +5,9 @@ import it.unipi.myfuture.myfuture_backend.enums.UserRole;
 import it.unipi.myfuture.myfuture_backend.model.RecentTransaction;
 import it.unipi.myfuture.myfuture_backend.model.SuspensionInfo;
 import it.unipi.myfuture.myfuture_backend.model.WalletItem;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -16,6 +18,8 @@ import java.util.List;
  * Does NOT contain sensitive or system-managed fields.
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserRequestDTO {
 
     private String firstName;

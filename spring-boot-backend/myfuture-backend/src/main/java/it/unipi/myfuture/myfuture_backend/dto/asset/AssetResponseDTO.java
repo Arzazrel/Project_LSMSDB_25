@@ -1,7 +1,9 @@
 package it.unipi.myfuture.myfuture_backend.dto.asset;
 
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
@@ -9,6 +11,8 @@ import java.time.Instant;
  * DTO used to expose asset information to users.
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AssetResponseDTO {
 
     private String symbol;

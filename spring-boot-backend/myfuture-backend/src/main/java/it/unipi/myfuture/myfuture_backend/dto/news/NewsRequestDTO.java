@@ -1,6 +1,8 @@
 package it.unipi.myfuture.myfuture_backend.dto.news;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
@@ -11,6 +13,8 @@ import java.time.Instant;
  * for creating or updating a news entry.
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class NewsRequestDTO {
 
     private Instant date;

@@ -97,7 +97,7 @@ public class CustomerController {
     /**
      * Get last 10 transactions of the authenticated user.
      */
-    @GetMapping("/me/transactions")
+    @GetMapping("/me/lastTransactions")
     public ResponseEntity<ResponseWrapper<UserResponseDTO>> getMeTransactions() {
 
         // TODO: retrieve userId from JWT/JWS authentication context +++++++++++++++++++++++++++++++++++++++++
