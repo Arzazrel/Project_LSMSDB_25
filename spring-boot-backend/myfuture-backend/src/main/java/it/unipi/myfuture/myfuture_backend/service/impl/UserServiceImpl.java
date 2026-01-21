@@ -3,6 +3,7 @@ package it.unipi.myfuture.myfuture_backend.service.impl;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.UserDao;
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
 import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
+import it.unipi.myfuture.myfuture_backend.enums.UserRole;
 import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
 import it.unipi.myfuture.myfuture_backend.mapper.UserMapper;
 import it.unipi.myfuture.myfuture_backend.model.SuspensionInfo;
@@ -44,6 +45,7 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = UserMapper.toEntity(request);   // create entity from request
+        user.setRole(UserRole.user);                // set default role
 
         String encodedPassword = passwordEncoder.encode(request.getPassword()); // encrypt the psw
         user.setPasswordHash(encodedPassword);                                  // set the encrypted psw in the entity
@@ -103,6 +105,63 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
+     * Retrieve user ID related to the email.
+     *
+     * @param email username
+     * @return user ID
+     */
+    @Override
+    public Long getUserIdByEmail(String email)
+    {
+        User user = userDao.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("User not found"));
+
+        return user.getUserId();
+    }
+
+    /**
+     * Retrieve the cash information of the user.
+     *
+     * @param email username of the user
+     * @return user fields for cash
+     */
+    @Override
+    public UserCashResponseDTO getUserCash(String email) {
+        User user = userDao.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("User not found"));
+
+        return UserMapper.toCashtDTO(user);     // convert and return only the request fields
+    }
+
+    /**
+     * Retrieve the portfolio of the user.
+     *
+     * @param email username of the user
+     * @return user portfolio (wallets for the share,etf,crypto)
+     */
+    @Override
+    public UserPortfolioResponseDTO getUserPortfolio(String email) {
+        User user = userDao.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("User not found"));
+
+        return UserMapper.toPortfolioDTO(user); // convert and return only the request fields
+    }
+
+    /**
+     * Retrieve the last transactions (10 almost) of the user.
+     *
+     * @param email username of the user
+     * @return user last transactions
+     */
+    @Override
+    public UserTransactionsResponseDTO getUserLastTransactions(String email) {
+        User user = userDao.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("User not found"));
+
+        return UserMapper.toTransactionsDTO(user);  // convert and return only the request fields
+    }
+
+    /**
      * Retrieve all active users. Admin only.
      *
      * @return list of users
@@ -124,9 +183,26 @@ public class UserServiceImpl implements UserService {
      * @return updated user
      */
     @Override
-    public UserResponseDTO updateAccount(Long userId, UserRequestDTO request) {
+    public UserResponseDTO updateAccountByUserId(Long userId, UserRequestDTO request) {
 
         User user = userDao.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("User not found"));
+
+        UserMapper.updateEntity(user, request);
+        return UserMapper.toResponseDTO(userDao.save(user));
+    }
+
+    /**
+     * Update user account information. Customer only.
+     *
+     * @param email username
+     * @param request update data
+     * @return updated user
+     */
+    @Override
+    public UserResponseDTO updateAccountByEmail(String email, UserRequestDTO request)
+    {
+        User user = userDao.findByEmail(email)
                 .orElseThrow(() -> new BusinessException("User not found"));
 
         UserMapper.updateEntity(user, request);

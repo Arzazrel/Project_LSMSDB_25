@@ -3,6 +3,7 @@ package it.unipi.myfuture.myfuture_backend.controller;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.ResponseWrapper;
+import it.unipi.myfuture.myfuture_backend.dto.user.UserLoginRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.user.UserRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.user.UserResponseDTO;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
@@ -57,7 +58,7 @@ public class UnregisteredUserController {
      */
     @PostMapping("/login")
     public ResponseEntity<ResponseWrapper<UserResponseDTO>> login(
-            @RequestBody UserRequestDTO request) {
+            @RequestBody UserLoginRequestDTO request) {
 
         UserResponseDTO response = userService.login(request.getEmail(), request.getPassword());
         return ResponseEntity.ok(new ResponseWrapper<>("Login successful", response));

@@ -7,6 +7,7 @@ import it.unipi.myfuture.myfuture_backend.model.User;
 import it.unipi.myfuture.myfuture_backend.model.WalletItem;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -79,5 +80,49 @@ public class UserMapper {
         dto.setRecentTransactions(user.getRecentTransactions());
 
         return dto;
+    }
+
+    /**
+     * Convert User entity to UserCashResponseDTO.
+     *
+     * @param user user entity
+     * @return user subfields response DTO
+     */
+    public static UserCashResponseDTO toCashtDTO(User user) {
+        UserCashResponseDTO dto = new UserCashResponseDTO();
+        dto.setCash(user.getCash());
+        dto.setBlockedCash(user.getBlockedCash());
+        dto.setCurrency(user.getCurrency());
+        return dto;
+    }
+
+    /**
+     * Convert User entity to UserPortfolioResponseDTO.
+     *
+     * @param user user entity
+     * @return user subfields response DTO
+     */
+    public static UserPortfolioResponseDTO toPortfolioDTO(User user) {
+        UserPortfolioResponseDTO dto = new UserPortfolioResponseDTO();
+        dto.setShareWallet(user.getShareWallet());
+        dto.setEtfWallet(user.getEtfWallet());
+        dto.setCryptoWallet(user.getCryptoWallet());
+        return dto;
+    }
+
+    /**
+     * Convert User entity to UserTransactionsResponseDTO.
+     *
+     * @param user user entity
+     * @return user subfields response DTO
+     */
+    public static UserTransactionsResponseDTO toTransactionsDTO(User user) {
+        List<RecentTransaction> list = user.getRecentTransactions() != null ?
+                user.getRecentTransactions() : new ArrayList<>();
+
+        return new UserTransactionsResponseDTO(
+                list,
+                list.size()
+        );
     }
 }

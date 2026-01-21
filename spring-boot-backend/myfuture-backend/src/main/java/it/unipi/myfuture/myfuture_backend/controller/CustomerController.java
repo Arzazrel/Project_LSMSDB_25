@@ -6,8 +6,7 @@ import it.unipi.myfuture.myfuture_backend.dto.assetPrice.AssetPriceResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionResponseDTO;
-import it.unipi.myfuture.myfuture_backend.dto.user.UserRequestDTO;
-import it.unipi.myfuture.myfuture_backend.dto.user.UserResponseDTO;
+import it.unipi.myfuture.myfuture_backend.dto.user.*;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionStatus;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionType;
@@ -66,13 +65,12 @@ public class CustomerController {
      * Get cash and blocked cash of the authenticated user.
      */
     @GetMapping("/me/cash")
-    public ResponseEntity<ResponseWrapper<UserResponseDTO>> getMeCash(Authentication authentication) {
+    public ResponseEntity<ResponseWrapper<UserCashResponseDTO>> getMeCash(Authentication authentication) {
 
         String email = authentication.getName();    // retrieve the email address of the logged-in user from the security context
 
         return ResponseEntity.ok(
-                new ResponseWrapper<>("User retrieved successfully",
-                        userService.getUserByEmail(email))
+                new ResponseWrapper<>("Cash retrieved", userService.getUserCash(email))
         );
     }
 
@@ -80,15 +78,12 @@ public class CustomerController {
      * Get wallets of the authenticated user.
      */
     @GetMapping("/me/portfolio")
-    public ResponseEntity<ResponseWrapper<UserResponseDTO>> getMePortfolio() {
+    public ResponseEntity<ResponseWrapper<UserPortfolioResponseDTO>> getMePortfolio(Authentication authentication) {
 
-        // TODO: retrieve userId from JWT/JWS authentication context +++++++++++++++++++++++++++++++++++++++++
-        Long userId = 1L;
-        // get user and get the wallets (share, etf, crypto)
+        String email = authentication.getName();    // retrieve the email address of the logged-in user from the security context
 
         return ResponseEntity.ok(
-                new ResponseWrapper<>("Wallet retrieved successfully",
-                        userService.getUserById(userId))
+                new ResponseWrapper<>("Portfolio retrieved", userService.getUserPortfolio(email))
         );
     }
 
@@ -96,15 +91,12 @@ public class CustomerController {
      * Get last 10 transactions of the authenticated user.
      */
     @GetMapping("/me/lastTransactions")
-    public ResponseEntity<ResponseWrapper<UserResponseDTO>> getMeTransactions() {
+    public ResponseEntity<ResponseWrapper<UserTransactionsResponseDTO>> getMeTransactions(Authentication authentication) {
 
-        // TODO: retrieve userId from JWT/JWS authentication context +++++++++++++++++++++++++++++++++++++++++
-        Long userId = 1L;
-        // get last 10 transactions of the user
+        String email = authentication.getName();    // retrieve the email address of the logged-in user from the security context
 
         return ResponseEntity.ok(
-                new ResponseWrapper<>("Last 10 transactions retrieved successfully",
-                        userService.getUserById(userId))
+                new ResponseWrapper<>("Portfolio retrieved", userService.getUserLastTransactions(email))
         );
     }
 
@@ -113,14 +105,13 @@ public class CustomerController {
      */
     @PutMapping("/me/account")
     public ResponseEntity<ResponseWrapper<UserResponseDTO>> updateAccount(
-            @RequestBody UserRequestDTO request) {
+            @RequestBody UserRequestDTO request, Authentication authentication) {
 
-        // TODO: retrieve userId from JWT/JWS authentication context ++++++++++++++++++++++++++++++++++++++++++
-        Long userId = 1L;
+        String email = authentication.getName();    // retrieve the email address of the logged-in user from the security context
 
         return ResponseEntity.ok(
                 new ResponseWrapper<>("Account updated successfully",
-                        userService.updateAccount(userId, request))
+                        userService.updateAccountByEmail(email, request))
         );
     }
 
@@ -133,10 +124,10 @@ public class CustomerController {
      */
     @PostMapping("/transactions")
     public ResponseEntity<ResponseWrapper<TransactionResponseDTO>> createTransaction(
-            @RequestBody TransactionRequestDTO request) {
+            @RequestBody TransactionRequestDTO request, Authentication authentication) {
 
-        // TODO: retrieve userId from JWT/JWS authentication context +++++++++++++++++++++++++++++++++++++++++++
-        Long userId = 1L;
+        String email = authentication.getName();            // retrieve the email address of the logged-in user from the security context
+        Long userId = userService.getUserIdByEmail(email);  // get user_id
 
         return ResponseEntity.ok(
                 new ResponseWrapper<>("Transaction created successfully",
@@ -148,10 +139,10 @@ public class CustomerController {
      * Get last transactions of the authenticated customer.
      */
     @GetMapping("/me/transactions")
-    public ResponseEntity<ResponseWrapper<List<TransactionResponseDTO>>> getMyTransactions() {
+    public ResponseEntity<ResponseWrapper<List<TransactionResponseDTO>>> getMyTransactions(Authentication authentication) {
 
-        // TODO: retrieve userId from JWT/JWS authentication context +++++++++++++++++++++++++++++++++++++++++++++
-        Long userId = 1L;
+        String email = authentication.getName();            // retrieve the email address of the logged-in user from the security context
+        Long userId = userService.getUserIdByEmail(email);  // get user_id
 
         return ResponseEntity.ok(
                 new ResponseWrapper<>("Transactions retrieved successfully",
@@ -167,10 +158,11 @@ public class CustomerController {
             @RequestParam(required = false) TransactionStatus status,
             @RequestParam(required = false) TransactionType type,
             @RequestParam(required = false) Instant from,
-            @RequestParam(required = false) Instant to) {
+            @RequestParam(required = false) Instant to,
+            Authentication authentication) {
 
-        // TODO: retrieve userId from JWT/JWS authentication context ++++++++++++++++++++++++++++++++++++++++++
-        Long userId = 1L;
+        String email = authentication.getName();            // retrieve the email address of the logged-in user from the security context
+        Long userId = userService.getUserIdByEmail(email);  // get user_id
 
         return ResponseEntity.ok(
                 new ResponseWrapper<>("Transactions retrieved successfully",

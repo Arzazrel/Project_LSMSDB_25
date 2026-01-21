@@ -2,6 +2,9 @@ package it.unipi.myfuture.myfuture_backend.service;
 
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
 import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
+import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
+import it.unipi.myfuture.myfuture_backend.mapper.UserMapper;
+import it.unipi.myfuture.myfuture_backend.model.User;
 
 import java.time.Instant;
 import java.util.List;
@@ -41,12 +44,44 @@ public interface UserService {
     UserResponseDTO getUserById(Long userId);
 
     /**
+     * Retrieve user ID related to the email.
+     *
+     * @param email username
+     * @return user ID
+     */
+    Long getUserIdByEmail(String email);
+
+    /**
      * Retrieve user by email.
      *
      * @param email username of the user
      * @return user data
      */
     UserResponseDTO getUserByEmail(String email);
+
+    /**
+     * Retrieve the cash information of the user.
+     *
+     * @param email username of the user
+     * @return user fields for cash
+     */
+    UserCashResponseDTO getUserCash(String email);
+
+    /**
+     * Retrieve the portfolio of the user.
+     *
+     * @param email username of the user
+     * @return user portfolio (wallets for the share,etf,crypto)
+     */
+    UserPortfolioResponseDTO getUserPortfolio(String email);
+
+    /**
+     * Retrieve the last transactions (10 almost) of the user.
+     *
+     * @param email username of the user
+     * @return user last transactions
+     */
+    UserTransactionsResponseDTO getUserLastTransactions(String email);
 
     /**
      * Retrieve all active users. Admin only.
@@ -62,7 +97,16 @@ public interface UserService {
      * @param request update data
      * @return updated user
      */
-    UserResponseDTO updateAccount(Long userId, UserRequestDTO request);
+    UserResponseDTO updateAccountByUserId(Long userId, UserRequestDTO request);
+
+    /**
+     * Update user account information. Customer only.
+     *
+     * @param email username
+     * @param request update data
+     * @return updated user
+     */
+    UserResponseDTO updateAccountByEmail(String email, UserRequestDTO request);
 
     /**
      * Suspend a user.  Admin only.

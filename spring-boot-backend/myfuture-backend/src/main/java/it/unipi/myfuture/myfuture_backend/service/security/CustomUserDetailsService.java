@@ -31,9 +31,9 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         // create and return the context object
         return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())              // mail of the user (in this system is equal to username)
-                .password(user.getPasswordHash())       // encrypted psw
-                .roles(user.getRole().name())           // role is 'user' or 'admin'
+                .username(user.getEmail())                  // mail of the user (in this system is equal to username)
+                .password(user.getPasswordHash())           // encrypted psw
+                .roles(user.getRole().name().toUpperCase()) // in MongoDB role is 'user' or 'admin'
                 .build();
     }
 }
