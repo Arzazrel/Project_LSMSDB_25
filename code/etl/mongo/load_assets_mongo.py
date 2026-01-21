@@ -28,6 +28,13 @@ FILES = {
     "crypto": "crypto_list.csv"
 }
 
+# Dictionary for sector normalization
+SECTOR_MAPPING = {
+    'Basic Materials': 'Materials',
+    'Financial Services': 'Financials',
+    'Health Care': 'Healthcare'
+}
+
 # ------------------------------------ start: utils methods ------------------------------------
 
 """
@@ -54,6 +61,14 @@ def clean_value(value):
     if pd.isna(value) or str(value).strip() == "":
         return None
     return value
+    
+# normalize the sector
+def normalize_sector(value):
+    val = clean_value(value)
+    if val is None:
+        return None
+    # Check if the value exists in our mapping, otherwise return the original cleaned value
+    return SECTOR_MAPPING.get(val, val)
 
 # ------------------------------------ end: utils methods ------------------------------------
 
@@ -77,7 +92,7 @@ def load_assets():
             "longName": clean_value(row.get("Long Name")),
             "type": "share",
             "country": clean_value(row.get("Country")),
-            "sector": clean_value(row.get("Sector")),
+            "sector": normalize_sector(row.get("Sector")),
             "industry": clean_value(row.get("Industry")),
             "ingested_at": datetime.utcnow()                            # add the injection date 
         })
@@ -165,4 +180,31 @@ db.assets.find({ type: "crypto" }).limit(3).pretty()
 
 // check fields
 db.assets.findOne({ symbol: "AAPL" })
+
+
+The value from the dataset and their normalization:
+# values to be normalized to avoid replication
+'Basic Materials'           -> 'Materials'
+'Materials'                 -> 'Materials'
+
+'Financial Services'        -> 'Financials'
+'Financials'                -> 'Financials'
+
+'Health Care'               -> 'Healthcare'
+'Healthcare'                -> 'Healthcare'
+
+# values that remain the same are not normalized
+'Communication Services'
+'Consumer Cyclical'
+'Consumer Defensive'
+'Consumer Discretionary'
+'Consumer Staples'
+'Energy'
+'Industrials'
+'Information Technology'
+'Real Estate'
+'Technology'
+'Utilities'
+null
+ */
 """
