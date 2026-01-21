@@ -74,7 +74,7 @@ def ingest_users():
                 max_user_id = int(row["id"])            # update current max user_id
             
             # create the document for the current row (user or admin)
-            if row["role"] == "admin":  # admin case
+            if row["role"] == "admin":  # 'admin' case
                 user_doc = {
                     "user_id": row["id"],
                     "first_name": row["first_name"],
@@ -95,7 +95,7 @@ def ingest_users():
                     "suspended": False,
                     "deletedAt": False
                 }
-            else:                       # user case
+            else:                       # 'user' case
                 user_doc = {
                     "user_id": row["id"],
                     "first_name": row["first_name"],
