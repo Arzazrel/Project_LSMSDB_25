@@ -42,7 +42,7 @@ public class UserDao {
      */
     public Optional<User> findByUserId(Long userId) {
         Query query = new Query(
-                Criteria.where("userId").is(userId)
+                Criteria.where("user_id").is(userId)
                         .and("deleted").ne(true)
                         .and("suspended").ne(true)
         );
@@ -83,7 +83,7 @@ public class UserDao {
      * @param userId id of the user
      */
     public void softDelete(Long userId) {
-        Query query = new Query(Criteria.where("userId").is(userId));
+        Query query = new Query(Criteria.where("user_id").is(userId));
         User user = mongoTemplate.findOne(query, User.class);
 
         if (user != null) {
@@ -119,7 +119,7 @@ public class UserDao {
      * @param reason contain the data and the reason of the suspension
      */
     public void suspendUser(Long userId, SuspendReason reason) {
-        Query query = new Query(Criteria.where("userId").is(userId));
+        Query query = new Query(Criteria.where("user_id").is(userId));
         User user = mongoTemplate.findOne(query, User.class);
 
         if (user != null) {
@@ -136,7 +136,7 @@ public class UserDao {
     public void undoSuspendUser(Long userId) {
 
         Query query = new Query(
-                Criteria.where("userId").is(userId)
+                Criteria.where("user_id").is(userId)
                         .and("suspended").is(true)
         );
 

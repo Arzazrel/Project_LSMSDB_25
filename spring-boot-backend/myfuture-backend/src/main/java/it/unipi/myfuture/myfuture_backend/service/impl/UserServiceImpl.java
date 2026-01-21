@@ -9,6 +9,7 @@ import it.unipi.myfuture.myfuture_backend.model.SuspensionInfo;
 import it.unipi.myfuture.myfuture_backend.model.User;
 import it.unipi.myfuture.myfuture_backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -23,6 +24,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserDao userDao;
+    @Autowired
+    private PasswordEncoder passwordEncoder;    // for user authentication
 
     // ----------------------------------------------- user API --------------------------------------------------
 
@@ -35,8 +38,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDTO registerUser(UserRequestDTO request) {
 
-        User user = UserMapper.toEntity(request);
-        return UserMapper.toResponseDTO(userDao.save(user));
+        // check if the user already exist
+        if (userDao.findByEmail(request.getEmail()).isPresent()) {
+            throw new BusinessException("Email already registered");
+        }
+
+        User user = UserMapper.toEntity(request);   // create entity from request
+
+        String encodedPassword = passwordEncoder.encode(request.getPassword()); // encrypt the psw
+        user.setPasswordHash(encodedPassword);                                  // set the encrypted psw in the entity
+
+        return UserMapper.toResponseDTO(userDao.save(user));                    // save and return
     }
 
     /**
@@ -50,7 +62,12 @@ public class UserServiceImpl implements UserService {
     public UserResponseDTO login(String email, String psw) {
 
         User user = userDao.findByEmail(email)
-                .orElseThrow(() -> new BusinessException("Invalid credentials"));
+                .orElseThrow(() -> new BusinessException("Invalid email or password"));
+
+        // check if the encrypted psw passed as parameter matches with the encrypted psw saved in the DB
+        if (!passwordEncoder.matches(psw, user.getPasswordHash())) {
+            throw new BusinessException("Invalid email or password");
+        }
 
         return UserMapper.toResponseDTO(user);
     }
@@ -65,6 +82,21 @@ public class UserServiceImpl implements UserService {
     public UserResponseDTO getUserById(Long userId) {
 
         User user = userDao.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("User not found"));
+
+        return UserMapper.toResponseDTO(user);
+    }
+
+    /**
+     * Retrieve user by email.
+     *
+     * @param email username of the user
+     * @return user data
+     */
+    @Override
+    public UserResponseDTO getUserByEmail(String email)
+    {
+        User user = userDao.findByEmail(email)
                 .orElseThrow(() -> new BusinessException("User not found"));
 
         return UserMapper.toResponseDTO(user);

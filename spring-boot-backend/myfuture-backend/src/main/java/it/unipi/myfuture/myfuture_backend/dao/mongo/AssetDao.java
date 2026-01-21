@@ -41,8 +41,12 @@ public class AssetDao {
     public Optional<Asset> findBySymbolActive(String symbol) {
         Query query = new Query(
                 Criteria.where("symbol").is(symbol)
-                        .and("deleted").ne(true)
         );
+        // We search where ‘deleted’ is either false OR does not exist at all.
+        query.addCriteria(new Criteria().orOperator(
+                Criteria.where("deleted").is(false),
+                Criteria.where("deleted").exists(false)
+        ));
         return Optional.ofNullable(mongoTemplate.findOne(query, Asset.class));
     }
 

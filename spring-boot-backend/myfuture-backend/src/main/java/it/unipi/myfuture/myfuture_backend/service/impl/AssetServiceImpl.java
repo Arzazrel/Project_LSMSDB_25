@@ -65,7 +65,7 @@ public class AssetServiceImpl implements AssetService {
     @Override
     public AssetResponseDTO getAssetBySymbol(String symbol) {
 
-        Asset asset = assetDao.findBySymbolActive(symbol).orElseThrow(() -> new BusinessException("Asset not found"));
+        Asset asset = assetDao.findBySymbolActive(symbol.trim().toUpperCase()).orElseThrow(() -> new BusinessException("Asset not found"));
 
         return AssetMapper.toResponseDTO(asset);
     }

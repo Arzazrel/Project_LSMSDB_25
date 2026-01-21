@@ -117,11 +117,12 @@ public class NewsDao {
      * @param id MongoDB _id of the news to be soft-deleted
      */
     public void softDelete(String id) {
-        News news = mongoTemplate.findById(id, News.class);
-        if (news != null) {
+        News news = mongoTemplate.findById(id, News.class);     // get the news
+        if (news != null)                                       // control check
+        {
             news.setDeleted(true);
             news.setDeletedAt(Instant.now());
-            mongoTemplate.save(news);
+            mongoTemplate.save(news);                           // save changed data for the news
         }
     }
 

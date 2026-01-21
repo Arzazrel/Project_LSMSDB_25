@@ -41,6 +41,14 @@ public interface UserService {
     UserResponseDTO getUserById(Long userId);
 
     /**
+     * Retrieve user by email.
+     *
+     * @param email username of the user
+     * @return user data
+     */
+    UserResponseDTO getUserByEmail(String email);
+
+    /**
      * Retrieve all active users. Admin only.
      *
      * @return list of users

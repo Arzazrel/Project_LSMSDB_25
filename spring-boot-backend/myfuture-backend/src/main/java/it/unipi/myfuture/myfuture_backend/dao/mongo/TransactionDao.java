@@ -109,7 +109,7 @@ public class TransactionDao {
      */
     public void updateTransactionStatus(Long transactionId, TransactionStatus status) {
 
-        Query query = new Query(Criteria.where("transactionId").is(transactionId));    // get transaction
+        Query query = new Query(Criteria.where("transaction_id").is(transactionId));    // get transaction
 
         Update update = new Update()
                 .set("status", status)

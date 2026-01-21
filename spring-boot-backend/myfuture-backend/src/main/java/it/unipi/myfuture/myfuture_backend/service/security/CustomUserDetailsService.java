@@ -1,0 +1,39 @@
+package it.unipi.myfuture.myfuture_backend.service.security;
+
+import it.unipi.myfuture.myfuture_backend.dao.mongo.UserDao;
+import it.unipi.myfuture.myfuture_backend.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+@Service
+public class CustomUserDetailsService implements UserDetailsService {
+
+    @Autowired
+    private UserDao userDao;
+
+    /**
+     * Method called by Spring Security's authentication manager. It fetches the user entity from MongoDB and converts
+     * it into a UserDetails object that Spring Security understands.
+     * This object contains the hashed password and the assigned roles used for authorization.
+     *
+     * @param email the email (used as username) identifying the user whose data is required.
+     * @return a fully populated user record (never <code>null</code>)
+     * @throws UsernameNotFoundException if the user could not be found or the user has no GrantedAuthority
+     */
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // get the user
+        User user = userDao.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        // create and return the context object
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(user.getEmail())              // mail of the user (in this system is equal to username)
+                .password(user.getPasswordHash())       // encrypted psw
+                .roles(user.getRole().name())           // role is 'user' or 'admin'
+                .build();
+    }
+}

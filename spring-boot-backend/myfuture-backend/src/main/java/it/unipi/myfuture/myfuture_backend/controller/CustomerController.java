@@ -15,6 +15,7 @@ import it.unipi.myfuture.myfuture_backend.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.time.Instant;
 import java.util.List;
@@ -51,30 +52,27 @@ public class CustomerController {
      * Get authenticated customer information.
      */
     @GetMapping("/me")
-    public ResponseEntity<ResponseWrapper<UserResponseDTO>> getMe() {
+    public ResponseEntity<ResponseWrapper<UserResponseDTO>> getMe(Authentication authentication) {
 
-        // TODO: retrieve userId from JWT/JWS authentication context +++++++++++++++++++++++++++++++++++++++++
-        Long userId = 1L;
+        String email = authentication.getName();    // retrieve the email address of the logged-in user from the security context
 
         return ResponseEntity.ok(
                 new ResponseWrapper<>("User retrieved successfully",
-                        userService.getUserById(userId))
+                        userService.getUserByEmail(email))
         );
     }
 
     /**
      * Get cash and blocked cash of the authenticated user.
      */
-    @GetMapping("/me/wallet")
-    public ResponseEntity<ResponseWrapper<UserResponseDTO>> getMeCash() {
+    @GetMapping("/me/cash")
+    public ResponseEntity<ResponseWrapper<UserResponseDTO>> getMeCash(Authentication authentication) {
 
-        // TODO: retrieve userId from JWT/JWS authentication context +++++++++++++++++++++++++++++++++++++++++
-        Long userId = 1L;
-        // get user and get the cash and blocked cash
+        String email = authentication.getName();    // retrieve the email address of the logged-in user from the security context
 
         return ResponseEntity.ok(
                 new ResponseWrapper<>("User retrieved successfully",
-                        userService.getUserById(userId))
+                        userService.getUserByEmail(email))
         );
     }
 

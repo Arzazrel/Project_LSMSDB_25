@@ -1,9 +1,13 @@
 package it.unipi.myfuture.myfuture_backend.mapper;
 
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
+import it.unipi.myfuture.myfuture_backend.enums.UserCurrency;
+import it.unipi.myfuture.myfuture_backend.model.RecentTransaction;
 import it.unipi.myfuture.myfuture_backend.model.User;
+import it.unipi.myfuture.myfuture_backend.model.WalletItem;
 
 import java.time.Instant;
+import java.util.List;
 
 /**
  * UserMapper Mapper handles conversion between User entity and User DTOs.
@@ -62,8 +66,17 @@ public class UserMapper {
         dto.setEmail(user.getEmail());
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
+        dto.setRole(user.getRole());
+
         dto.setCash(user.getCash());
         dto.setBlockedCash(user.getBlockedCash());
+        dto.setCurrency(user.getCurrency());
+
+        dto.setShareWallet(user.getShareWallet());
+        dto.setEtfWallet(user.getEtfWallet());
+        dto.setCryptoWallet(user.getCryptoWallet());
+
+        dto.setRecentTransactions(user.getRecentTransactions());
 
         return dto;
     }

@@ -18,6 +18,8 @@ import java.util.Date;
 public class Asset {
 
     @Id
+    private String id;              // MongoDB _id
+
     private String symbol;           // unique symbol of the asset
 
     private String shortName;        // short name
