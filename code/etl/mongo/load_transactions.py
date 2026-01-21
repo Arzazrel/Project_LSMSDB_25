@@ -298,7 +298,7 @@ def ingest_transactions():
             if transaction_count % 100 == 0:                                
                 print(f"Creating transaction number: {transaction_count}")  # UI print to see progression
             
-            user_id = str(row["accountAgeDays"])                # the user_id of the logged-in user (who made) the transaction will be equal to the "accountAgeDays"
+            user_id = int(row["accountAgeDays"])                # the user_id of the logged-in user (who made) the transaction will be equal to the "accountAgeDays"
             quantity = int(row["numItems"])                     # get the quantity of the asset purchased in the transaction
             payment_method = row["paymentMethod"]               # can be : 'storecredit', 'paypal', 'creditcard'
 

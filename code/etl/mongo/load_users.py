@@ -76,7 +76,7 @@ def ingest_users():
             # create the document for the current row (user or admin)
             if row["role"] == "admin":  # 'admin' case
                 user_doc = {
-                    "user_id": row["id"],
+                    "user_id": int(row["id"]),
                     "first_name": row["first_name"],
                     "last_name": row["last_name"],
                     "email": row["email"],
@@ -97,7 +97,7 @@ def ingest_users():
                 }
             else:                       # 'user' case
                 user_doc = {
-                    "user_id": row["id"],
+                    "user_id": int(row["id"]),
                     "first_name": row["first_name"],
                     "last_name": row["last_name"],
                     "email": row["email"],
