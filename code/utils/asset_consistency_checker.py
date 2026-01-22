@@ -101,20 +101,20 @@ def check_assets_consistency():
     print("="*50)                                                       # UI print
     
     # symbols in master list but NO historical file found
-    print(f"\n[!] Missing Data: {len(missing_from_disk)} symbols in lists have NO historical file:")    # UI print
+    print(f"\n-- Missing Data: {len(missing_from_disk)} symbols in lists have NO historical file:")   # UI print
     if missing_from_disk:
-        print(sorted(list(missing_from_disk)))                                                          # UI print
+        print(sorted(list(missing_from_disk)))                                                      # UI print
     else:
-        print("None! All listed assets have a corresponding file.")                                     # UI print
+        print("None! All listed assets have a corresponding file.")                                 # UI print
         
     # Case B: Files found on disk but NO entry in master list
-    print(f"\n[?] Extra Files: {len(not_in_asset_list)} files found on disk are NOT in master lists:")  # UI print
+    print(f"\n-- Extra Files: {len(not_in_asset_list)} files found on disk are NOT in master lists:") # UI print
     if not_in_asset_list:
-        print(sorted(not_in_asset_list))                                                                # UI print
+        print(sorted(not_in_asset_list))                                                            # UI print
     else:
-        print("None! All files on disk are correctly cataloged.")                                       # UI print
+        print("None! All files on disk are correctly cataloged.")                                   # UI print
 
-    print("Consistency check completed.")                                                             # UI print
+    print("Consistency check completed.")                                                           # UI print
     
 # ------------------------------------ end: load method ------------------------------------
 

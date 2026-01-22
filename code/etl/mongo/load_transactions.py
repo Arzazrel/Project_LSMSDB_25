@@ -295,9 +295,6 @@ def ingest_transactions():
         
         for row in reader:                                      # scroll all row (transactions) of the file
             
-            if transaction_count % 100 == 0:                                
-                print(f"Creating transaction number: {transaction_count}")  # UI print to see progression
-            
             user_id = int(row["accountAgeDays"])                # the user_id of the logged-in user (who made) the transaction will be equal to the "accountAgeDays"
             quantity = int(row["numItems"])                     # get the quantity of the asset purchased in the transaction
             payment_method = row["paymentMethod"]               # can be : 'storecredit', 'paypal', 'creditcard'
@@ -307,11 +304,12 @@ def ingest_transactions():
                 print("ERROR in ingest_transactions [load_transactions] - User with user_id: ",user_id, " isn't in the DB.")
                 continue
 
-            snapshot = asset_price_service.get_random_asset_price() # get a random asset, a realistic date and time and the corresponding price - SEE NOTE 0
-            if snapshot is None:                                # control check
-                print("ERROR in ingest_transactions [load_transactions] - failed selection of symbol, assetType, date,price")
-                null_transaction_count += 1                     # update failed transation counter
-                continue
+            snapshot = None
+            while snapshot is None:
+                snapshot = asset_price_service.get_random_asset_price() # get a random asset, a realistic date and time and the corresponding price - SEE NOTE 0
+                if snapshot is None:                                # control check
+                    #print("ERROR in ingest_transactions [load_transactions] - failed selection of symbol, assetType, date,price")
+                    null_transaction_count += 1                     # update failed transation counter
 
             # -- create a deposit if the payment method is "storecredit" -- 
             if payment_method == "storecredit":
@@ -362,6 +360,10 @@ def ingest_transactions():
 
             insert_transaction(db, purchase_tx)                 # insert the transaction into MongoDB
             apply_purchase(db, user, purchase_tx)               # applies the changes to the user
+            #print("CREATE TRANSACTION - User with transaction_id: ",tx_id)
+            
+            if transaction_count % 100 == 0:                                
+                print(f"Creating transaction number: {transaction_count}")  # UI print to see progression
             
             transaction_count += 1                              # update counter
             

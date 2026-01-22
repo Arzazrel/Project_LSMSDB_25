@@ -28,7 +28,7 @@ FILES = {
     "crypto": "crypto_list.csv"
 }
 
-# Dictionary for sector normalization
+# dictionary for sector normalization
 SECTOR_MAPPING = {
     'Basic Materials': 'Materials',
     'Financial Services': 'Financials',
@@ -87,7 +87,7 @@ def load_assets():
 
     for _, row in df_shares.iterrows():                                 # scroll all the rows in the csv file
         documents.append({
-            "symbol": clean_value(row.get("Symbol")),
+            "symbol": clean_value(row.get("symbol")),
             "shortName": clean_value(row.get("Short Name")),
             "longName": clean_value(row.get("Long Name")),
             "type": "share",

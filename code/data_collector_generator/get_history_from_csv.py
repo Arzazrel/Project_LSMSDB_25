@@ -75,14 +75,15 @@ Returns:
 - delimiter as a string (e.g., ',', ';', '\t', etc.)
 """
 def get_csv_delimiter(file_path: str, n_lines: int = 20) -> str:
-    with open(file_path, "r", encoding="utf-8") as f:
-        sample_lines = "".join([f.readline() for _ in range(n_lines)])
-        sniffer = csv.Sniffer()
-        dialect = sniffer.sniff(sample_lines)
-        delimiter = dialect.delimiter
-    return delimiter
-
-
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            sample_lines = "".join([f.readline() for _ in range(n_lines)])
+            sniffer = csv.Sniffer()
+            dialect = sniffer.sniff(sample_lines)
+            return dialect.delimiter
+    except Exception as e:
+        return ","      # if it cannot determine the delimiter (e.g., a single column), it returns the comma as the default.
+    
 # ------------------------------------ end: methods ------------------------------------
 
 if __name__ == "__main__":

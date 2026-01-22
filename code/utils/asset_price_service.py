@@ -17,11 +17,13 @@ from datetime import timedelta, time
 from code.utils.mongoDB_conn import get_db
 
 # Market hours (Italian time, CET/CEST)
-MARKET_OPEN_TIME = time(15, 30)   # 09:30 EST
-MARKET_CLOSE_TIME = time(22, 0)   # 16:00 EST
+MARKET_OPEN_TIME = time(15, 30)     # 09:30 EST
+MARKET_CLOSE_TIME = time(22, 0)     # 16:00 EST
 
-OPEN_WINDOW_MINUTES = 60          # 1 hour after open
-CLOSE_WINDOW_MINUTES = 60         # 1 hour before close
+OPEN_WINDOW_MINUTES = 60            # 1 hour after open
+CLOSE_WINDOW_MINUTES = 60           # 1 hour before close
+
+VERBOSE = False                     # if true -> show all error and warning print , if else -> don't show error and warning print
 
 # ------------------------------------ start: utils methods ------------------------------------
 
@@ -43,9 +45,10 @@ def random_time_between_market_hours():
     Returns None if no data is available.
 """
 def get_most_recent_price_date(symbol):
-    db = get_db()           # get DB connection
-    if db is None:          # check DB connection
-        print("ERROR [asset_price_service] - DB connection not avaiable")
+    db = get_db()               # get DB connection
+    if db is None:              # check DB connection
+        if VERBOSE:
+            print("ERROR [asset_price_service] - DB connection not avaiable")
         return None
         
     # get the most recent asset_prices for the selected symbol
@@ -73,20 +76,21 @@ Output:
 """
 def pick_random_asset(asset_type=None):
 
-    db = get_db()           # get DB connection
-    if db is None:          # check DB connection
-        print("ERROR [asset_price_service] - DB connection not avaiable")
+    db = get_db()               # get DB connection
+    if db is None:              # check DB connection
+        if VERBOSE:
+            print("ERROR [asset_price_service] - DB connection not avaiable")
         return None
 
     query = {}
-    if asset_type:          # check if the asset_type is given
-        query["Type"] = asset_type
+    if asset_type:              # check if the asset_type is given
+        query["type"] = asset_type
 
-    assets = list(db.assets.find(query))    # chek all the asset (optionally filtered by asset_type) 
-    if not assets:                          # control check for the list of assets
+    asset = list(db.assets.aggregate([{"$match": query}, {"$sample": {"size": 1}}]))   # chek all the asset (optionally filtered by asset_type) 
+    if not asset:                          # control check for the list of assets
         return None
-
-    asset = random.choice(assets)           # take one random asset
+        
+    asset = asset[0]            # take the element from list of dictionary to dictionary
 
     # return a dictionary with te parameters
     return {
@@ -107,9 +111,10 @@ Output:
 """
 def pick_random_price_date(symbol: str, start_date=None):
 
-    db = get_db()           # get DB connection
-    if db is None:          # check DB connection
-        print("ERROR [asset_price_service] - DB connection not available")
+    db = get_db()               # get DB connection
+    if db is None:              # check DB connection
+        if VERBOSE:
+            print("ERROR [asset_price_service] - DB connection not available")
         return None
 
     # --- retrieve start_date (earliest available) if not provided ---
@@ -133,33 +138,19 @@ def pick_random_price_date(symbol: str, start_date=None):
 
     last_doc = list(last_doc)               # list of the docs with the same date (in the project only one)
     if not last_doc:
-        print("ERROR in pick_random_price_date [asset_price_service] - failed retrieve last_doc for end_date")
+        if VERBOSE:
+            print("ERROR in pick_random_price_date [asset_price_service] - failed retrieve last_doc for end_date")
         return None
 
     end_date = last_doc[0]["date"]          # get the end date
 
-    # -- validation loop --
-    max_attempts = 20                       # max num of attempts fo the validation
-    attempt = 0                             # current attempt
-    
-    while attempt < max_attempts:           # validation loop
-
-        delta_days = (end_date - start_date).days               # get the days between the dates
-        random_offset = random.randint(0, delta_days)           # get a randoma date
-
-        random_date = start_date + timedelta(days=random_offset)                        # create the random date
-        random_date = random_date.replace(hour=0, minute=0, second=0, microsecond=0)    # consistency setting 
-
-        # check if exists (validate the random data chosen)
-        exists = db.asset_prices.find_one(
-            {"symbol": symbol, "date": random_date},
-            {"_id": 1}
-        )
-
-        if exists:
-            return random_date              # return the validated date
-
-        attempt += 1                        # update counter
+    pipeline = [
+        {"$match": {"symbol": symbol, "date": {"$gte": start_date, "$lte": end_date}}},
+        {"$sample": {"size": 1}}
+    ]
+    random_doc = list(db.asset_prices.aggregate(pipeline))
+    if random_doc:
+        return random_doc[0]["date"]
 
     return start_date                       # default return 
 
@@ -240,26 +231,30 @@ Output:
 """
 def get_random_asset_price(asset_type=None):
     
-    db = get_db()           # get DB connection
-    if db is None:          # check DB connection
-        print("ERROR [asset_price_service] - DB connection not avaiable")
+    db = get_db()                   # get DB connection
+    if db is None:                  # check DB connection
+        if VERBOSE:
+            print("ERROR [asset_price_service] - DB connection not avaiable")
         return None
 
-    asset = pick_random_asset(asset_type)   # get the random asset for the transaction
-    if asset is None:                       # security check
-        print("ERROR [asset_price_service] - failed selection of asset for transaction")
+    asset = pick_random_asset(asset_type)           # get the random asset for the transaction
+    if asset is None:                               # security check
+        if VERBOSE:
+            print("ERROR pick_random_asset in get_random_asset_price() in [asset_price_service] - failed selection of asset for transaction")
         return None
 
     date = pick_random_price_date(asset["symbol"])  # get the random date for the transaction (with hour 00:00)
     if date is None:                                # security check
-        print("ERROR [asset_price_service] - failed selection of the date for the transaction for the symbol: ",asset["symbol"])
+        if VERBOSE:
+            print("ERROR - pick_random_price_date in get_random_asset_price() in [asset_price_service] - failed selection of the date for the transaction for the symbol: ",asset["symbol"])
         return None
         
     price_doc = db.asset_prices.find_one(           # get the document relating to the prices for the chosen asset and date
         {"symbol": asset["symbol"], "date": date}
     )
     if price_doc is None:
-        print("ERROR [asset_price_service] - failed the recovery of the asset price for the transaction")
+        if VERBOSE:
+            print("ERROR db.asset_prices.find_one in get_random_asset_price in [asset_price_service] - failed the recovery of the asset price for the transaction")
         return None
 
     # generate a realistic trade datetime (during stock exchange opening hours) on that date
@@ -268,7 +263,7 @@ def get_random_asset_price(asset_type=None):
         random_time_between_market_hours()
     )
 
-    price, source = pick_price_from_candle(price_doc, date) # get the price per unit for the transaction
+    price, source = pick_price_from_candle(price_doc, trade_time)   # get the price per unit for the transaction
 
     # return the usefull information generated for the transaction
     return {
