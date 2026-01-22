@@ -431,7 +431,8 @@ If you want reset or modify a counter (ex.):
 db.counters.updateOne(
   { _id: "transaction_id" },
   { $set: { seq: 0 } }
-)```
+)
+```
 
 ## Step 2 – News Ingestion
 Use the python code:
@@ -507,6 +508,29 @@ Verify counter:
 ```MongoDB shell
 db.users.findOne({ user_id: "user_id" })
 ```
+
+To create an admin user for test (optional)
+```MongoDB shell
+db.users.insertOne({
+  "user_id": NumberLong(9999),            
+  "first_name": "Admin",
+  "last_name": "Test",
+  "email": "admin",                      
+  "password": "$2b$12$KovI17.U8k8GWhH.Xp6Y9O9P5f9G6I9j0q8H.yO8n6L5k4j3i2h1g", // "admin" hash
+  "role": "admin",                        // admin role
+  "birth_date": new Date(),
+  "phone": 333333333,
+  "address": "street test, 0",
+  "city": "testCity",
+  "province": "testville",
+  "cap": 00000,
+  "registration_date": new Date(),
+  "created_at": new Date(),
+  "updated_at": new Date(),
+  "suspended": False,
+  "deletedAt": False
+});
+```            
 
 ## Step 6 – Transactions Simulation & Ingestion
 Before inserting transactions into the DB, it is recommended to apply the index on asset_prices. The algorithm for creating and inserting transactions inserts into the ‘transactions’ collection and modifies the “users” collection, but makes many queries on the ‘asset_prices’ collection.
