@@ -8,8 +8,7 @@ import it.unipi.myfuture.myfuture_backend.dto.assetPrice.AssetPriceResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionResponseDTO;
-import it.unipi.myfuture.myfuture_backend.dto.user.UserResponseDTO;
-import it.unipi.myfuture.myfuture_backend.dto.user.UserSuspendDTO;
+import it.unipi.myfuture.myfuture_backend.dto.user.*;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionStatus;
@@ -398,4 +397,26 @@ public class AdminController {
 
     //------------------------------------------------ end: news API ---------------------------------------------------
     //------------------------------------------------ end: CRUD API ---------------------------------------------------
+
+    //-------------------------------------------- start: Aggregation API ----------------------------------------------
+    @GetMapping("/analytics/top-variety")
+    public ResponseEntity<ResponseWrapper<List<UserVarietyDTO>>> getTopVariety() {
+        return ResponseEntity.ok(new ResponseWrapper<>("Top 10 users by variety retrieved",
+                userService.getTopUsersByPortfolioVariety()));
+    }
+
+    @GetMapping("/analytics/top-holders")
+    public ResponseEntity<ResponseWrapper<List<UserTopAssetHolderDTO>>> getTopHolders(
+            @RequestParam String symbol,
+            @RequestParam AssetType type) {
+        return ResponseEntity.ok(new ResponseWrapper<>("Top 10 holders of " + symbol + " retrieved",
+                userService.getTopHoldersByAsset(symbol, type)));
+    }
+
+    @GetMapping("/analytics/global-stats")
+    public ResponseEntity<ResponseWrapper<GlobalUserStatsDTO>> getGlobalStats() {
+        return ResponseEntity.ok(new ResponseWrapper<>("Global assets stats retrieved",
+                userService.getGlobalPortfolioStats()));
+    }
+    //--------------------------------------------- end: Aggregation API -----------------------------------------------
 }

@@ -1,6 +1,7 @@
 package it.unipi.myfuture.myfuture_backend.service;
 
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
+import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
 import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
 import it.unipi.myfuture.myfuture_backend.mapper.UserMapper;
@@ -16,8 +17,7 @@ import java.util.List;
  */
 public interface UserService {
 
-    // ----------------------------------------------- start: user API --------------------------------------------------
-
+    //----------------------------------------- start: method for CRUD API ---------------------------------------------
     /**
      * Register a new user. Initializes wallet, portfolio and default values.
      *
@@ -130,5 +130,32 @@ public interface UserService {
      */
     void softDeleteUser(Long userId);
 
-    // ----------------------------------------------- end: user API --------------------------------------------------
+    //------------------------------------------ end: method for CRUD API ----------------------------------------------
+
+    //------------------------------------- start: method for aggregation API ------------------------------------------
+
+    /**
+     * View the 10 users with the largest portfolios in terms of different assets.
+     *
+     * @return list of the user
+     */
+    List<UserVarietyDTO> getTopUsersByPortfolioVariety();
+
+    /**
+     * View the 10 users with the largest amount of a given asset in their portfolio.
+     *
+     * @param symbol symbol of the asset to looking for
+     * @param type the type of the asset, used for identify the correct wallet to look in
+     * @return list of the user
+     */
+    List<UserTopAssetHolderDTO> getTopHoldersByAsset(String symbol, AssetType type);
+
+    /**
+     * View the average number of distinct, average, maximum amount of assets held by users
+     *
+     * @return list of the user
+     */
+    GlobalUserStatsDTO getGlobalPortfolioStats();
+
+    //------------------------------------- end: method for aggregation API --------------------------------------------
 }

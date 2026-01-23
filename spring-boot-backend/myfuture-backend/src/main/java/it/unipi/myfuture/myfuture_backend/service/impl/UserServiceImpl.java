@@ -1,7 +1,9 @@
 package it.unipi.myfuture.myfuture_backend.service.impl;
 
-import it.unipi.myfuture.myfuture_backend.dao.mongo.UserDao;
+import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserAggregationDao;
+import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserDao;
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
+import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
 import it.unipi.myfuture.myfuture_backend.enums.UserRole;
 import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
@@ -25,11 +27,14 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private UserAggregationDao userAggregationDao;
+
     @Autowired
     private PasswordEncoder passwordEncoder;    // for user authentication
 
-    // ----------------------------------------------- user API --------------------------------------------------
-
+    //----------------------------------------- start: method for CRUD API ---------------------------------------------
     /**
      * Register a new user. Initializes wallet, portfolio and default values.
      *
@@ -263,4 +268,48 @@ public class UserServiceImpl implements UserService {
     public void softDeleteUser(Long userId) {
         userDao.softDelete(userId);
     }
+
+    //------------------------------------------ end: method for CRUD API ----------------------------------------------
+
+    //------------------------------------- start: method for aggregation API ------------------------------------------
+
+    /**
+     * View the 10 users with the largest portfolios in terms of different assets.
+     *
+     * @return list of the user
+     */
+    @Override
+    public List<UserVarietyDTO> getTopUsersByPortfolioVariety()
+    {
+        return userAggregationDao.findTop10ByPortfolioVariety();
+    }
+
+    /**
+     * View the 10 users with the largest amount of a given asset in their portfolio.
+     *
+     * @param symbol symbol of the asset to looking for
+     * @param type the type of the asset, used for identify the correct wallet to look in
+     * @return list of the user
+     */
+    @Override
+    public List<UserTopAssetHolderDTO> getTopHoldersByAsset(String symbol, AssetType type)
+    {
+        // control check for input validation
+        if (symbol == null || symbol.isEmpty())
+            throw new BusinessException("Symbol cannot be empty");
+
+        return userAggregationDao.findTop10HoldersByAsset(symbol, type);
+    }
+
+    /**
+     * View the average number of distinct, average, maximum amount of assets held by users
+     *
+     * @return list of the user
+     */
+    @Override
+    public GlobalUserStatsDTO getGlobalPortfolioStats(){
+        return userAggregationDao.getGlobalUsageStats();
+    }
+
+    //------------------------------------- end: method for aggregation API --------------------------------------------
 }

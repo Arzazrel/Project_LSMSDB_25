@@ -1,6 +1,6 @@
 package it.unipi.myfuture.myfuture_backend.service.security;
 
-import it.unipi.myfuture.myfuture_backend.dao.mongo.UserDao;
+import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserDao;
 import it.unipi.myfuture.myfuture_backend.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;

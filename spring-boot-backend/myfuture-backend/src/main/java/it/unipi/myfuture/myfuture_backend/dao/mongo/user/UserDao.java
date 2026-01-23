@@ -1,4 +1,4 @@
-package it.unipi.myfuture.myfuture_backend.dao.mongo;
+package it.unipi.myfuture.myfuture_backend.dao.mongo.user;
 
 import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
 import it.unipi.myfuture.myfuture_backend.model.News;
