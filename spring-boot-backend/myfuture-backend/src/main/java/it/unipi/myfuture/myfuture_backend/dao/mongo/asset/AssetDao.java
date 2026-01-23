@@ -1,4 +1,4 @@
-package it.unipi.myfuture.myfuture_backend.dao.mongo;
+package it.unipi.myfuture.myfuture_backend.dao.mongo.asset;
 
 import it.unipi.myfuture.myfuture_backend.model.Asset;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;

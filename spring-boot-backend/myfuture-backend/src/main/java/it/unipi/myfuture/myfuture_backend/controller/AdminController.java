@@ -3,6 +3,8 @@ package it.unipi.myfuture.myfuture_backend.controller;
 import it.unipi.myfuture.myfuture_backend.dto.ResponseWrapper;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetResponseDTO;
+import it.unipi.myfuture.myfuture_backend.dto.asset.AssetTypeCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.asset.SectorShareCountDTO;
 import it.unipi.myfuture.myfuture_backend.dto.assetPrice.AssetPriceRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.assetPrice.AssetPriceResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsRequestDTO;
@@ -276,7 +278,7 @@ public class AdminController {
     /**
      * Insert asset price.
      */
-    @PostMapping("/asset_prices")
+    @PostMapping("/asset-prices")
     public ResponseEntity<ResponseWrapper<AssetPriceResponseDTO>> insertAssetPrice(
             @RequestBody AssetPriceRequestDTO request) {
 
@@ -289,7 +291,7 @@ public class AdminController {
     /**
      * Get asset prices by symbol and date range.
      */
-    @GetMapping("/asset_prices/{symbol}")
+    @GetMapping("/asset-prices/{symbol}")
     public ResponseEntity<ResponseWrapper<List<AssetPriceResponseDTO>>> getAssetPrices(
             @PathVariable String symbol,
             @RequestParam Instant from,
@@ -304,7 +306,7 @@ public class AdminController {
     /**
      * Get latest asset price.
      */
-    @GetMapping("/asset_prices/{symbol}/latest")
+    @GetMapping("/asset-prices/{symbol}/latest")
     public ResponseEntity<ResponseWrapper<AssetPriceResponseDTO>> getLatestPrice(
             @PathVariable String symbol) {
 
@@ -317,7 +319,7 @@ public class AdminController {
     /**
      * Delete asset prices by symbol.
      */
-    @DeleteMapping("/asset_prices/{symbol}")
+    @DeleteMapping("/asset-prices/{symbol}")
     public ResponseEntity<ResponseWrapper<Void>> deleteAssetPrices(
             @PathVariable String symbol) {
 
@@ -399,13 +401,21 @@ public class AdminController {
     //------------------------------------------------ end: CRUD API ---------------------------------------------------
 
     //-------------------------------------------- start: Aggregation API ----------------------------------------------
-    @GetMapping("/analytics/top-variety")
+    //---------------------------------------------- start: users API --------------------------------------------------
+
+    /**
+     * View the 10 users with the largest portfolios in terms of different assets.
+     */
+    @GetMapping("/analytics/users/top-variety")
     public ResponseEntity<ResponseWrapper<List<UserVarietyDTO>>> getTopVariety() {
         return ResponseEntity.ok(new ResponseWrapper<>("Top 10 users by variety retrieved",
                 userService.getTopUsersByPortfolioVariety()));
     }
 
-    @GetMapping("/analytics/top-holders")
+    /**
+     * View the 10 users with the largest amount of a given asset in their portfolio.
+     */
+    @GetMapping("/analytics/users/top-holders")
     public ResponseEntity<ResponseWrapper<List<UserTopAssetHolderDTO>>> getTopHolders(
             @RequestParam String symbol,
             @RequestParam AssetType type) {
@@ -413,10 +423,32 @@ public class AdminController {
                 userService.getTopHoldersByAsset(symbol, type)));
     }
 
-    @GetMapping("/analytics/global-stats")
+    /**
+     * View the average, minimum and maximum number of distinct assets held by users
+     */
+    @GetMapping("/analytics/users/global-stats")
     public ResponseEntity<ResponseWrapper<GlobalUserStatsDTO>> getGlobalStats() {
         return ResponseEntity.ok(new ResponseWrapper<>("Global assets stats retrieved",
                 userService.getGlobalPortfolioStats()));
     }
+    //----------------------------------------------- end: users API ---------------------------------------------------
+    //---------------------------------------------- start: asset API --------------------------------------------------
+
+    /**
+     * Calculate number of assets by type (share / ETF / crypto)
+     */
+    @GetMapping("/analytics/assets/asset-type-count")
+    public ResponseEntity<ResponseWrapper<List<AssetTypeCountDTO>>> getTypeCount() {
+        return ResponseEntity.ok(new ResponseWrapper<>("Asset distribution retrieved", assetService.getAssetTypeDistribution()));
+    }
+
+    /**
+     * Calculate top 10 sectors by number of listed share
+     */
+    @GetMapping("/analytics/assets/top-asset-sector")
+    public ResponseEntity<ResponseWrapper<List<SectorShareCountDTO>>> getTopSectors() {
+        return ResponseEntity.ok(new ResponseWrapper<>("Top sectors retrieved", assetService.getTopSectorsByShares()));
+    }
+    //----------------------------------------------- end: asset API ---------------------------------------------------
     //--------------------------------------------- end: Aggregation API -----------------------------------------------
 }

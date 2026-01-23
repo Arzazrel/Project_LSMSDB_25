@@ -1,8 +1,11 @@
 package it.unipi.myfuture.myfuture_backend.service.impl;
 
-import it.unipi.myfuture.myfuture_backend.dao.mongo.AssetDao;
+import it.unipi.myfuture.myfuture_backend.dao.mongo.asset.AssetAggregationDao;
+import it.unipi.myfuture.myfuture_backend.dao.mongo.asset.AssetDao;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetResponseDTO;
+import it.unipi.myfuture.myfuture_backend.dto.asset.AssetTypeCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.asset.SectorShareCountDTO;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
 import it.unipi.myfuture.myfuture_backend.mapper.AssetMapper;
@@ -22,7 +25,10 @@ public class AssetServiceImpl implements AssetService {
     @Autowired
     private AssetDao assetDao;
 
-    // ------------------------------------------------ start: asset API --------------------------------------------------
+    @Autowired
+    private AssetAggregationDao assetAggregationDao;
+
+    //----------------------------------------- start: method for CRUD API ---------------------------------------------
 
     /**
      * Create a new asset. Used by admin.
@@ -128,5 +134,30 @@ public class AssetServiceImpl implements AssetService {
         assetDao.undoSoftDelete(symbol);        // removes soft delete
     }
 
-    // ------------------------------------------------ end: asset API --------------------------------------------------
+    //------------------------------------------ end: method for CRUD API ----------------------------------------------
+
+    //------------------------------------- start: method for aggregation API ------------------------------------------
+
+    /**
+     * Calculate number of assets by type (share / ETF / crypto)
+     *
+     * @return statistics DTO
+     */
+    @Override
+    public List<AssetTypeCountDTO> getAssetTypeDistribution()
+    {
+        return assetAggregationDao.countAssetsByType();
+    }
+
+    /**
+     * Calculate top 10 sectors by number of listed share
+     *
+     * @return statistics DTO
+     */
+    @Override
+    public List<SectorShareCountDTO> getTopSectorsByShares()
+    {
+        return assetAggregationDao.findTop10SectorsByShares();
+    }
+    //------------------------------------- end: method for aggregation API --------------------------------------------
 }

@@ -2,6 +2,8 @@ package it.unipi.myfuture.myfuture_backend.service;
 
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetResponseDTO;
+import it.unipi.myfuture.myfuture_backend.dto.asset.AssetTypeCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.asset.SectorShareCountDTO;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 
 import java.util.List;
@@ -11,7 +13,7 @@ import java.util.List;
  * Defines all business operations related to asset management. (Controllers interact ONLY with this interface layer)
  */
 public interface AssetService {
-
+    //----------------------------------------- start: method for CRUD API ---------------------------------------------
     /**
      * Create a new asset. Used by admin.
      *
@@ -66,4 +68,22 @@ public interface AssetService {
      */
     void restoreAsset(String symbol);
 
+    //------------------------------------------ end: method for CRUD API ----------------------------------------------
+
+    //------------------------------------- start: method for aggregation API ------------------------------------------
+
+    /**
+     * Calculate number of assets by type (share / ETF / crypto)
+     *
+     * @return statistics DTO
+     */
+    List<AssetTypeCountDTO> getAssetTypeDistribution();
+
+    /**
+     * Calculate top 10 sectors by number of listed share
+     *
+     * @return statistics DTO
+     */
+    List<SectorShareCountDTO> getTopSectorsByShares();
+    //------------------------------------- end: method for aggregation API --------------------------------------------
 }
