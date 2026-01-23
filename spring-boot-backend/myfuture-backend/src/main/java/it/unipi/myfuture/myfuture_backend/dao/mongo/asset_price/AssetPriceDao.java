@@ -1,4 +1,4 @@
-package it.unipi.myfuture.myfuture_backend.dao.mongo;
+package it.unipi.myfuture.myfuture_backend.dao.mongo.asset_price;
 
 import it.unipi.myfuture.myfuture_backend.model.AssetPrice;
 import org.springframework.beans.factory.annotation.Autowired;

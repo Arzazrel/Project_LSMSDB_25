@@ -1,9 +1,12 @@
 package it.unipi.myfuture.myfuture_backend.dao.mongo.asset;
 
-import it.unipi.myfuture.myfuture_backend.dto.asset.AssetTypeCountDTO;
-import it.unipi.myfuture.myfuture_backend.dto.asset.SectorShareCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetTypeCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.SectorShareCountDTO;
 import java.util.List;
 
+/**
+ * class that defines aggregations that work on the assets collection
+ */
 public interface AssetAggregationDao {
     /**
      * Number of assets by type (share / ETF / crypto)

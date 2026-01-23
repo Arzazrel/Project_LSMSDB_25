@@ -2,6 +2,9 @@ package it.unipi.myfuture.myfuture_backend.service.impl;
 
 import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserAggregationDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserDao;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.GlobalUserStatsDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.UserTopAssetHolderDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.UserVarietyDTO;
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;

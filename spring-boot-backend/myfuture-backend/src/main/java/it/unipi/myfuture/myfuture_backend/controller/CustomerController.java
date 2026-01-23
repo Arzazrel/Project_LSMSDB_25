@@ -1,15 +1,18 @@
 package it.unipi.myfuture.myfuture_backend.controller;
 
 import it.unipi.myfuture.myfuture_backend.dto.ResponseWrapper;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetGrowthDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetStableTrendDTO;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetResponseDTO;
-import it.unipi.myfuture.myfuture_backend.dto.asset.AssetTypeCountDTO;
-import it.unipi.myfuture.myfuture_backend.dto.asset.SectorShareCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetTypeCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.SectorShareCountDTO;
 import it.unipi.myfuture.myfuture_backend.dto.assetPrice.AssetPriceResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
+import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionStatus;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionType;
 import it.unipi.myfuture.myfuture_backend.service.*;
@@ -310,5 +313,42 @@ public class CustomerController {
         return ResponseEntity.ok(new ResponseWrapper<>("Top sectors retrieved", assetService.getTopSectorsByShares()));
     }
     //----------------------------------------------- end: asset API ---------------------------------------------------
+
+    //------------------------------------------- start: asset_prices API ----------------------------------------------
+
+    /**
+     * calculate the top 10 assets with the best growth decline last day/week/month.
+     */
+    @GetMapping("/analytics/assets_prices/top-growth")
+    public ResponseEntity<ResponseWrapper<List<AssetGrowthDTO>>> getTopGrowth(@RequestParam TimeWindow window) {
+        return ResponseEntity.ok(new ResponseWrapper<>("Top growth assets retrieved", assetPriceService.getGrowthAnalytics(window)));
+    }
+
+    /**
+     *  calculate the top 10 assets with the best worst decline last day/week/month.
+     */
+    @GetMapping("/analytics/assets_prices/worst-growth")
+    public ResponseEntity<ResponseWrapper<List<AssetGrowthDTO>>> getWorstGrowth(@RequestParam TimeWindow window) {
+        return ResponseEntity.ok(new ResponseWrapper<>("Worst growth assets retrieved", assetPriceService.getWorstAnalytics(window)));
+    }
+
+    /**
+     * See the 10 assets that have consistently raisen over the past week and their average daily growth/descent rate.
+     */
+    @GetMapping("/analytics/assets_prices/top-stable-raisen")
+    public ResponseEntity<ResponseWrapper<List<AssetStableTrendDTO>>> getStableRaisen() {
+        return ResponseEntity.ok(new ResponseWrapper<>("Consistent rising assets retrieved", assetPriceService.getPositiveStableTrendAnalytics()));
+    }
+
+    /**
+     * See the 10 assets that have consistently fell over the past week and their average daily growth/descent rate.
+     */
+    @GetMapping("/analytics/assets_prices/worst-stable-fell")
+    public ResponseEntity<ResponseWrapper<List<AssetStableTrendDTO>>> getStableFell() {
+        return ResponseEntity.ok(new ResponseWrapper<>("Consistent falling assets retrieved", assetPriceService.getNegativeStableTrendAnalytics()));
+    }
+
+    //-------------------------------------------- end: asset_prices API -----------------------------------------------
+
     //--------------------------------------------- end: Aggregation API -----------------------------------------------
 }

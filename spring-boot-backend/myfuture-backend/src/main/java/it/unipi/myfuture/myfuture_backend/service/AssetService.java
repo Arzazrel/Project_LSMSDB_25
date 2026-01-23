@@ -2,8 +2,8 @@ package it.unipi.myfuture.myfuture_backend.service;
 
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetResponseDTO;
-import it.unipi.myfuture.myfuture_backend.dto.asset.AssetTypeCountDTO;
-import it.unipi.myfuture.myfuture_backend.dto.asset.SectorShareCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetTypeCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.SectorShareCountDTO;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 
 import java.util.List;

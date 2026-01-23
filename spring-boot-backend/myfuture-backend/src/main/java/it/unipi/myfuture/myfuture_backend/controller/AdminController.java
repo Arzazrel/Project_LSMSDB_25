@@ -1,10 +1,9 @@
 package it.unipi.myfuture.myfuture_backend.controller;
 
 import it.unipi.myfuture.myfuture_backend.dto.ResponseWrapper;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.*;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetResponseDTO;
-import it.unipi.myfuture.myfuture_backend.dto.asset.AssetTypeCountDTO;
-import it.unipi.myfuture.myfuture_backend.dto.asset.SectorShareCountDTO;
 import it.unipi.myfuture.myfuture_backend.dto.assetPrice.AssetPriceRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.assetPrice.AssetPriceResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsRequestDTO;
@@ -12,7 +11,6 @@ import it.unipi.myfuture.myfuture_backend.dto.news.NewsResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
-import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionStatus;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionType;
 import it.unipi.myfuture.myfuture_backend.service.*;

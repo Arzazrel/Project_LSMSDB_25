@@ -1,8 +1,8 @@
 package it.unipi.myfuture.myfuture_backend.dao.mongo.asset.impl;
 
 import it.unipi.myfuture.myfuture_backend.dao.mongo.asset.AssetAggregationDao;
-import it.unipi.myfuture.myfuture_backend.dto.asset.AssetTypeCountDTO;
-import it.unipi.myfuture.myfuture_backend.dto.asset.SectorShareCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetTypeCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.SectorShareCountDTO;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -13,6 +13,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * class that implements aggregations that work on the assets collection
+ */
 @Repository
 public class AssetAggregationDaoImpl implements AssetAggregationDao {
 

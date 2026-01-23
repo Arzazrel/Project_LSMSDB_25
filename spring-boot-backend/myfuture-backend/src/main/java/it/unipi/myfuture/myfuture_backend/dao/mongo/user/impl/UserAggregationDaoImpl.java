@@ -1,9 +1,9 @@
 package it.unipi.myfuture.myfuture_backend.dao.mongo.user.impl;
 
 import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserAggregationDao;
-import it.unipi.myfuture.myfuture_backend.dto.user.UserTopAssetHolderDTO;
-import it.unipi.myfuture.myfuture_backend.dto.user.UserVarietyDTO;
-import it.unipi.myfuture.myfuture_backend.dto.user.GlobalUserStatsDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.UserTopAssetHolderDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.UserVarietyDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.GlobalUserStatsDTO;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -17,6 +17,9 @@ import org.springframework.stereotype.Repository;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * class that implements aggregations that work on the users collection
+ */
 @Repository
 public class UserAggregationDaoImpl implements UserAggregationDao {
 

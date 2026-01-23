@@ -1,7 +1,10 @@
 package it.unipi.myfuture.myfuture_backend.service;
 
+import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetGrowthDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetStableTrendDTO;
 import it.unipi.myfuture.myfuture_backend.dto.assetPrice.AssetPriceRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.assetPrice.AssetPriceResponseDTO;
+import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 
 import java.time.Instant;
 import java.util.List;
@@ -12,6 +15,7 @@ import java.util.List;
  */
 public interface AssetPriceService {
 
+    //------------------------------------ start: method for aggregation API -------------------------------------------
     /**
      * Insert or update an asset price entry. Used by admin.
      *
@@ -45,4 +49,39 @@ public interface AssetPriceService {
      */
     void deletePrices(String symbol);
 
+    //------------------------------------- end: method for aggregation API --------------------------------------------
+
+    //------------------------------------- start: method for aggregation API ------------------------------------------
+
+    /**
+     * View the top 10 assets with the best growth decline last day/week/month.
+     *
+     * @param window    time window considered
+     * @return list of AssetGrowthDTO containing the result
+     */
+    List<AssetGrowthDTO> getGrowthAnalytics(TimeWindow window);
+
+    /**
+     * View the top 10 assets with the best worst decline last day/week/month.
+     *
+     * @param window    time window considered
+     * @return list of AssetGrowthDTO containing the result
+     */
+    List<AssetGrowthDTO> getWorstAnalytics(TimeWindow window);
+
+    /**
+     * See the 10 assets that have consistently raisen over the past week and their average daily growth rate.
+     *
+     * @return list of AssetStableTrendDTO containing the result
+     */
+    List<AssetStableTrendDTO> getPositiveStableTrendAnalytics();
+
+    /**
+     * See the 10 assets that have consistently fell over the past week and their average daily descent rate.
+     *
+     * @return list of AssetStableTrendDTO containing the result
+     */
+    List<AssetStableTrendDTO> getNegativeStableTrendAnalytics();
+
+    //-------------------------------------- end: method for aggregation API -------------------------------------------
 }

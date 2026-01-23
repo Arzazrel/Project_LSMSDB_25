@@ -1,8 +1,12 @@
 package it.unipi.myfuture.myfuture_backend.service.impl;
 
-import it.unipi.myfuture.myfuture_backend.dao.mongo.AssetPriceDao;
+import it.unipi.myfuture.myfuture_backend.dao.mongo.asset_price.AssetPriceAggregationDao;
+import it.unipi.myfuture.myfuture_backend.dao.mongo.asset_price.AssetPriceDao;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetGrowthDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetStableTrendDTO;
 import it.unipi.myfuture.myfuture_backend.dto.assetPrice.AssetPriceRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.assetPrice.AssetPriceResponseDTO;
+import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.mapper.AssetPriceMapper;
 import it.unipi.myfuture.myfuture_backend.model.AssetPrice;
 import it.unipi.myfuture.myfuture_backend.service.AssetPriceService;
@@ -22,8 +26,10 @@ public class AssetPriceServiceImpl implements AssetPriceService {
     @Autowired
     private AssetPriceDao assetPriceDao;
 
-    // ---------------------------------------------- start: asset_price API ----------------------------------------------
+    @Autowired
+    private AssetPriceAggregationDao assetPriceAggregationDao;
 
+    //------------------------------------ start: method for aggregation API -------------------------------------------
     /**
      * Insert or update an asset price entry. Used by admin.
      *
@@ -81,6 +87,51 @@ public class AssetPriceServiceImpl implements AssetPriceService {
     public void deletePrices(String symbol) {
         assetPriceDao.deleteBySymbol(symbol);   // real delete, not a soft delete
     }
+    //------------------------------------- end: method for aggregation API --------------------------------------------
 
-    // ---------------------------------------------- end: asset_price API ------------------------------------------------
+    //------------------------------------- start: method for aggregation API ------------------------------------------
+
+    /**
+     * View the top 10 assets with the best growth decline last day/week/month.
+     *
+     * @param window    time window considered
+     * @return list of AssetGrowthDTO containing the result
+     */
+    @Override
+    public List<AssetGrowthDTO> getGrowthAnalytics(TimeWindow window) {
+        return assetPriceAggregationDao.findAssetPerformance(window, false);
+    }
+
+    /**
+     * View the top 10 assets with the best worst decline last day/week/month.
+     *
+     * @param window    time window considered
+     * @return list of AssetGrowthDTO containing the result
+     */
+    @Override
+    public List<AssetGrowthDTO> getWorstAnalytics(TimeWindow window) {
+        return assetPriceAggregationDao.findAssetPerformance(window, true);
+    }
+
+    /**
+     * See the 10 assets that have consistently raisen over the past week and their average daily growth rate.
+     *
+     * @return list of AssetStableTrendDTO containing the result
+     */
+    @Override
+    public List<AssetStableTrendDTO> getPositiveStableTrendAnalytics() {
+        return assetPriceAggregationDao.findConsistentTrendAssets(true);
+    }
+
+    /**
+     * See the 10 assets that have consistently fell over the past week and their average daily descent rate.
+     *
+     * @return list of AssetStableTrendDTO containing the result
+     */
+    @Override
+    public List<AssetStableTrendDTO> getNegativeStableTrendAnalytics() {
+        return assetPriceAggregationDao.findConsistentTrendAssets(false);
+    }
+
+    //-------------------------------------- end: method for aggregation API -------------------------------------------
 }

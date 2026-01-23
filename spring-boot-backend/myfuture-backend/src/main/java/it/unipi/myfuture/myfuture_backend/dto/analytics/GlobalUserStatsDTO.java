@@ -1,4 +1,4 @@
-package it.unipi.myfuture.myfuture_backend.dto.user;
+package it.unipi.myfuture.myfuture_backend.dto.analytics;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
