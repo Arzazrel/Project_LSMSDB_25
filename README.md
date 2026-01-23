@@ -516,7 +516,7 @@ db.users.insertOne({
   "first_name": "Admin",
   "last_name": "Test",
   "email": "admin",                      
-  "password": "$2b$12$KovI17.U8k8GWhH.Xp6Y9O9P5f9G6I9j0q8H.yO8n6L5k4j3i2h1g", // "admin" hash
+  "passwordHash": "$2a$10$BYzsOtlTLfjTozSITofgiuKpcWxtORaidnBDYLbS4BHf3OxjTnViq", // "admin" hash
   "role": "admin",                        // admin role
   "birth_date": new Date(),
   "phone": 333333333,
@@ -527,8 +527,8 @@ db.users.insertOne({
   "registration_date": new Date(),
   "created_at": new Date(),
   "updated_at": new Date(),
-  "suspended": False,
-  "deletedAt": False
+  "suspended": false,
+  "deleted": false
 });
 ```            
 
