@@ -1,15 +1,18 @@
 package it.unipi.myfuture.myfuture_backend.service.impl;
 
-import it.unipi.myfuture.myfuture_backend.dao.mongo.TransactionDao;
-import it.unipi.myfuture.myfuture_backend.dto.asset.AssetResponseDTO;
+import it.unipi.myfuture.myfuture_backend.dao.mongo.transaction.TransactionDao;
+import it.unipi.myfuture.myfuture_backend.dao.mongo.transaction.TransactionAggregationDao;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.MostTradedAssetDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.TotalInvestmentDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.TransactionDistributionDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.UserFinancialFlowDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionResponseDTO;
+import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionStatus;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionType;
 import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
-import it.unipi.myfuture.myfuture_backend.mapper.AssetMapper;
 import it.unipi.myfuture.myfuture_backend.mapper.TransactionMapper;
-import it.unipi.myfuture.myfuture_backend.model.Asset;
 import it.unipi.myfuture.myfuture_backend.model.Transaction;
 import it.unipi.myfuture.myfuture_backend.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +31,10 @@ public class TransactionServiceImpl implements TransactionService {
     @Autowired
     private TransactionDao transactionDao;
 
-    // ----------------------------------------------- start: transaction API -------------------------------------------
+    @Autowired
+    private TransactionAggregationDao transactionAggregationDao;
 
+    //----------------------------------------- start: method for CRUD API ---------------------------------------------
     /**
      * Create a new transaction.
      *
@@ -141,6 +146,62 @@ public class TransactionServiceImpl implements TransactionService {
     public void deleteTransaction(Long id) {
         transactionDao.deleteById(id);
     }
+    //------------------------------------------ end: method for CRUD API ----------------------------------------------
+    //------------------------------------- start: method for aggregation API ------------------------------------------
 
-    // ----------------------------------------------- end: transaction API ---------------------------------------------
+    /**
+     * Get the most traded assets based on volume and transaction count.
+     *
+     * @param window analysis time window
+     * @return a list of  MostTradedAssetDTO sorted by descending monetary volume.
+     */
+    @Override
+    public List<MostTradedAssetDTO> getMostTradedAssets(TimeWindow window) {
+        return transactionAggregationDao.findMostTradedAssets(window);
+    }
+
+    /**
+     * Analyze transaction distribution by a specific field (e.g., 'category' or 'paymentMethod').
+     *
+     * @param groupByField The field on which to perform the grouping (e.g., “category” or “paymentMethod”).
+     * @param window analysis time window (DAY, WEEK, MONTH, YEAR)
+     * @return A list of TransactionDistributionDTO with counts and volumes for each group.
+     */
+    @Override
+    public List<TransactionDistributionDTO> getTransactionDistribution(String groupByField, TimeWindow window) {
+        // Validate grouping field to prevent invalid MongoDB queries
+        if (!"category".equals(groupByField) && !"paymentMethod".equals(groupByField)) {
+            throw new IllegalArgumentException("Invalid grouping field: " + groupByField);
+        }
+        return transactionAggregationDao.getTransactionDistribution(groupByField, window);
+    }
+
+    /**
+     * Get the total money invested (BUY operations) globally or for a specific asset.
+     *
+     * @param symbol (Optional) The symbol of a specific asset. If null, the calculation is global.
+     * @param window The time window for calculating the investment.
+     * @return A TotalInvestmentDTO containing the amount invested and the number of purchases.
+     */
+    @Override
+    public TotalInvestmentDTO getTotalMoneyInvested(String symbol, TimeWindow window) {
+        // Calculate total capital inflow for the platform or a specific asset
+        return transactionAggregationDao.getTotalMoneyInvested(symbol, window);
+    }
+
+    /**
+     * Rank users by their net financial flow (Sales - Purchases).
+     *
+     * @param window The analysis time window.
+     * @param ascending If true, returns users with the worst flow (those who invested the most).
+     *                  If false, returns users with the best flow (those who earned the most).
+     * @return A list of UserFinancialFlowDTO with details of volumes per user.
+     */
+    @Override
+    public List<UserFinancialFlowDTO> getUserFinancialFlow(TimeWindow window, boolean ascending) {
+        // Rank users based on their liquidity impact (net flow)
+        return transactionAggregationDao.findUserFinancialFlow(window, ascending);
+    }
+
+    //------------------------------------- end: method for aggregation API --------------------------------------------
 }

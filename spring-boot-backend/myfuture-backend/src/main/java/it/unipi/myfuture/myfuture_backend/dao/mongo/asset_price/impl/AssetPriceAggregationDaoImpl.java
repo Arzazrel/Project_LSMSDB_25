@@ -4,6 +4,7 @@ import it.unipi.myfuture.myfuture_backend.dao.mongo.asset_price.AssetPriceAggreg
 import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetGrowthDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetStableTrendDTO;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
+import it.unipi.myfuture.myfuture_backend.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -35,7 +36,7 @@ public class AssetPriceAggregationDaoImpl implements AssetPriceAggregationDao {
     @Override
     public List<AssetGrowthDTO> findAssetPerformance(TimeWindow window, boolean ascending) {
 
-        Instant startDate = calculateStartDate(window);         // calculate the start date
+        Instant startDate = DateUtils.calculateStartDate(window);         // calculate the start date
 
         Aggregation aggregation = Aggregation.newAggregation(
                 // filter get only asset_prices more recent than start time
@@ -101,19 +102,4 @@ public class AssetPriceAggregationDaoImpl implements AssetPriceAggregationDao {
 
         return mongoTemplate.aggregate(aggregation, "asset_prices", AssetStableTrendDTO.class).getMappedResults();
     }
-
-    /**
-     * Method that, given a time window, calculates the date obtained by subtracting the time window from the current date.
-     *
-     * @param window time window
-     * @return start date
-     */
-    private Instant calculateStartDate(TimeWindow window) {
-        return switch (window) {
-            case DAY -> Instant.now().minus(1, ChronoUnit.DAYS);
-            case WEEK -> Instant.now().minus(7, ChronoUnit.DAYS);
-            case MONTH -> Instant.now().minus(30, ChronoUnit.DAYS);
-        };
-    }
-
 }

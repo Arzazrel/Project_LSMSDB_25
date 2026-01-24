@@ -1,7 +1,12 @@
 package it.unipi.myfuture.myfuture_backend.service;
 
+import it.unipi.myfuture.myfuture_backend.dto.analytics.MostTradedAssetDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.TotalInvestmentDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.TransactionDistributionDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.UserFinancialFlowDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionResponseDTO;
+import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionStatus;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionType;
 
@@ -13,6 +18,7 @@ import java.util.List;
  */
 public interface TransactionService {
 
+    //----------------------------------------- start: method for CRUD API ---------------------------------------------
     /**
      * Create a new transaction.
      *
@@ -61,8 +67,8 @@ public interface TransactionService {
     /**
      * Update a transaction. (non-routine operation)
      *
-     * @param transactionId
-     * @param request
+     * @param transactionId transaction id
+     * @param request updated transaction
      */
     TransactionResponseDTO updateTransaction(Long transactionId, TransactionRequestDTO request);
 
@@ -73,4 +79,44 @@ public interface TransactionService {
      */
     void deleteTransaction(Long id);
 
+    //------------------------------------------ end: method for CRUD API ----------------------------------------------
+    //------------------------------------- start: method for aggregation API ------------------------------------------
+
+    /**
+     * Get the most traded assets based on volume and transaction count.
+     *
+     * @param window analysis time window
+     * @return a list of  MostTradedAssetDTO sorted by descending monetary volume.
+     */
+    List<MostTradedAssetDTO> getMostTradedAssets(TimeWindow window);
+
+    /**
+     * Analyze transaction distribution by a specific field (e.g., 'category' or 'paymentMethod').
+     *
+     * @param groupByField The field on which to perform the grouping (e.g., “category” or “paymentMethod”).
+     * @param window analysis time window (DAY, WEEK, MONTH, YEAR)
+     * @return A list of TransactionDistributionDTO with counts and volumes for each group.
+     */
+    List<TransactionDistributionDTO> getTransactionDistribution(String groupByField, TimeWindow window);
+
+    /**
+     * Get the total money invested (BUY operations) globally or for a specific asset.
+     *
+     * @param symbol (Optional) The symbol of a specific asset. If null, the calculation is global.
+     * @param window The time window for calculating the investment.
+     * @return A TotalInvestmentDTO containing the amount invested and the number of purchases.
+     */
+    TotalInvestmentDTO getTotalMoneyInvested(String symbol, TimeWindow window);
+
+    /**
+     * Rank users by their net financial flow (Sales - Purchases).
+     *
+     * @param window The analysis time window.
+     * @param ascending If true, returns users with the worst flow (those who invested the most).
+     *                  If false, returns users with the best flow (those who earned the most).
+     * @return A list of UserFinancialFlowDTO with details of volumes per user.
+     */
+    List<UserFinancialFlowDTO> getUserFinancialFlow(TimeWindow window, boolean ascending);
+
+    //------------------------------------- end: method for aggregation API --------------------------------------------
 }

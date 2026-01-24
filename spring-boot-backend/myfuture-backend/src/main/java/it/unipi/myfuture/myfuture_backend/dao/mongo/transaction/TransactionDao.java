@@ -1,4 +1,4 @@
-package it.unipi.myfuture.myfuture_backend.dao.mongo;
+package it.unipi.myfuture.myfuture_backend.dao.mongo.transaction;
 
 import com.mongodb.client.result.UpdateResult;
 import it.unipi.myfuture.myfuture_backend.exception.BusinessException;

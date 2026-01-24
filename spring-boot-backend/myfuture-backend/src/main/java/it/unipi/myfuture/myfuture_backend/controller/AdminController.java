@@ -482,5 +482,59 @@ public class AdminController {
         return ResponseEntity.ok(new ResponseWrapper<>("Consistent falling assets retrieved", assetPriceService.getNegativeStableTrendAnalytics()));
     }
     //-------------------------------------------- end: asset_prices API -----------------------------------------------
+
+    //------------------------------------------- start: transactions API ----------------------------------------------
+
+    /**
+     * Get the most traded assets based on volume and transaction count.
+     */
+    @GetMapping("/analytics/transactions/most-traded")
+    public ResponseEntity<ResponseWrapper<List<MostTradedAssetDTO>>> getMostTraded(@RequestParam TimeWindow window) {
+        // High-level overview of market activity
+        return ResponseEntity.ok(new ResponseWrapper<>("Most traded assets retrieved", transactionService.getMostTradedAssets(window)));
+    }
+
+    /**
+     * Analyze transaction distribution by a specific field (e.g., 'category' or 'paymentMethod').
+     */
+    @GetMapping("/analytics/transactions/distribution")
+    public ResponseEntity<ResponseWrapper<List<TransactionDistributionDTO>>> getDistribution(
+            @RequestParam String type, // expected 'category' or 'paymentMethod'
+            @RequestParam TimeWindow window) {
+        // Monitor payment preferences or asset class popularity
+        return ResponseEntity.ok(new ResponseWrapper<>("Distribution statistics for transactions retrieved", transactionService.getTransactionDistribution(type, window)));
+    }
+
+    /**
+     * Get the total money invested (BUY operations) globally or for a specific asset.
+     */
+    @GetMapping("/analytics/transactions/invested-money")
+    public ResponseEntity<ResponseWrapper<TotalInvestmentDTO>> getInvestedMoney(
+            @RequestParam(required = false) String symbol,
+            @RequestParam TimeWindow window) {
+        // Track total capital flowing into the assets
+        return ResponseEntity.ok(new ResponseWrapper<>("Total amount of money invested in transactions retrieved", transactionService.getTotalMoneyInvested(symbol, window)));
+    }
+
+    /**
+     * Rank users by their net financial flow (Sales - Purchases).
+     */
+    @GetMapping("/analytics/transactions/top-net-flow")
+    public ResponseEntity<ResponseWrapper<List<UserFinancialFlowDTO>>> getTopNetFlow(@RequestParam TimeWindow window) {
+        // Users who are cashing out the most (Selling > Buying)
+        return ResponseEntity.ok(new ResponseWrapper<>("", transactionService.getUserFinancialFlow(window, false)));
+    }
+
+    /**
+     * Rank users by their net financial flow (Sales - Purchases).
+     */
+    @GetMapping("/analytics/transactions/worst-net-flow")
+    public ResponseEntity<ResponseWrapper<List<UserFinancialFlowDTO>>> getWorstNetFlow(@RequestParam TimeWindow window) {
+        // Users who are investing the most (Buying > Selling)
+        return ResponseEntity.ok(new ResponseWrapper<>("", transactionService.getUserFinancialFlow(window, true)));
+    }
+
+    //-------------------------------------------- end: transactions API -----------------------------------------------
+
     //--------------------------------------------- end: Aggregation API -----------------------------------------------
 }
