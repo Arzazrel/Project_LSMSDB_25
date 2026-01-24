@@ -296,7 +296,6 @@ public class CustomerController {
 
     //-------------------------------------------- start: Aggregation API ----------------------------------------------
     //---------------------------------------------- start: asset API --------------------------------------------------
-
     /**
      * Calculate number of assets by type (share / ETF / crypto)
      */
@@ -315,7 +314,6 @@ public class CustomerController {
     //----------------------------------------------- end: asset API ---------------------------------------------------
 
     //------------------------------------------- start: asset_prices API ----------------------------------------------
-
     /**
      * calculate the top 10 assets with the best growth decline last day/week/month.
      */
@@ -347,7 +345,6 @@ public class CustomerController {
     public ResponseEntity<ResponseWrapper<List<AssetStableTrendDTO>>> getStableFell() {
         return ResponseEntity.ok(new ResponseWrapper<>("Consistent falling assets retrieved", assetPriceService.getNegativeStableTrendAnalytics()));
     }
-
     //-------------------------------------------- end: asset_prices API -----------------------------------------------
 
     //--------------------------------------------- end: Aggregation API -----------------------------------------------
