@@ -25,7 +25,9 @@ public final class DateUtils {
             case WEEK -> Instant.now().minus(7, ChronoUnit.DAYS);
             case MONTH -> Instant.now().minus(30, ChronoUnit.DAYS);
             case YEAR -> Instant.now().minus(365, ChronoUnit.DAYS);
-            default -> Instant.now().minus(365, ChronoUnit.DAYS);
+            case TWO_YEAR -> Instant.now().minus(365*2, ChronoUnit.DAYS);
+            case FIVE_YEAR -> Instant.now().minus(365*5, ChronoUnit.DAYS);
+            default -> Instant.now().minus(3650, ChronoUnit.DAYS);
         };
     }
 }

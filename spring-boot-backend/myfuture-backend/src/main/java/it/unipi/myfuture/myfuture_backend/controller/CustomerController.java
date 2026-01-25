@@ -1,11 +1,8 @@
 package it.unipi.myfuture.myfuture_backend.controller;
 
 import it.unipi.myfuture.myfuture_backend.dto.ResponseWrapper;
-import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetGrowthDTO;
-import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetStableTrendDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.*;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetResponseDTO;
-import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetTypeCountDTO;
-import it.unipi.myfuture.myfuture_backend.dto.analytics.SectorShareCountDTO;
 import it.unipi.myfuture.myfuture_backend.dto.assetPrice.AssetPriceResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionRequestDTO;
@@ -347,5 +344,14 @@ public class CustomerController {
     }
     //-------------------------------------------- end: asset_prices API -----------------------------------------------
 
+    //----------------------------------------------- start: news API --------------------------------------------------
+    /**
+     * Retrieves the count of news articles per sector for a specific time window.
+     */
+    @GetMapping("/analytics/news/trending-sectors")
+    public ResponseEntity<ResponseWrapper<List<SectorNewsCountDTO>>> getTrendingSectors(@RequestParam TimeWindow window) {
+        return ResponseEntity.ok(new ResponseWrapper<>("Top news for sector retrieved", newsService.getNewsCountBySector(window)));
+    }
+    //------------------------------------------------ end: news API ---------------------------------------------------
     //--------------------------------------------- end: Aggregation API -----------------------------------------------
 }

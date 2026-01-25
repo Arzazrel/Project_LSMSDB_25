@@ -4,5 +4,7 @@ public enum TimeWindow {
     DAY,
     WEEK,
     MONTH,
-    YEAR
+    YEAR,
+    TWO_YEAR,
+    FIVE_YEAR
 }

@@ -1,4 +1,4 @@
-package it.unipi.myfuture.myfuture_backend.dao.mongo;
+package it.unipi.myfuture.myfuture_backend.dao.mongo.news;
 
 import it.unipi.myfuture.myfuture_backend.model.Asset;
 import it.unipi.myfuture.myfuture_backend.model.News;

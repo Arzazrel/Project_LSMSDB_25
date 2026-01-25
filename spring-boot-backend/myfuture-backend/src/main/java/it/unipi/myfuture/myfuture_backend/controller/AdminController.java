@@ -536,5 +536,24 @@ public class AdminController {
 
     //-------------------------------------------- end: transactions API -----------------------------------------------
 
+    //----------------------------------------------- start: news API --------------------------------------------------
+    /**
+     * Retrieves the count of news articles per sector for a specific time window.
+     */
+    @GetMapping("/analytics/news/trending-sectors")
+    public ResponseEntity<ResponseWrapper<List<SectorNewsCountDTO>>> getTrendingSectors(@RequestParam TimeWindow window) {
+        return ResponseEntity.ok(new ResponseWrapper<>("Top news for sector retrieved", newsService.getNewsCountBySector(window)));
+    }
+
+    /**
+     * Retrieves the top 5 companies most mentioned in recent news articles.
+     */
+    @GetMapping("/top-mentioned-companies")
+    public ResponseEntity<ResponseWrapper<List<TopMentionedAssetDTO>>> getTopMentionedCompanies(@RequestParam TimeWindow window) {
+        // Identifies companies that are currently dominating the news cycle
+        return ResponseEntity.ok(new ResponseWrapper<>("Top mentioned companies retrieved", newsService.getTopMentionedCompanies(window)));
+    }
+    //------------------------------------------------ end: news API ---------------------------------------------------
+
     //--------------------------------------------- end: Aggregation API -----------------------------------------------
 }

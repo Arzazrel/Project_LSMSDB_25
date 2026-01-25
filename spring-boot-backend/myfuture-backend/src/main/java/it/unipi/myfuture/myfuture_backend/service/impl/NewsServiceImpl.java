@@ -1,8 +1,12 @@
 package it.unipi.myfuture.myfuture_backend.service.impl;
 
-import it.unipi.myfuture.myfuture_backend.dao.mongo.NewsDao;
+import it.unipi.myfuture.myfuture_backend.dao.mongo.news.NewsAggregationDao;
+import it.unipi.myfuture.myfuture_backend.dao.mongo.news.NewsDao;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.SectorNewsCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.TopMentionedAssetDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsResponseDTO;
+import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
 import it.unipi.myfuture.myfuture_backend.mapper.NewsMapper;
 import it.unipi.myfuture.myfuture_backend.service.NewsService;
@@ -21,8 +25,10 @@ public class NewsServiceImpl implements NewsService {
     @Autowired
     private NewsDao newsDao;
 
-    // ----------------------------------------------- news API --------------------------------------------------
+    @Autowired
+    private NewsAggregationDao newsAggregationDao;
 
+    //----------------------------------------- start: method for CRUD API ---------------------------------------------
     /**
      * Create or update a news entry. Used by admin.
      *
@@ -108,4 +114,28 @@ public class NewsServiceImpl implements NewsService {
         }
         newsDao.softDelete(id);         // soft delete the retrieved news
     }
+
+    //------------------------------------------ end: method for CRUD API ----------------------------------------------
+
+    //------------------------------------- start: method for aggregation API ------------------------------------------
+
+    /**
+     * Retrieves the count of news articles per sector for a specific time window.
+     */
+    @Override
+    public List<SectorNewsCountDTO> getNewsCountBySector(TimeWindow window) {
+        // Business logic: Analyze news distribution across market sectors
+        return newsAggregationDao.countNewsBySector(window);
+    }
+
+    /**
+     * Retrieves the top 5 companies most mentioned in recent news articles.
+     */
+    @Override
+    public List<TopMentionedAssetDTO> getTopMentionedCompanies(TimeWindow window) {
+        // Business logic: Identify trending companies based on media coverage
+        return newsAggregationDao.findTopMentionedAssets(window);
+    }
+
+    //------------------------------------- end: method for aggregation API --------------------------------------------
 }

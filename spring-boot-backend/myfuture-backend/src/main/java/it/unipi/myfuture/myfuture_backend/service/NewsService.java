@@ -1,7 +1,10 @@
 package it.unipi.myfuture.myfuture_backend.service;
 
+import it.unipi.myfuture.myfuture_backend.dto.analytics.SectorNewsCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.TopMentionedAssetDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsRequestDTO;
+import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 
 import java.util.List;
 
@@ -11,6 +14,7 @@ import java.util.List;
  */
 public interface NewsService {
 
+    //----------------------------------------- start: method for CRUD API ---------------------------------------------
     /**
      * Create or update a news entry. Used by admin.
      *
@@ -56,4 +60,19 @@ public interface NewsService {
      * @param id MongoDB identifier
      */
     void deleteNews(String id);
+
+    //------------------------------------------ end: method for CRUD API ----------------------------------------------
+
+    //------------------------------------- start: method for aggregation API ------------------------------------------
+
+    /**
+     * Retrieves the count of news articles per sector for a specific time window.
+     */
+    List<SectorNewsCountDTO> getNewsCountBySector(TimeWindow window);
+
+    /**
+     * Retrieves the top 5 companies most mentioned in recent news articles.
+     */
+    List<TopMentionedAssetDTO> getTopMentionedCompanies(TimeWindow window);
+    //------------------------------------- end: method for aggregation API --------------------------------------------
 }
