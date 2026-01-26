@@ -659,7 +659,7 @@ If the tests on the indexes have been completed, I recommend running the program
 python -m code.db.create_indexes
 ```
 
-## Backend Setup and API Documentation
+# Backend Setup and API Documentation
 Follow these steps to compile and run the Spring Boot application on WSL2 and access the Swagger documentation from your Windows browser.
 
 1. Build and Run the Application
@@ -702,3 +702,38 @@ To verify the service is responding correctly without using a browser, you can r
 curl -I http://localhost:8080/v3/api-docs
 ```
 A successful connection will return a HTTP/1.1 200 OK response.
+
+# API Testing & Quality Assurance (Postman)
+This project includes a comprehensive Postman suite to verify functional requirements, security roles, and MongoDB aggregations.
+
+## Setup and Installation
+Download Postman Desktop: Required for local testing (WSL2/Localhost). Download here.
+Backend Status: Ensure the Spring Boot application is running (http://localhost:8080).
+Import Collection: Open Postman > Import > Link.
+Paste: http://localhost:8080/v3/api-docs
+
+This automatically generates folders for Users, Customers, and Admins.
+
+Configure Environment: Create a new Environment in Postman with these variables:
+baseUrl: http://localhost:8080
+admin_user: admin, admin_psw: adminpassword
+regular_user: testuser, regular_psw: testuser
+
+## Authentication & User Management
+Before testing protected routes, we must ensure users can join the platform.
+Test 1: User Registration
+Endpoint: POST /api/users/register
+Action: Send a JSON body with a new username and password.
+Validation: Check for 201 Created.
+
+Test 2: User Login
+Endpoint: POST /api/users/login
+Action: Use Basic Auth with the credentials created in Step 1.
+Validation: Check for 200 OK.
+
+## Core Functionality (Assets & News)
+Verify that the "Market" logic works for all users.
+Asset Browsing: GET /api/assets (Filter by type or sector).
+News Feed: GET /api/news (Filter by category).
+
+Validation: Ensure no critical fields (like price or title) are null
