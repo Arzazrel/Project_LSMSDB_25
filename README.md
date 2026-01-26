@@ -446,6 +446,11 @@ db.news.countDocuments()
 db.news.findOne()
 ```
 
+Delete all the news with wrong date.
+```MongoDB shell
+db.news.deleteMany({ date: null });
+```
+
 If you want to see the data entered in abse on the date of ingestion. Ex. of latest 5 ingestions: 
 ```MongoDB shell
 db.news.find().sort({ ingested_at: -1 }).limit(5)
@@ -506,27 +511,27 @@ db.users.findOne()
 
 Verify counter:
 ```MongoDB shell
-db.users.findOne({ user_id: "user_id" })
+db.users.findOne({ user_id: user_id })
 ```
 
 To create an admin user for test (optional)
 ```MongoDB shell
 db.users.insertOne({
   "user_id": NumberLong(9999),            
-  "first_name": "Admin",
-  "last_name": "Test",
+  "firstName": "Admin",
+  "lastName": "Test",
   "email": "admin",                      
   "passwordHash": "$2a$10$BYzsOtlTLfjTozSITofgiuKpcWxtORaidnBDYLbS4BHf3OxjTnViq", // "admin" hash
   "role": "admin",                        // admin role
-  "birth_date": new Date(),
+  "birthDate": new Date(),
   "phone": 333333333,
   "address": "street test, 0",
   "city": "testCity",
   "province": "testville",
   "cap": 00000,
   "registration_date": new Date(),
-  "created_at": new Date(),
-  "updated_at": new Date(),
+  "createdAt": new Date(),
+  "updatedAt": new Date(),
   "suspended": false,
   "deleted": false
 });
