@@ -6,6 +6,7 @@ import it.unipi.myfuture.myfuture_backend.dto.analytics.TotalInvestmentDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.TransactionDistributionDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserFinancialFlowDTO;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
+import it.unipi.myfuture.myfuture_backend.enums.TransactionGroupField;
 import it.unipi.myfuture.myfuture_backend.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -40,7 +41,9 @@ public class TransactionAggregationDaoImpl implements TransactionAggregationDao 
 
         Aggregation aggregation = Aggregation.newAggregation(
                 // filter only transaction more recent from the start date
-                Aggregation.match(Criteria.where("timestamp").gte(startDate)),
+                Aggregation.match(Criteria.where("date").gte(startDate)),
+                // filter only transaction of buy or sell
+                Aggregation.match(Criteria.where("symbol").ne(null)),
                 // group by symbol
                 Aggregation.group("symbol")
                         .count().as("transactionCount")                   // count number of transaction
@@ -62,19 +65,20 @@ public class TransactionAggregationDaoImpl implements TransactionAggregationDao 
      * Analyze the number of transaction, by categories or by payment type for day/week/month/year.
      * Offering an overview of user payment preferences
      *
-     * @param groupByField The field on which to perform the grouping (e.g., “category” or “paymentMethod”).
+     * @param groupByField The field on which to perform the grouping (e.g., “type” or “paymentMethod”).
      * @param window analysis time window (DAY, WEEK, MONTH, YEAR)
      * @return A list of TransactionDistributionDTO with counts and volumes for each group.
      */
     @Override
-    public List<TransactionDistributionDTO> getTransactionDistribution(String groupByField, TimeWindow window){
+    public List<TransactionDistributionDTO> getTransactionDistribution(TransactionGroupField groupByField, TimeWindow window){
         Instant startDate = DateUtils.calculateStartDate(window);               // calculate the start date
+        String fieldName = groupByField.name();
 
         Aggregation aggregation = Aggregation.newAggregation(
                 // filter only transaction more recent from the start date
-                Aggregation.match(Criteria.where("timestamp").gte(startDate)),
+                Aggregation.match(Criteria.where("date").gte(startDate)),
                 // group by parameter (es. "paymentMethod")
-                Aggregation.group(groupByField)
+                Aggregation.group(Fields.from(Fields.field(fieldName, fieldName)))
                         .count().as("count")
                         .sum("totalPrice").as("totalAmount"),
                 // rename the field with the correct name for DTO -> TransactionDistributionDTO has category, count, totalAmount, timeWindow
@@ -99,7 +103,7 @@ public class TransactionAggregationDaoImpl implements TransactionAggregationDao 
         Instant startDate = DateUtils.calculateStartDate(window);       // calculate the start date
 
         // create dynamic filter: always type = BUY and by data
-        Criteria criteria = Criteria.where("type").is("BUY").and("timestamp").gte(startDate);
+        Criteria criteria = Criteria.where("type").is("purchase").and("date").gte(startDate);
 
         // If the symbol is provided, add the filter for the specific asset.
         if (symbol != null && !symbol.isEmpty())
@@ -139,7 +143,7 @@ public class TransactionAggregationDaoImpl implements TransactionAggregationDao 
 
         Aggregation aggregation = Aggregation.newAggregation(
                 // filter only transaction more recent from the start date
-                Aggregation.match(Criteria.where("timestamp").gte(startDate)),
+                Aggregation.match(Criteria.where("date").gte(startDate)),
                 // conditional flow: if BUY -> totalBought, if SELL -> in totalSold
                 Aggregation.project("userId", "totalPrice", "type")
                         .and(ConditionalOperators.when(Criteria.where("type").is("BUY"))

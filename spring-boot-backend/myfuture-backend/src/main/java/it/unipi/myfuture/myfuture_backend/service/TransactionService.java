@@ -7,6 +7,7 @@ import it.unipi.myfuture.myfuture_backend.dto.analytics.UserFinancialFlowDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionResponseDTO;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
+import it.unipi.myfuture.myfuture_backend.enums.TransactionGroupField;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionStatus;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionType;
 
@@ -91,13 +92,13 @@ public interface TransactionService {
     List<MostTradedAssetDTO> getMostTradedAssets(TimeWindow window);
 
     /**
-     * Analyze transaction distribution by a specific field (e.g., 'category' or 'paymentMethod').
+     * Analyze transaction distribution by a specific field (e.g., 'type' or 'paymentMethod').
      *
-     * @param groupByField The field on which to perform the grouping (e.g., “category” or “paymentMethod”).
+     * @param groupByField The field on which to perform the grouping (e.g., “type” or “paymentMethod”).
      * @param window analysis time window (DAY, WEEK, MONTH, YEAR)
      * @return A list of TransactionDistributionDTO with counts and volumes for each group.
      */
-    List<TransactionDistributionDTO> getTransactionDistribution(String groupByField, TimeWindow window);
+    List<TransactionDistributionDTO> getTransactionDistribution(TransactionGroupField groupByField, TimeWindow window);
 
     /**
      * Get the total money invested (BUY operations) globally or for a specific asset.

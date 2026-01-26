@@ -23,7 +23,7 @@ public class AssetPriceMapper {
         AssetPrice price = new AssetPrice();
 
         price.setSymbol(AssPriceRequest.getSymbol());
-        price.setTimestamp(AssPriceRequest.getTimestamp());
+        price.setDate(AssPriceRequest.getTimestamp());
 
         price.setOpen(AssPriceRequest.getOpen());
         price.setHigh(AssPriceRequest.getHigh());
@@ -50,7 +50,7 @@ public class AssetPriceMapper {
         AssetPriceResponseDTO response = new AssetPriceResponseDTO();
 
         response.setSymbol(price.getSymbol());
-        response.setTimestamp(price.getTimestamp());
+        response.setTimestamp(price.getDate());
 
         response.setOpen(price.getOpen());
         response.setHigh(price.getHigh());

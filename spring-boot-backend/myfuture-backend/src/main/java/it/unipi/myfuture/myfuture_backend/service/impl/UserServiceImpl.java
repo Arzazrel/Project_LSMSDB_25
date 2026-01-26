@@ -234,7 +234,7 @@ public class UserServiceImpl implements UserService {
         User user = userDao.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException("User not found"));
         // check if the user is suspended
-        if (user.isSuspended()) {
+        if (Boolean.TRUE.equals(user.getSuspended())) {
             throw new BusinessException("User is already suspended");
         }
 

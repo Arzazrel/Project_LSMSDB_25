@@ -31,7 +31,7 @@ public class NewsAggregationDaoImpl implements NewsAggregationDao {
 
         Aggregation aggregation = Aggregation.newAggregation(
                 // filter get only asset_prices more recent than start time
-                Aggregation.match(Criteria.where("ingestedAt").gte(startDate)),
+                Aggregation.match(Criteria.where("date").gte(startDate)),
                 // group by sector and count the news for each sector
                 Aggregation.group("sector").count().as("newsCount"),
                 // sort by count news
@@ -55,7 +55,7 @@ public class NewsAggregationDaoImpl implements NewsAggregationDao {
 
         Aggregation aggregation = Aggregation.newAggregation(
                 // filter get only asset_prices more recent than start time
-                Aggregation.match(Criteria.where("ingestedAt").gte(startDate)),
+                Aggregation.match(Criteria.where("date").gte(startDate)),
                 // group by company name and count
                 Aggregation.group("company").count().as("mentionCount"),
                 // sort by mentionCount

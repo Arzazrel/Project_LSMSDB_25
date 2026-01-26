@@ -10,10 +10,7 @@ import it.unipi.myfuture.myfuture_backend.dto.news.NewsRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
-import it.unipi.myfuture.myfuture_backend.enums.AssetType;
-import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
-import it.unipi.myfuture.myfuture_backend.enums.TransactionStatus;
-import it.unipi.myfuture.myfuture_backend.enums.TransactionType;
+import it.unipi.myfuture.myfuture_backend.enums.*;
 import it.unipi.myfuture.myfuture_backend.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -499,7 +496,7 @@ public class AdminController {
      */
     @GetMapping("/analytics/transactions/distribution")
     public ResponseEntity<ResponseWrapper<List<TransactionDistributionDTO>>> getDistribution(
-            @RequestParam String type, // expected 'category' or 'paymentMethod'
+            @RequestParam TransactionGroupField type, // expected 'category' or 'paymentMethod'
             @RequestParam TimeWindow window) {
         // Monitor payment preferences or asset class popularity
         return ResponseEntity.ok(new ResponseWrapper<>("Distribution statistics for transactions retrieved", transactionService.getTransactionDistribution(type, window)));
@@ -548,7 +545,7 @@ public class AdminController {
     /**
      * Retrieves the top 5 companies most mentioned in recent news articles.
      */
-    @GetMapping("/top-mentioned-companies")
+    @GetMapping("/analytics/news/top-mentioned-companies")
     public ResponseEntity<ResponseWrapper<List<TopMentionedAssetDTO>>> getTopMentionedCompanies(@RequestParam TimeWindow window) {
         // Identifies companies that are currently dominating the news cycle
         return ResponseEntity.ok(new ResponseWrapper<>("Top mentioned companies retrieved", newsService.getTopMentionedCompanies(window)));

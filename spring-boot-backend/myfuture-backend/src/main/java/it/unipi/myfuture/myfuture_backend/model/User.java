@@ -5,6 +5,7 @@ import it.unipi.myfuture.myfuture_backend.enums.UserRole;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -12,10 +13,8 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Represents a registered user or administrator of the platform.
- *
- * This entity stores personal information, account status, wallet data,
- * and recent transactions for a user.
+ * Represents a registered user or administrator of the platform. This entity stores personal information,
+ * account status, wallet data, and recent transactions for a user.
  *
  * Collection: users
  * Used by: authentication, account management, trading operations
@@ -25,14 +24,14 @@ import java.util.List;
 public class User {
 
     @Id
-    private String id;              // MongoDB _id
-
-    private Long userId;            // application-level ID (from counters)
+    private String id;                  // MongoDB _id
+    @Field("user_id")
+    private Long userId;                // application-level ID (from counters)
     private String firstName;
     private String lastName;
     private String email;
     private String passwordHash;
-    private UserRole role;          // user or admin
+    private UserRole role;              // user or admin
     private LocalDate birthDate;
     private String phone;
 
@@ -43,8 +42,8 @@ public class User {
 
     private Instant registrationDate;
 
-    private boolean suspended;
-    private SuspensionInfo suspensionInfo; // nullable
+    private Boolean suspended;
+    private SuspensionInfo suspensionInfo;
 
     // soft delete
     private Boolean deleted;

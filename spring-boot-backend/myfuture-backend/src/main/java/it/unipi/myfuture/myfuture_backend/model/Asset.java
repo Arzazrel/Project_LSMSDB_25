@@ -12,6 +12,8 @@ import java.util.Date;
  * Asset entity representing an asset document in MongoDB.
  * It contains common fields and fields specific to asset types (share, ETF, crypto).
  * Also includes soft delete support.
+ *
+ * Collection: assets
  */
 @Data
 @Document(collection = "assets")

@@ -9,6 +9,7 @@ import it.unipi.myfuture.myfuture_backend.dto.analytics.UserFinancialFlowDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionResponseDTO;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
+import it.unipi.myfuture.myfuture_backend.enums.TransactionGroupField;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionStatus;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionType;
 import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
@@ -161,16 +162,16 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     /**
-     * Analyze transaction distribution by a specific field (e.g., 'category' or 'paymentMethod').
+     * Analyze transaction distribution by a specific field (e.g., 'tupe' or 'paymentMethod').
      *
-     * @param groupByField The field on which to perform the grouping (e.g., “category” or “paymentMethod”).
+     * @param groupByField The field on which to perform the grouping (e.g., “type” or “paymentMethod”).
      * @param window analysis time window (DAY, WEEK, MONTH, YEAR)
      * @return A list of TransactionDistributionDTO with counts and volumes for each group.
      */
     @Override
-    public List<TransactionDistributionDTO> getTransactionDistribution(String groupByField, TimeWindow window) {
+    public List<TransactionDistributionDTO> getTransactionDistribution(TransactionGroupField groupByField, TimeWindow window) {
         // Validate grouping field to prevent invalid MongoDB queries
-        if (!"category".equals(groupByField) && !"paymentMethod".equals(groupByField)) {
+        if (!"category".equals(groupByField.name()) && !"paymentMethod".equals(groupByField.name())) {
             throw new IllegalArgumentException("Invalid grouping field: " + groupByField);
         }
         return transactionAggregationDao.getTransactionDistribution(groupByField, window);

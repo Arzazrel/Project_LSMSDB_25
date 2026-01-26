@@ -5,6 +5,7 @@ import it.unipi.myfuture.myfuture_backend.dto.analytics.TotalInvestmentDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.TransactionDistributionDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserFinancialFlowDTO;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
+import it.unipi.myfuture.myfuture_backend.enums.TransactionGroupField;
 
 import java.util.List;
 /**
@@ -27,7 +28,7 @@ public interface TransactionAggregationDao {
      * @param window analysis time window (DAY, WEEK, MONTH, YEAR)
      * @return A list of TransactionDistributionDTO with counts and volumes for each group.
      */
-    List<TransactionDistributionDTO> getTransactionDistribution(String groupByField, TimeWindow window);
+    List<TransactionDistributionDTO> getTransactionDistribution(TransactionGroupField groupByField, TimeWindow window);
 
     /**
      * Calculates the total capital invested in the purchase of assets during a specific period.

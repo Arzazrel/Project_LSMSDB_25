@@ -8,9 +8,7 @@ import it.unipi.myfuture.myfuture_backend.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
-import org.springframework.data.mongodb.core.aggregation.Fields;
+import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Repository;
 
@@ -40,9 +38,9 @@ public class AssetPriceAggregationDaoImpl implements AssetPriceAggregationDao {
 
         Aggregation aggregation = Aggregation.newAggregation(
                 // filter get only asset_prices more recent than start time
-                Aggregation.match(Criteria.where("timestamp").gte(startDate)),
+                Aggregation.match(Criteria.where("date").gte(startDate)),
                 // sort the timestamp in ascending order
-                Aggregation.sort(Sort.Direction.ASC, "timestamp"),
+                Aggregation.sort(Sort.Direction.ASC, "date"),
                 // group by symbol and take the first price of the window (open) and the last price of the window (close)
                 Aggregation.group("symbol")
                         .first("open").as("firstPrice")
@@ -76,11 +74,11 @@ public class AssetPriceAggregationDaoImpl implements AssetPriceAggregationDao {
 
         Aggregation aggregation = Aggregation.newAggregation(
                 // filter get only asset_prices more recent than start time
-                Aggregation.match(Criteria.where("timestamp").gte(oneWeekAgo)),
+                Aggregation.match(Criteria.where("date").gte(oneWeekAgo)),
                 // create a Boolean field: 'true' if positive trend, 'false' if negative trend
                 Aggregation.project("symbol")
                         .andExpression("(close - open) / open * 100").as("dailyPriceChange")
-                        .and(ConditionalOperators.when(Criteria.where("close").gt(Fields.field("open")))
+                        .and(ConditionalOperators.when(ComparisonOperators.Gt.valueOf("close").greaterThan("open"))
                                 .then(true).otherwise(false)).as("isPositive"),
                 // group by symbol
                 Aggregation.group("symbol")
@@ -97,7 +95,12 @@ public class AssetPriceAggregationDaoImpl implements AssetPriceAggregationDao {
                 // rename the field with the correct name for DTO -> AssetStableTrendDTO has symbol, averageRate, minRate, maxRate, positiveTrend
                 Aggregation.project("averageRate", "minRate", "maxRate")
                         .and("_id").as("symbol")
-                        .andExpression(String.valueOf(positiveTrend)).as("positiveTrend")
+                        .and(new AggregationExpression() {
+                            @Override
+                            public org.bson.Document toDocument(AggregationOperationContext context) {
+                                return new org.bson.Document("$literal", positiveTrend);
+                            }
+                        }).as("positiveTrend")
         );
 
         return mongoTemplate.aggregate(aggregation, "asset_prices", AssetStableTrendDTO.class).getMappedResults();

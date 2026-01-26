@@ -25,7 +25,7 @@ public class TransactionMapper {
         Transaction tx = new Transaction();
 
         tx.setUserId(userId);
-        tx.setType(transactionRequest.getType());
+        tx.setTransactionType(transactionRequest.getTransactionType());
         tx.setCurrency(transactionRequest.getCurrency());
         tx.setTotalPrice(transactionRequest.getTotalPrice());
         tx.setPaymentMethod(transactionRequest.getPaymentMethod());
@@ -61,7 +61,7 @@ public class TransactionMapper {
     public static void updateEntityFromDTO(Transaction tx, TransactionRequestDTO dto) {
 
         // Update mutable business fields
-        tx.setType(dto.getType());
+        tx.setTransactionType(dto.getTransactionType());
         tx.setCurrency(dto.getCurrency());
         tx.setTotalPrice(dto.getTotalPrice());
         tx.setPaymentMethod(dto.getPaymentMethod());
@@ -91,7 +91,7 @@ public class TransactionMapper {
 
         dto.setTransactionId(transaction.getTransactionId());
         dto.setUserId(transaction.getUserId());
-        dto.setType(transaction.getType());
+        dto.setTransactionType(transaction.getTransactionType());
         dto.setDate(transaction.getDate());
         dto.setCurrency(transaction.getCurrency());
         dto.setTotalPrice(transaction.getTotalPrice());

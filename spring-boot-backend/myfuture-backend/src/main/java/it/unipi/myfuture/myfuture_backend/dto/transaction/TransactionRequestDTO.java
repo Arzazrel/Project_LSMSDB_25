@@ -15,7 +15,7 @@ import java.time.Instant;
 @AllArgsConstructor
 public class TransactionRequestDTO {
 
-    private TransactionType type;       // purchase, sell, deposit, withdrawal
+    private TransactionType transactionType;       // purchase, sell, deposit, withdrawal
 
     private UserCurrency currency;      // default: USD (for now is supported USD only)
 
