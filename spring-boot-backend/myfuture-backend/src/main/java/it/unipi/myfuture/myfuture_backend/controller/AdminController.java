@@ -450,7 +450,7 @@ public class AdminController {
     /**
      * calculate the top 10 assets with the best growth decline last day/week/month.
      */
-    @GetMapping("/analytics/assets_prices/top-growth")
+    @GetMapping("/analytics/assets_prices/top-growth-assets")
     public ResponseEntity<ResponseWrapper<List<AssetGrowthDTO>>> getTopGrowth(@RequestParam TimeWindow window) {
         return ResponseEntity.ok(new ResponseWrapper<>("Top growth assets retrieved", assetPriceService.getGrowthAnalytics(window)));
     }
@@ -458,9 +458,9 @@ public class AdminController {
     /**
      *  calculate the top 10 assets with the best worst decline last day/week/month.
      */
-    @GetMapping("/analytics/assets_prices/worst-growth")
+    @GetMapping("/analytics/assets_prices/worst-decline-assets")
     public ResponseEntity<ResponseWrapper<List<AssetGrowthDTO>>> getWorstGrowth(@RequestParam TimeWindow window) {
-        return ResponseEntity.ok(new ResponseWrapper<>("Worst growth assets retrieved", assetPriceService.getWorstAnalytics(window)));
+        return ResponseEntity.ok(new ResponseWrapper<>("Worst decline assets retrieved", assetPriceService.getWorstAnalytics(window)));
     }
 
     /**
@@ -496,10 +496,10 @@ public class AdminController {
      */
     @GetMapping("/analytics/transactions/distribution")
     public ResponseEntity<ResponseWrapper<List<TransactionDistributionDTO>>> getDistribution(
-            @RequestParam TransactionGroupField type, // expected 'category' or 'paymentMethod'
+            @RequestParam TransactionGroupField groupBy, // expected 'category' or 'paymentMethod'
             @RequestParam TimeWindow window) {
         // Monitor payment preferences or asset class popularity
-        return ResponseEntity.ok(new ResponseWrapper<>("Distribution statistics for transactions retrieved", transactionService.getTransactionDistribution(type, window)));
+        return ResponseEntity.ok(new ResponseWrapper<>("Distribution statistics for transactions retrieved", transactionService.getTransactionDistribution(groupBy, window)));
     }
 
     /**

@@ -78,13 +78,13 @@ public class TransactionAggregationDaoImpl implements TransactionAggregationDao 
                 // filter only transaction more recent from the start date
                 Aggregation.match(Criteria.where("date").gte(startDate)),
                 // group by parameter (es. "paymentMethod")
-                Aggregation.group(Fields.from(Fields.field(fieldName, fieldName)))
+                Aggregation.group(fieldName)
                         .count().as("count")
                         .sum("totalPrice").as("totalAmount"),
                 // rename the field with the correct name for DTO -> TransactionDistributionDTO has category, count, totalAmount, timeWindow
                 Aggregation.project("count", "totalAmount")
                         .and("_id").as("category")
-                        .andExpression(window.name()).as("timeWindow")
+                        .andExpression("'" + window.name() + "'").as("timeWindow")
         );
 
         return mongoTemplate.aggregate(aggregation, "transactions", TransactionDistributionDTO.class).getMappedResults();
@@ -102,10 +102,9 @@ public class TransactionAggregationDaoImpl implements TransactionAggregationDao 
     public TotalInvestmentDTO getTotalMoneyInvested(String symbol, TimeWindow window) {
         Instant startDate = DateUtils.calculateStartDate(window);       // calculate the start date
 
-        // create dynamic filter: always type = BUY and by data
-        Criteria criteria = Criteria.where("type").is("purchase").and("date").gte(startDate);
-
-        // If the symbol is provided, add the filter for the specific asset.
+        // create dynamic filter: always type = purchase and by data
+        Criteria criteria = Criteria.where("transactionType").is("purchase").and("date").gte(startDate);
+        // if the symbol is provided, add the filter for the specific asset.
         if (symbol != null && !symbol.isEmpty())
             criteria.and("symbol").is(symbol);
 
@@ -118,7 +117,7 @@ public class TransactionAggregationDaoImpl implements TransactionAggregationDao 
                         .count().as("numberOfTransactions"),                // count number of transactions
                 // rename the field with the correct name for DTO -> TotalInvestmentDTO has totalInvested, numberOfTransactions, window
                 Aggregation.project("totalInvested", "numberOfTransactions")
-                        .andExpression(window.name()).as("window")
+                        .andExpression("'" + window.name() + "'").as("window")
         );
 
         // run aggregation
@@ -145,13 +144,13 @@ public class TransactionAggregationDaoImpl implements TransactionAggregationDao 
                 // filter only transaction more recent from the start date
                 Aggregation.match(Criteria.where("date").gte(startDate)),
                 // conditional flow: if BUY -> totalBought, if SELL -> in totalSold
-                Aggregation.project("userId", "totalPrice", "type")
-                        .and(ConditionalOperators.when(Criteria.where("type").is("BUY"))
+                Aggregation.project("user_id", "totalPrice", "transactionType")
+                        .and(ConditionalOperators.when(Criteria.where("transactionType").is("purchase"))
                                 .then(Fields.field("totalPrice")).otherwise(0.0)).as("buyAmount")   // sum in buy contributor
-                        .and(ConditionalOperators.when(Criteria.where("type").is("SELL"))
+                        .and(ConditionalOperators.when(Criteria.where("transactionType").is("sell"))
                                 .then(Fields.field("totalPrice")).otherwise(0.0)).as("sellAmount"), // sum in sell contributor
                 // group by userId
-                Aggregation.group("userId")
+                Aggregation.group("user_id")
                         .sum("buyAmount").as("totalBought")
                         .sum("sellAmount").as("totalSold"),
                 // calculate Net Flow: (Sold - Bought)

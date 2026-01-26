@@ -39,7 +39,7 @@ public class NewsAggregationDaoImpl implements NewsAggregationDao {
                 // rename the field with the correct name for DTO -> SectorNewsCountDTO has sector, newsCount, window
                 Aggregation.project("newsCount")
                         .and("_id").as("sector")
-                        .andExpression(window.name()).as("window")
+                        .andExpression("'" + window.name() + "'").as("window")
         );
 
         return mongoTemplate.aggregate(aggregation, "news", SectorNewsCountDTO.class).getMappedResults();
@@ -55,7 +55,7 @@ public class NewsAggregationDaoImpl implements NewsAggregationDao {
 
         Aggregation aggregation = Aggregation.newAggregation(
                 // filter get only asset_prices more recent than start time
-                Aggregation.match(Criteria.where("date").gte(startDate)),
+                Aggregation.match(Criteria.where("date").gte(startDate).and("company").exists(true).ne(null)),
                 // group by company name and count
                 Aggregation.group("company").count().as("mentionCount"),
                 // sort by mentionCount
@@ -64,8 +64,8 @@ public class NewsAggregationDaoImpl implements NewsAggregationDao {
                 Aggregation.limit(5),
                 // rename the field with the correct name for DTO -> TopMentionedAssetDTO has companyName, mentionCount, window
                 Aggregation.project("mentionCount")
-                        .and("_id").as("company")
-                        .andExpression(window.name()).as("window")
+                        .and("_id").as("companyName")
+                        .andExpression("'" + window.name() + "'").as("window")
         );
 
         return mongoTemplate.aggregate(aggregation, "news", TopMentionedAssetDTO.class).getMappedResults();

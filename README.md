@@ -493,6 +493,46 @@ db.asset_prices.findOne()
 db.asset_prices.find({ Symbol: "AAPL" }).limit(5)
 ```
 
+If you want you can add test asset_prices to test aggregation.
+To test 'worst-stable-fell'
+```MongoDB shell
+var docs = [];
+for (var i = 0; i < 7; i++) {
+  var date = new Date();
+  date.setDate(date.getDate() - i);
+  docs.push({
+    symbol: "TEST_NEG",
+    open: 100,
+    close: 95, // -5% costante
+    date: date,
+    updatedAt: date
+  });
+}
+db.asset_prices.insertMany(docs);
+```
+
+To test 'top-stable-raisen'
+```MongoDB shell
+var docs = [];
+for (var i = 0; i < 7; i++) {
+  var date = new Date();
+  date.setDate(date.getDate() - i);
+  docs.push({
+    symbol: "TEST_POS",
+    open: 100,
+    close: 105, // +5% costante
+    date: date,
+    updatedAt: date
+  });
+}
+db.asset_prices.insertMany(docs);
+```
+
+to delete this test asset_prices
+```MongoDB shell
+db.asset_prices.deleteMany({ symbol: { $in: ["TEST_POS", "TEST_NEG"] } });
+```
+
 ## Step 5 – Users Ingestion
 Use the python code:
 ```bash

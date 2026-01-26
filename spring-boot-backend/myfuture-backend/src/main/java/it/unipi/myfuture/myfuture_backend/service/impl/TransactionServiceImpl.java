@@ -171,9 +171,9 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public List<TransactionDistributionDTO> getTransactionDistribution(TransactionGroupField groupByField, TimeWindow window) {
         // Validate grouping field to prevent invalid MongoDB queries
-        if (!"category".equals(groupByField.name()) && !"paymentMethod".equals(groupByField.name())) {
-            throw new IllegalArgumentException("Invalid grouping field: " + groupByField);
-        }
+        if (groupByField == null)
+            throw new IllegalArgumentException("Grouping field cannot be null");
+
         return transactionAggregationDao.getTransactionDistribution(groupByField, window);
     }
 

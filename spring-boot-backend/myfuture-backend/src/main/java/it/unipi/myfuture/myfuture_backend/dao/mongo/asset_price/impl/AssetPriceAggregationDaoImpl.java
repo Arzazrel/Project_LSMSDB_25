@@ -55,7 +55,7 @@ public class AssetPriceAggregationDaoImpl implements AssetPriceAggregationDao {
                 // rename the field with the correct name for DTO -> AssetGrowthDTO has symbol, percentageChange, window
                 Aggregation.project("percentageChange")
                         .and("_id").as("symbol")
-                        .andExpression(String.valueOf(window)).as("window")
+                        .andExpression("'" + window.name() + "'").as("window")
         );
 
         return mongoTemplate.aggregate(aggregation, "asset_prices", AssetGrowthDTO.class).getMappedResults();
@@ -71,6 +71,7 @@ public class AssetPriceAggregationDaoImpl implements AssetPriceAggregationDao {
     @Override
     public List<AssetStableTrendDTO> findConsistentTrendAssets(boolean positiveTrend) {
         Instant oneWeekAgo = Instant.now().minus(7, ChronoUnit.DAYS);   // calculate the start date
+        Object oppositeTrend = positiveTrend ? false : true;                            // get opposite trend
 
         Aggregation aggregation = Aggregation.newAggregation(
                 // filter get only asset_prices more recent than start time
@@ -87,7 +88,7 @@ public class AssetPriceAggregationDaoImpl implements AssetPriceAggregationDao {
                         .min("dailyPriceChange").as("minRate")
                         .max("dailyPriceChange").as("maxRate"),
                 // filter only the symbol with same trend (positiveTrend) for all the window
-                Aggregation.match(Criteria.where("allDaysTrend").all(positiveTrend)),
+                Aggregation.match(Criteria.where("allDaysTrend").nin(oppositeTrend)),
                 // sort by averageRate
                 Aggregation.sort(positiveTrend ? Sort.Direction.DESC : Sort.Direction.ASC, "averageRate"),
                 // take top 10 doc

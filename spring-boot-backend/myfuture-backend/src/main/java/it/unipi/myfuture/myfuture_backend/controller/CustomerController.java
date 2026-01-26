@@ -314,7 +314,7 @@ public class CustomerController {
     /**
      * calculate the top 10 assets with the best growth decline last day/week/month.
      */
-    @GetMapping("/analytics/assets_prices/top-growth")
+    @GetMapping("/analytics/assets_prices/top-growth-assets")
     public ResponseEntity<ResponseWrapper<List<AssetGrowthDTO>>> getTopGrowth(@RequestParam TimeWindow window) {
         return ResponseEntity.ok(new ResponseWrapper<>("Top growth assets retrieved", assetPriceService.getGrowthAnalytics(window)));
     }
@@ -322,9 +322,9 @@ public class CustomerController {
     /**
      *  calculate the top 10 assets with the best worst decline last day/week/month.
      */
-    @GetMapping("/analytics/assets_prices/worst-growth")
+    @GetMapping("/analytics/assets_prices/worst-decline-assets")
     public ResponseEntity<ResponseWrapper<List<AssetGrowthDTO>>> getWorstGrowth(@RequestParam TimeWindow window) {
-        return ResponseEntity.ok(new ResponseWrapper<>("Worst growth assets retrieved", assetPriceService.getWorstAnalytics(window)));
+        return ResponseEntity.ok(new ResponseWrapper<>("Worst decline assets retrieved", assetPriceService.getWorstAnalytics(window)));
     }
 
     /**
