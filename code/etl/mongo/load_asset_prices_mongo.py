@@ -143,7 +143,7 @@ def load_asset_prices():
                     "low": clean_value(row["low"]),
                     "close": clean_value(row["close"]),
                     "volume": clean_value(row["volume"]),
-                    "ingested_at": datetime.utcnow()
+                    "ingestedAt": datetime.utcnow()
                 })
     
         print(f"CSV files processed in this folder: {files_processed}")    # UI print

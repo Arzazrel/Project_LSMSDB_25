@@ -77,39 +77,39 @@ def ingest_users():
             if row["role"] == "admin":  # 'admin' case
                 user_doc = {
                     "user_id": int(row["id"]),
-                    "first_name": row["first_name"],
-                    "last_name": row["last_name"],
+                    "firstName": row["first_name"],
+                    "lastName": row["last_name"],
                     "email": row["email"],
                     "password_hash": row["password_hash"],
                     "role": row["role"],
-                    "birth_date": parse_date(row["birth_date"]),
+                    "birthDate": parse_date(row["birth_date"]),
                     "phone": row["phone"],
                     "address": row["address"],
                     "city": row["city"],
                     "province": row["province"],
                     "cap": row["cap"],
-                    "registration_date": parse_date(row["registration_date"]),
+                    "registrationDate": parse_date(row["registration_date"]),
                     
-                    "created_at": datetime.utcnow(),
-                    "updated_at": datetime.utcnow(),
+                    "createdAt": datetime.utcnow(),
+                    "updatedAt": datetime.utcnow(),
                     "suspended": False,
-                    "deletedAt": False
+                    "deleted": False
                 }
-            else:                       # 'user' case
+            else:                       # 'user' cases
                 user_doc = {
                     "user_id": int(row["id"]),
-                    "first_name": row["first_name"],
-                    "last_name": row["last_name"],
+                    "firstName": row["first_name"],
+                    "lastName": row["last_name"],
                     "email": row["email"],
                     "password_hash": row["password_hash"],
                     "role": row["role"],
-                    "birth_date": parse_date(row["birth_date"]),
+                    "birthDate": parse_date(row["birth_date"]),
                     "phone": row["phone"],
                     "address": row["address"],
                     "city": row["city"],
                     "province": row["province"],
                     "cap": row["cap"],
-                    "registration_date": parse_date(row["registration_date"]),
+                    "registrationDate": parse_date(row["registration_date"]),
                     
                     "cash": float(row["balance"]),
                     "blockedCash": 0.0,
@@ -120,10 +120,10 @@ def ingest_users():
                     "cryptoWallet": [],
                     "recentTransactions": [],
 
-                    "created_at": datetime.utcnow(),
-                    "updated_at": datetime.utcnow(),
+                    "createdAt": datetime.utcnow(),
+                    "updatedAt": datetime.utcnow(),
                     "suspended": False,
-                    "deletedAt": False
+                    "deleted": False
                 }
             
             db.users.insert_one(user_doc)               # insert the document into DB

@@ -79,8 +79,8 @@ def load_news():
             "sector": clean_value(row.get("Sector")),
             "index": clean_value(row.get("Index")),
             "company": clean_value(row.get("Company")),
-            "ingested_at": datetime.utcnow(),               # add the injection date 
-            "deletedAt": False
+            "ingestedAt": datetime.utcnow(),                # add the injection date 
+            "deleted": False
         }
 
         documents.append(doc)

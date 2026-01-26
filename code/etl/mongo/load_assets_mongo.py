@@ -94,7 +94,8 @@ def load_assets():
             "country": clean_value(row.get("Country")),
             "sector": normalize_sector(row.get("Sector")),
             "industry": clean_value(row.get("Industry")),
-            "ingested_at": datetime.utcnow()                            # add the injection date 
+            "ingestedAt": datetime.utcnow(),                            # add the injection date 
+            "deleted": False
         })
 
     # ---- ETFs ----
@@ -113,7 +114,8 @@ def load_assets():
             "fundFamily": clean_value(row.get("fundFamily")),
             "annualReportExpenseRatio": clean_value(row.get("annualReportExpenseRatio")),
             "totalAssets": clean_value(row.get("totalAssets")),
-            "ingested_at": datetime.utcnow()                            # add the injection date 
+            "ingestedAt": datetime.utcnow(),                            # add the injection date 
+            "deleted": False
         })
 
     # ---- CRYPTO ----
@@ -132,7 +134,8 @@ def load_assets():
             "currency": clean_value(row.get("currency")),
             "circulatingSupply": clean_value(row.get("circulatingSupply")),
             "maxSupply": clean_value(row.get("maxSupply")),
-            "ingested_at": datetime.utcnow()
+            "ingestedAt": datetime.utcnow(),
+            "deleted": False
         })
 
     # Insert into MongoDB

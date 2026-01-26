@@ -45,7 +45,7 @@ def insert_transaction(db, tx):
     
 # update the user (document) into MongoDB
 def update_user(db, user):
-    user["updated_at"] = datetime.utcnow()                      # update time
+    user["updatedAt"] = datetime.utcnow()                      # update time
     db.users.replace_one({"user_id": user["user_id"]}, user)    # update the user into DB
     
 # ------------------------------------ end: insert method ------------------------------------
@@ -114,7 +114,7 @@ def apply_deposit(db, user, dp):
     # create the summary of the deposit to insert in the recentTransactions
     deposit_summary = {
         "transaction_id": dp["transaction_id"],
-        "type": dp["type"],
+        "transactionType": dp["transactionType"],
         "totalPrice": dp["totalPrice"],
         "status": dp["status"],
         "date": dp["date"]
@@ -169,7 +169,7 @@ def apply_purchase(db, user, tx):
     # create the summary of the purchase to insert in the recentTransactions
     purchase_summary = {
         "transaction_id": tx["transaction_id"],
-        "type": tx["type"],
+        "transactionType": tx["transactionType"],
         "symbol": symbol,
         "quantity": qty,
         "totalPrice": tx["totalPrice"],
@@ -209,7 +209,7 @@ def apply_sell(db, user, tx):
     # --- recent transactions ---
     insert_recent_transaction_ordered(user, {
         "transaction_id": tx["transaction_id"],
-        "type": tx["type"],
+        "transactionType": tx["transactionType"],
         "symbol": tx["symbol"],
         "quantity": tx["quantity"],
         "totalPrice": tx["totalPrice"],
@@ -260,7 +260,7 @@ def generate_sell_transaction(db, user, purchase_tx):
         "transaction_id": sell_tx_id,
         "user_id": user["user_id"],
         "symbol": symbol,
-        "type": "sell",
+        "transactionType": "sell",
         "date": sell_time,
         "currency": "USD",
         "totalPrice": price * qty,
@@ -269,7 +269,7 @@ def generate_sell_transaction(db, user, purchase_tx):
         "assetType": purchase_tx["assetType"],
         "pricePerUnit": price,
         "quantity": qty,
-        "updated_at": sell_time
+        "updatedAt": sell_time
     }
    
    
@@ -326,13 +326,13 @@ def ingest_transactions():
                 deposit_tx = {
                     "transaction_id": deposit_tx_id,
                     "user_id": user_id,
-                    "type": "deposit",                                              # set the type of the transaction
+                    "transactionType": "deposit",                                              # set the type of the transaction
                     "date": snapshot["date"] - timedelta(minutes=5),                # set the date and time for the deposit transaction
                     "currency": "USD",
                     "status": "EXECUTED",
                     "totalPrice": deposit_amount,
                     "paymentMethod": deposit_pay_method,
-                    "updated_at": snapshot["date"] - timedelta(minutes=5)
+                    "updatedAt": snapshot["date"] - timedelta(minutes=5)
                 }
 
                 insert_transaction(db, deposit_tx)              # insert the transaction into MongoDB
@@ -346,7 +346,7 @@ def ingest_transactions():
                 "transaction_id": tx_id,
                 "user_id": user_id,
                 "symbol": snapshot["symbol"],
-                "type": "purchase",
+                "transactionType": "purchase",
                 "date": snapshot["date"],
                 "currency": "USD",
                 "totalPrice": snapshot["price"] * quantity,
@@ -355,7 +355,7 @@ def ingest_transactions():
                 "assetType": snapshot["assetType"],
                 "pricePerUnit": snapshot["price"],
                 "quantity": quantity,
-                "updated_at": snapshot["date"]
+                "updatedAt": snapshot["date"]
             }
 
             insert_transaction(db, purchase_tx)                 # insert the transaction into MongoDB
