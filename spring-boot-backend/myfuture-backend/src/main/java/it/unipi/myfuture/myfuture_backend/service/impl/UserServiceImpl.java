@@ -1,5 +1,6 @@
 package it.unipi.myfuture.myfuture_backend.service.impl;
 
+import it.unipi.myfuture.myfuture_backend.dao.mongo.CounterDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserAggregationDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserDao;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.GlobalUserStatsDTO;
@@ -35,6 +36,9 @@ public class UserServiceImpl implements UserService {
     private UserAggregationDao userAggregationDao;
 
     @Autowired
+    private CounterDao counterDao;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;    // for user authentication
 
     //----------------------------------------- start: method for CRUD API ---------------------------------------------
@@ -52,8 +56,9 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException("Email already registered");
         }
 
-        User user = UserMapper.toEntity(request);   // create entity from request
-        user.setRole(UserRole.user);                // set default role
+        User user = UserMapper.toEntity(request);                               // create entity from request
+        user.setRole(UserRole.user);                                            // set default role
+        user.setUserId(counterDao.getNextSequence("user_id"));         // generate the userId
 
         String encodedPassword = passwordEncoder.encode(request.getPassword()); // encrypt the psw
         user.setPasswordHash(encodedPassword);                                  // set the encrypted psw in the entity

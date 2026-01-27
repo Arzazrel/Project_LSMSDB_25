@@ -1,12 +1,17 @@
 package it.unipi.myfuture.myfuture_backend.service.security;
 
+import it.unipi.myfuture.myfuture_backend.config.UserPrincipal;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserDao;
 import it.unipi.myfuture.myfuture_backend.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -30,10 +35,15 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         // create and return the context object
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())                  // mail of the user (in this system is equal to username)
-                .password(user.getPasswordHash())           // encrypted psw
-                .roles(user.getRole().name().toUpperCase()) // in MongoDB role is 'user' or 'admin'
-                .build();
+        List<GrantedAuthority> authorities = List.of(
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().name().toUpperCase())
+        );
+
+        return new UserPrincipal(
+                user.getUserId(),
+                user.getEmail(),
+                user.getPasswordHash(),
+                authorities
+        );
     }
 }

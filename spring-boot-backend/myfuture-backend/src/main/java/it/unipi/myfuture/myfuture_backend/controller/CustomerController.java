@@ -1,5 +1,6 @@
 package it.unipi.myfuture.myfuture_backend.controller;
 
+import it.unipi.myfuture.myfuture_backend.config.UserPrincipal;
 import it.unipi.myfuture.myfuture_backend.dto.ResponseWrapper;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.*;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetResponseDTO;
@@ -55,7 +56,9 @@ public class CustomerController {
     @GetMapping("/me")
     public ResponseEntity<ResponseWrapper<UserResponseDTO>> getMe(Authentication authentication) {
 
-        String email = authentication.getName();    // retrieve the email address of the logged-in user from the security context
+        // retrieve the email address of the logged-in user from the security context
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        String email = principal.getUsername();
 
         return ResponseEntity.ok(
                 new ResponseWrapper<>("User retrieved successfully",
