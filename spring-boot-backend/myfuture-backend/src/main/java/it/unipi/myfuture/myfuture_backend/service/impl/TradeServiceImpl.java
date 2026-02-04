@@ -1,3 +1,5 @@
+package it.unipi.myfuture.myfuture_backend.service.impl;
+
 import it.unipi.myfuture.myfuture_backend.dao.mongo.CounterDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.asset.AssetDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.transaction.TransactionDao;
@@ -15,9 +17,7 @@ import it.unipi.myfuture.myfuture_backend.model.User;
 import it.unipi.myfuture.myfuture_backend.model.WalletItem;
 import it.unipi.myfuture.myfuture_backend.service.TradeService;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
