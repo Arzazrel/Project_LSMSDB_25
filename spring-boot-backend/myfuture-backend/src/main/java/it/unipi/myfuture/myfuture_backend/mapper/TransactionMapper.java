@@ -1,6 +1,8 @@
 package it.unipi.myfuture.myfuture_backend.mapper;
 
 import it.unipi.myfuture.myfuture_backend.dto.transaction.*;
+import it.unipi.myfuture.myfuture_backend.enums.TransactionType;
+import it.unipi.myfuture.myfuture_backend.model.RecentTransaction;
 import it.unipi.myfuture.myfuture_backend.model.Transaction;
 
 import java.time.Instant;
@@ -45,15 +47,11 @@ public class TransactionMapper {
     //------------------------------------------ start: update mapping (request) ---------------------------------------
     /**
      * Update an existing Transaction entity using data from TransactionRequestDTO.
-     *
      * This method is intended for ADMIN operations only.
-     *
      * It performs a partial update:
      * - Only fields present in the DTO are overwritten
      * - Immutable fields (transactionId, userId, date) are NOT modified
-     *
-     * Business rules (status transitions, validation, permissions)
-     * must be enforced at service layer.
+     * Business rules (status transitions, validation, permissions) must be enforced at service layer.
      *
      * @param tx existing transaction entity
      * @param dto DTO containing updated values
@@ -109,4 +107,41 @@ public class TransactionMapper {
         return dto;
     }
     //---------------------------------------------- end: response mapping ---------------------------------------------
+
+    //--------------------------------------------- start: sub entity mapping ------------------------------------------
+
+    /**
+     * Convert Transaction entity to RecentTransaction entity (to add in user's last transaction embedding).
+     *
+     * @param transaction transaction entity
+     * @return transaction response DTO
+     */
+    public static RecentTransaction toRecentTransaction(Transaction transaction)
+    {
+        RecentTransaction recentTransaction = new RecentTransaction();
+
+        recentTransaction.setTransactionId(transaction.getTransactionId());
+        TransactionType transactionType = transaction.getTransactionType();
+        recentTransaction.setType(transactionType);
+
+        // check transaction type to choose the right value for symbol
+        if (transaction.getTransactionType() == TransactionType.purchase || transaction.getTransactionType() == TransactionType.sell)
+        {
+            recentTransaction.setSymbol(transaction.getSymbol());   // purchase / sell
+            recentTransaction.setQuantity(transaction.getQuantity());
+        }
+        else
+        {
+            recentTransaction.setSymbol("");                        // deposit / withdrawal
+            recentTransaction.setQuantity(0.0);                     // default value
+        }
+
+        recentTransaction.setTotalPrice(transaction.getTotalPrice());
+        recentTransaction.setStatus(transaction.getStatus());
+        recentTransaction.setDate(transaction.getUpdatedAt());
+
+        return recentTransaction;
+    }
+
+    //---------------------------------------------- end: sub entity mapping -------------------------------------------
 }

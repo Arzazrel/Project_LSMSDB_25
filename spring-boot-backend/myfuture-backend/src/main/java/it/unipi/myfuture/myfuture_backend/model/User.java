@@ -58,4 +58,28 @@ public class User {
     private List<WalletItem> cryptoWallet;
 
     private List<RecentTransaction> recentTransactions;
+
+    //----------------------------------------------- start: methods ---------------------------------------------------
+    /**
+     * Adds a transaction to the recent transactions list.
+     * Maintains only the last 'maxLastTransaction'(10) transactions, acting as a fixed-size LIFO buffer.
+     *
+     * @param transaction the transaction to add (light class of the transaction class, only most relevant information).
+     */
+    public void addLatestTransaction(RecentTransaction transaction) {
+        int maxLastTransaction = 10;                // the maximum amount of last transaction to save in the user
+
+        if (this.recentTransactions == null)        // empty check
+            this.recentTransactions = new java.util.ArrayList<>();              // create the list
+
+
+        // Aggiunge in prima posizione (indice 0) per avere la più recente in alto
+        this.recentTransactions.add(0, transaction);
+
+        // Se superiamo le 10 transazioni, rimuoviamo la più vecchia (l'ultima della lista)
+        if (this.recentTransactions.size() > maxLastTransaction) {
+            this.recentTransactions.remove(this.recentTransactions.size() - 1);
+        }
+    }
+    //------------------------------------------------ end: methods ----------------------------------------------------
 }
