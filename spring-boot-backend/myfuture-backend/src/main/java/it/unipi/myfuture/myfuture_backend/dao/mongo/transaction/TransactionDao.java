@@ -35,6 +35,7 @@ public class TransactionDao {
      * @return the inserted object
      */
     public Transaction save(Transaction transaction) {
+        transaction.setUpdatedAt(Instant.now());
         return mongoTemplate.save(transaction);
     }
 

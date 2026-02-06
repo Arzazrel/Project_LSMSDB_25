@@ -32,7 +32,7 @@ public class UserDao {
      * @return the inserted object
      */
     public User save(User user) {
-        user.setUpdateAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
         return mongoTemplate.save(user);
     }
 
@@ -127,7 +127,7 @@ public class UserDao {
         if (user != null) {
             user.setDeleted(true);
             user.setDeletedAt(java.time.Instant.now());
-            user.setUpdateAt(java.time.Instant.now());
+            user.setUpdatedAt(java.time.Instant.now());
             mongoTemplate.save(user);
         }
     }
@@ -170,7 +170,7 @@ public class UserDao {
 
             user.getSuspensionInfo().setSuspendedAt(Instant.now());
             user.getSuspensionInfo().setSuspendReason(reason);
-            user.setUpdateAt(Instant.now());
+            user.setUpdatedAt(Instant.now());
             mongoTemplate.save(user);
         }
     }

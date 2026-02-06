@@ -62,7 +62,7 @@ public class User {
     private Boolean deleted;
     private Instant deletedAt;
     // manage field
-    private Instant updateAt;
+    private Instant updatedAt;
 
     //---------------------------------------- start: complex get/set methods ------------------------------------------
 
@@ -216,8 +216,10 @@ public class User {
      * @param qty quantity being purchased.
      * @param limitOrder if true -> indicate that is a transaction done when market is closed
      *                   if false -> indicate that is a transaction done when market is open
+     * @param useBlockedQuantity if true -> indicate to use blockedQuantity instead quantity (execution of pending sell)
+     *                           if false -> indicate to use quantity (execution of sell on market open)
      */
-    public void updatePortfolioForSell(String symbol, AssetType assetType, double qty, boolean limitOrder) {
+    public void updatePortfolioForSell(String symbol, AssetType assetType, double qty, boolean limitOrder, boolean useBlockedQuantity) {
 
         List<WalletItem> targetWallet = getWalletByType(assetType);     // chose the right wallet
 
@@ -226,21 +228,26 @@ public class User {
 
         if (index != -1) {      // the asset is in the portfolio
             WalletItem item = targetWallet.get(index);  // tak ethe current item
-            if (limitOrder)     // if is a limit order operate on blockedQuantity (sell after)
+            if (limitOrder)                 // is a limit order operate on blockedQuantity (sell after)
             {
                 item.setBlockedQuantity(item.getBlockedQuantity() + qty);       // update asset's blocked quantity
             }
-            else                // if isn't a limit order operate on quantity (sell now)
+            else
             {
                 double newQty = targetWallet.get(index).getQuantity() - qty;    // calculate new asset's quantity
                 if (newQty <= 0)        // sell all asset
                     targetWallet.remove(index);                         // remove document embedded for this asset
-                else
+                else                    // isn't a limit order operate on quantity (sell now)
+                {
                     item.setQuantity(newQty);                           // update asset's quantity
+
+                    if(useBlockedQuantity) // execution of limit order operate both on blockedQuantity and quantity (execution of pending sell)
+                        item.setBlockedQuantity(item.getBlockedQuantity() - qty);
+                }
             }
         }
         else {                  // the asset isn't in the portfolio
-            throw new BusinessException("Insufficient asset's quantity for this trade");
+            throw new BusinessException("The user doesn't have assets for this trade");
         }
     }
 

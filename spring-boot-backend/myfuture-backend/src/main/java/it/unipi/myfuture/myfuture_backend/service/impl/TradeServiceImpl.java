@@ -282,7 +282,7 @@ public class TradeServiceImpl implements TradeService {
             throw new BusinessException("Insufficient asset's quantity (Consistency check failed)");
 
         // update portfolio, remove quantity and asset if quantity = 0
-        user.updatePortfolioForSell(request.getSymbol(), request.getAssetType(), request.getQuantity(), false);
+        user.updatePortfolioForSell(request.getSymbol(), request.getAssetType(), request.getQuantity(), false, false);
         user.setCash(user.getCash() + request.getTotalPrice());                       // update user's cash
 
         Transaction transaction = setNewTransaction(userId, request, false);    // set transaction
@@ -349,7 +349,7 @@ public class TradeServiceImpl implements TradeService {
             throw new BusinessException("Insufficient asset's quantity (Consistency check failed)");
 
         // update portfolio, remove quantity and asset if quantity = 0
-        user.updatePortfolioForSell(request.getSymbol(), request.getAssetType(), request.getQuantity(), true);
+        user.updatePortfolioForSell(request.getSymbol(), request.getAssetType(), request.getQuantity(), true, false);
 
         Transaction transaction = setNewTransaction(userId, request, true);    // set transaction
         Transaction savedTransaction = transactionDao.save(transaction);// save transaction in MongoDB
@@ -416,7 +416,6 @@ public class TradeServiceImpl implements TradeService {
             tx.setStatus(TransactionStatus.PENDING);                                    // set status transaction
         else
             tx.setStatus(TransactionStatus.EXECUTED);                                   // set status transaction
-        tx.setUpdatedAt(Instant.now());                                                 // set updatedAt
 
         return tx;
     }
