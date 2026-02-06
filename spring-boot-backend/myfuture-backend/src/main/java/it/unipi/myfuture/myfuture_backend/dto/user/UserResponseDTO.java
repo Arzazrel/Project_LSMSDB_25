@@ -39,10 +39,6 @@ public class UserResponseDTO {
     private boolean suspended;
     private SuspensionInfo suspensionInfo; // nullable
 
-    // soft delete
-    private Boolean deleted;
-    private Instant deletedAt;
-
     private double cash;
     private double blockedCash;
     private UserCurrency currency;
@@ -52,4 +48,10 @@ public class UserResponseDTO {
     private List<WalletItem> cryptoWallet;
 
     private List<RecentTransaction> recentTransactions;
+
+    // soft delete
+    private Boolean deleted;
+    private Instant deletedAt;
+    // manage field
+    private Instant updateAt;
 }

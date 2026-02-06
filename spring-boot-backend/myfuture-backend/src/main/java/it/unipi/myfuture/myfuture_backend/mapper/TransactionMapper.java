@@ -64,7 +64,7 @@ public class TransactionMapper {
         tx.setTotalPrice(dto.getTotalPrice());
         tx.setPaymentMethod(dto.getPaymentMethod());
 
-        // Update trading-related fields (BUY / SELL)
+        // Update trading-related fields (purchase / sell)
         tx.setSymbol(dto.getSymbol());
         tx.setAssetType(dto.getAssetType());
         tx.setPricePerUnit(dto.getPricePerUnit());

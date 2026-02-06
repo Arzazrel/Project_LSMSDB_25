@@ -1,5 +1,6 @@
 package it.unipi.myfuture.myfuture_backend.dao.mongo;
 
+import it.unipi.myfuture.myfuture_backend.enums.CounterType;
 import it.unipi.myfuture.myfuture_backend.model.Counter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -25,9 +26,9 @@ public class CounterDao {
      * @param counterId identifier of the counter (e.g. "user_id", "transaction_id")
      * @return next sequential value
      */
-    public long getNextSequence(String counterId) {
+    public long getNextSequence(CounterType counterId) {
 
-        Query query = new Query(Criteria.where("_id").is(counterId));
+        Query query = new Query(Criteria.where("_id").is(counterId.toString()));
 
         Update update = new Update().inc("seq", 1);
 

@@ -3,6 +3,7 @@ package it.unipi.myfuture.myfuture_backend.mapper;
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
 import it.unipi.myfuture.myfuture_backend.enums.UserCurrency;
 import it.unipi.myfuture.myfuture_backend.model.RecentTransaction;
+import it.unipi.myfuture.myfuture_backend.model.SuspensionInfo;
 import it.unipi.myfuture.myfuture_backend.model.User;
 import it.unipi.myfuture.myfuture_backend.model.WalletItem;
 
@@ -36,6 +37,7 @@ public class UserMapper {
         user.setRegistrationDate(Instant.now());
         user.setDeleted(false);
         user.setSuspended(false);
+        user.setUpdateAt(Instant.now());
 
         return user;
     }
@@ -50,6 +52,7 @@ public class UserMapper {
         user.setFirstName(userRequest.getFirstName());
         user.setLastName(userRequest.getLastName());
         user.setPhone(userRequest.getPhone());
+        user.setUpdateAt(Instant.now());
     }
 
     // -------------------------------------- entity → response --------------------------------------
@@ -69,6 +72,14 @@ public class UserMapper {
         dto.setLastName(user.getLastName());
         dto.setRole(user.getRole());
 
+        dto.setBirthDate(user.getBirthDate());
+        dto.setPhone(user.getPhone());
+        dto.setAddress(user.getAddress());
+        dto.setCity(user.getCity());
+        dto.setProvince(user.getProvince());
+        dto.setCap(user.getCap());
+        dto.setRegistrationDate(user.getRegistrationDate());
+
         dto.setCash(user.getCash());
         dto.setBlockedCash(user.getBlockedCash());
         dto.setCurrency(user.getCurrency());
@@ -78,6 +89,17 @@ public class UserMapper {
         dto.setCryptoWallet(user.getCryptoWallet());
 
         dto.setRecentTransactions(user.getRecentTransactions());
+
+        // only an admin can request a deleted or suspended user, for normal login this value are always false
+        dto.setSuspended(user.getSuspended());
+        if (user.getSuspended())
+            dto.setSuspensionInfo(user.getSuspensionInfo());
+
+        dto.setDeleted(user.getDeleted());
+        if (user.getDeleted())
+            dto.setDeletedAt(user.getDeletedAt());
+
+        dto.setUpdateAt(user.getUpdateAt());
 
         return dto;
     }

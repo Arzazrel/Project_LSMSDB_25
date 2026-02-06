@@ -8,6 +8,7 @@ import it.unipi.myfuture.myfuture_backend.dto.analytics.UserTopAssetHolderDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserVarietyDTO;
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
+import it.unipi.myfuture.myfuture_backend.enums.CounterType;
 import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
 import it.unipi.myfuture.myfuture_backend.enums.UserRole;
 import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
@@ -58,7 +59,7 @@ public class UserServiceImpl implements UserService {
 
         User user = UserMapper.toEntity(request);                               // create entity from request
         user.setRole(UserRole.user);                                            // set default role
-        user.setUserId(counterDao.getNextSequence("user_id"));         // generate the userId
+        user.setUserId(counterDao.getNextSequence(CounterType.user_id));        // generate the userId
 
         String encodedPassword = passwordEncoder.encode(request.getPassword()); // encrypt the psw
         user.setPasswordHash(encodedPassword);                                  // set the encrypted psw in the entity
@@ -76,7 +77,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDTO login(String email, String psw) {
 
-        User user = userDao.findByEmail(email)
+        User user = userDao.findByEmailActive(email)
                 .orElseThrow(() -> new BusinessException("Invalid email or password"));
 
         // check if the encrypted psw passed as parameter matches with the encrypted psw saved in the DB
@@ -182,7 +183,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserResponseDTO> getAllUsers() {
 
-        return userDao.findAllActive()
+        return userDao.findAllUsers()
                 .stream()
                 .map(UserMapper::toResponseDTO)
                 .collect(Collectors.toList());
@@ -253,6 +254,7 @@ public class UserServiceImpl implements UserService {
         // Update user suspension state
         user.setSuspended(true);
         user.setSuspensionInfo(suspensionInfo);
+        user.setUpdateAt(Instant.now());
 
         userDao.save(user);                         // save changes
     }

@@ -133,7 +133,7 @@ public class TradeServiceImpl implements TradeService {
         // check key on redis
         if (cash == null || blockedCash == null) {
             // redis does not have the value, it is retrieved from MongoDB
-            user = userDao.findByEmail(email).orElseThrow(() -> new BusinessException("User not found"));
+            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User not found"));
             // populate Redis for next time (Self-healing cache) with all user information
             userRedisDao.saveFullUserToCache(user);
             cash = user.getCash();                                      // get cash
@@ -148,14 +148,14 @@ public class TradeServiceImpl implements TradeService {
         // get user by email (unique index, fast retrieve). If user is null, it means that the data was in the
         // cache and we need to load the user now. If it is NOT null, already have it.
         if (user == null)
-            user = userDao.findByEmail(email).orElseThrow(() -> new BusinessException("User session invalid"));
+            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User session invalid"));
 
         // consistency check
         if ((user.getCash() - user.getBlockedCash()) < totalCost)
             throw new BusinessException("Insufficient funds (Consistency check failed)");
 
         // update portfolio, add quantity and modify BEP
-        updatePortfolioForPurchase(user, request.getSymbol(), request.getAssetType(), request.getQuantity(), request.getPricePerUnit());
+        user.updatePortfolioForPurchase(request.getSymbol(), request.getAssetType(), request.getQuantity(), request.getPricePerUnit());
         user.setCash(user.getCash() - totalCost);                       // update user's cash
 
         Transaction transaction = setNewTransaction(userId, request, false);    // set transaction
@@ -196,7 +196,7 @@ public class TradeServiceImpl implements TradeService {
         // check key on redis
         if (cash == null || blockedCash == null) {
             // redis does not have the value, it is retrieved from MongoDB
-            user = userDao.findByEmail(email).orElseThrow(() -> new BusinessException("User not found"));
+            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User not found"));
             // populate Redis for next time (Self-healing cache) with all user information
             userRedisDao.saveFullUserToCache(user);
             cash = user.getCash();                                      // get cash
@@ -211,7 +211,7 @@ public class TradeServiceImpl implements TradeService {
         // get user by email (unique index, fast retrieve). If user is null, it means that the data was in the
         // cache and we need to load the user now. If it is NOT null, already have it.
         if (user == null)
-            user = userDao.findByEmail(email).orElseThrow(() -> new BusinessException("User session invalid"));
+            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User session invalid"));
 
         // consistency check
         if ((user.getCash() - user.getBlockedCash()) < totalCost)
@@ -253,11 +253,11 @@ public class TradeServiceImpl implements TradeService {
         // check key on redis
         if (cachedItem == null) {
             // redis does not have the value, it is retrieved from MongoDB
-            user = userDao.findByEmail(email).orElseThrow(() -> new BusinessException("User not found"));
+            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User not found"));
             // populate Redis for next time (Self-healing cache) with all user information
             userRedisDao.saveFullUserToCache(user);
             // get the item from the user
-            cachedItem = getAssetFromUser(user, request.getSymbol(), request.getAssetType());
+            cachedItem = user.getWalletItemBySymbol(request.getSymbol(), request.getAssetType());
         }
 
         if (cachedItem == null)         // control check
@@ -274,15 +274,15 @@ public class TradeServiceImpl implements TradeService {
         // get user by email (unique index, fast retrieve). If userHolder[0] is null, it means that the data was in the
         // cache and we need to load the user now. If it is NOT null, already have it.
         if (user == null)
-            user = userDao.findByEmail(email).orElseThrow(() -> new BusinessException("User session invalid"));
+            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User session invalid"));
 
-        WalletItem tempWI = getAssetFromUser(user, request.getSymbol(), request.getAssetType());    // get wallet from user
+        WalletItem tempWI = user.getWalletItemBySymbol(request.getSymbol(), request.getAssetType());    // get wallet from user
         // consistency check
         if ((tempWI == null) || (availableQuantity != (tempWI.getQuantity() - tempWI.getBlockedQuantity())))
             throw new BusinessException("Insufficient asset's quantity (Consistency check failed)");
 
         // update portfolio, remove quantity and asset if quantity = 0
-        updatePortfolioForSell(user, request.getSymbol(), request.getAssetType(), request.getQuantity(), false);
+        user.updatePortfolioForSell(request.getSymbol(), request.getAssetType(), request.getQuantity(), false);
         user.setCash(user.getCash() + request.getTotalPrice());                       // update user's cash
 
         Transaction transaction = setNewTransaction(userId, request, false);    // set transaction
@@ -320,11 +320,11 @@ public class TradeServiceImpl implements TradeService {
         // check key on redis
         if (cachedItem == null) {
             // redis does not have the value, it is retrieved from MongoDB
-            user = userDao.findByEmail(email).orElseThrow(() -> new BusinessException("User not found"));
+            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User not found"));
             // populate Redis for next time (Self-healing cache) with all user information
             userRedisDao.saveFullUserToCache(user);
             // get the item from the user
-            cachedItem = getAssetFromUser(user, request.getSymbol(), request.getAssetType());
+            cachedItem = user.getWalletItemBySymbol(request.getSymbol(), request.getAssetType());
         }
 
         if (cachedItem == null)         // control check
@@ -341,15 +341,15 @@ public class TradeServiceImpl implements TradeService {
         // get user by email (unique index, fast retrieve). If userHolder[0] is null, it means that the data was in the
         // cache and we need to load the user now. If it is NOT null, already have it.
         if (user == null)
-            user = userDao.findByEmail(email).orElseThrow(() -> new BusinessException("User session invalid"));
+            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User session invalid"));
 
-        WalletItem tempWI = getAssetFromUser(user, request.getSymbol(), request.getAssetType());    // get wallet from user
+        WalletItem tempWI = user.getWalletItemBySymbol(request.getSymbol(), request.getAssetType());    // get wallet from user
         // consistency check
         if ((tempWI == null) || (availableQuantity != (tempWI.getQuantity() - tempWI.getBlockedQuantity())))
             throw new BusinessException("Insufficient asset's quantity (Consistency check failed)");
 
         // update portfolio, remove quantity and asset if quantity = 0
-        updatePortfolioForSell(user, request.getSymbol(), request.getAssetType(), request.getQuantity(), true);
+        user.updatePortfolioForSell(request.getSymbol(), request.getAssetType(), request.getQuantity(), true);
 
         Transaction transaction = setNewTransaction(userId, request, true);    // set transaction
         Transaction savedTransaction = transactionDao.save(transaction);// save transaction in MongoDB
@@ -398,133 +398,6 @@ public class TradeServiceImpl implements TradeService {
     }
 
     /**
-     * method to extract a wallet item for an asset of the user or null.
-     *
-     * @param user user to search for if they own the asset you are looking for
-     * @param symbol asset identifier
-     * @param type asset type
-     * @return the WalletItem for the searched asset or null
-     */
-    private WalletItem getAssetFromUser(User user, String symbol, AssetType type) {
-        // get the correct wallets list into search
-        List<WalletItem> wallet = switch (type) {
-            case share -> user.getShareWallet();        // get share wallet
-            case etf -> user.getEtfWallet();            // get etf wallet
-            case crypto -> user.getCryptoWallet();      // get crypto wallet
-        };
-
-        if (wallet == null)         // control check
-            return null;
-
-        return wallet.stream()                                      // search in the wallets list
-                .filter(item -> item.getSymbol().equals(symbol))    // search the correct asset
-                .findFirst()                                        // take one (there is 1 or 0 item for an asset)
-                .orElse(null);                                // return null if there isn't
-    }
-
-    /**
-     * Internal helper to update user portfolio and calculate Weighted Average Price (BEP).
-     *
-     * @param user the user entity to update.
-     * @param symbol the asset symbol.
-     * @param qty quantity being purchased.
-     * @param currentPrice current price per asset unit of the current purchase.
-     */
-    private void updatePortfolioForPurchase(User user, String symbol, AssetType assetType, double qty, double currentPrice) {
-
-        // chose the right wallet
-        List<WalletItem> targetWallet = switch (assetType) {
-            case share -> user.getShareWallet();
-            case etf -> user.getEtfWallet();
-            case crypto -> user.getCryptoWallet();
-            default -> throw new BusinessException("Unsupported asset type");
-        };
-        // check if the searched asset is in the user's portfolio
-        int index = findAssetIndexInWallet(targetWallet,symbol);
-
-        if (index != -1) {      // the asset is in the portfolio
-
-            WalletItem item = targetWallet.get(index);  // take the wallet item for the asset
-            // update BEP and quantity
-            double oldTotalCost = item.getQuantity() * item.getBep();
-            double newTotalCost = qty * currentPrice;
-
-            item.setQuantity(item.getQuantity() + qty);                         // update quantity
-            item.setBep((oldTotalCost + newTotalCost) / item.getQuantity());    // update BEP
-        }
-        else {                  // the asset isn't in the portfolio
-            // create new walletItem and add asset in corresponding wallet
-            WalletItem newItem = new WalletItem();
-            newItem.setSymbol(symbol);
-            newItem.setQuantity(qty);
-            newItem.setBep(currentPrice);           // set BEP = price per unit = current price
-            newItem.setBlockedQuantity(0);          // set blocked quantity to 0
-
-            targetWallet.add(newItem);              // add new document embedded
-        }
-    }
-
-    /**
-     * Internal helper to update user portfolio after a sell transaction.
-     *
-     * @param user the user entity to update.
-     * @param symbol the asset symbol.
-     * @param qty quantity being purchased.
-     * @param limitOrder if true -> indicate that is a transaction done when market is closed
-     *                   if false -> indicate that is a transaction done when market is open
-     */
-    private void updatePortfolioForSell(User user, String symbol, AssetType assetType, double qty, boolean limitOrder) {
-
-        // chose the right wallet
-        List<WalletItem> targetWallet = switch (assetType) {
-            case share -> user.getShareWallet();
-            case etf -> user.getEtfWallet();
-            case crypto -> user.getCryptoWallet();
-            default -> throw new BusinessException("Unsupported asset type");
-        };
-        // check if the searched asset is in the user's portfolio
-        int index = findAssetIndexInWallet(targetWallet,symbol);
-
-        if (index != -1) {      // the asset is in the portfolio
-            WalletItem item = targetWallet.get(index);  // tak ethe current item
-            if (limitOrder)     // if is a limit order operate on blockedQuantity (sell after)
-            {
-                item.setBlockedQuantity(item.getBlockedQuantity() + qty);       // update asset's blocked quantity
-            }
-            else                // if isn't a limit order operate on quantity (sell now)
-            {
-                double newQty = targetWallet.get(index).getQuantity() - qty;    // calculate new asset's quantity
-                if (newQty <= 0)        // sell all asset
-                    targetWallet.remove(index);                         // remove document embedded for this asset
-                else
-                    item.setQuantity(newQty);                           // update asset's quantity
-            }
-        }
-        else {                  // the asset isn't in the portfolio
-            throw new BusinessException("Insufficient asset's quantity for this trade");
-        }
-    }
-
-    /**
-     * Function to search a symbol in the user wallet and return its index if is in the wallet.
-     *
-     * @param wallet the list of wallet for an asset type of the user
-     * @param symbol the symbol of te
-     * @return index i -> if the symbol is in the list
-     *          -1 -> if the symbol isn't in the list
-     */
-    private int findAssetIndexInWallet(List<WalletItem> wallet, String symbol) {
-        if (wallet == null) return -1;  // control check
-        // scroll each asset in the wallet
-        for (int i = 0; i < wallet.size(); i++) {
-            if (wallet.get(i).getSymbol().equals(symbol)) {
-                return i;           // there is the searched asset
-            }
-        }
-        return -1;                  // there isn't
-    }
-
-    /**
      * Function that generates the transaction entity, executed, complete with all fields ready to be saved in MongoDB.
      *
      * @param userId user identifier
@@ -538,7 +411,7 @@ public class TradeServiceImpl implements TradeService {
         // create a complete transaction from request
         Transaction tx = TransactionMapper.toEntity(tempTransaction, userId);
         // now add remaining fields
-        tx.setTransactionId(counterDao.getNextSequence("transaction_id"));     // get and update transactionId
+        tx.setTransactionId(counterDao.getNextSequence(CounterType.transaction_id));     // get and update transactionId
         if (limitOrder)     // market is closed
             tx.setStatus(TransactionStatus.PENDING);                                    // set status transaction
         else
