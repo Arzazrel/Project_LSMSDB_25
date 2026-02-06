@@ -43,7 +43,9 @@ public class CustomUserDetailsService implements UserDetailsService {
                 user.getUserId(),
                 user.getEmail(),
                 user.getPasswordHash(),
-                authorities
+                authorities,
+                !user.getDeleted(),     // enabled: 'true' if account is active, 'false' if account is deleted (soft)
+                !user.getSuspended()    // accountNonLocked: 'true' if account is suspended, 'false' if account isn't suspended (soft)
         );
     }
 }
