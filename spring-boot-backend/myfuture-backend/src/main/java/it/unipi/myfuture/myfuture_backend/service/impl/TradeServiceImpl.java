@@ -1,7 +1,7 @@
 package it.unipi.myfuture.myfuture_backend.service.impl;
 
 import it.unipi.myfuture.myfuture_backend.dao.mongo.CounterDao;
-import it.unipi.myfuture.myfuture_backend.dao.mongo.asset.AssetDao;
+import it.unipi.myfuture.myfuture_backend.dao.mongo.TradeDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.transaction.TransactionDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserDao;
 import it.unipi.myfuture.myfuture_backend.dao.redis.AssetRedisDao;
@@ -11,7 +11,6 @@ import it.unipi.myfuture.myfuture_backend.dto.transaction.TransactionResponseDTO
 import it.unipi.myfuture.myfuture_backend.enums.*;
 import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
 import it.unipi.myfuture.myfuture_backend.mapper.TransactionMapper;
-import it.unipi.myfuture.myfuture_backend.model.RecentTransaction;
 import it.unipi.myfuture.myfuture_backend.model.Transaction;
 import it.unipi.myfuture.myfuture_backend.model.User;
 import it.unipi.myfuture.myfuture_backend.model.WalletItem;
@@ -25,8 +24,6 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.Instant;
-import java.util.List;
 
 @Service
 public class TradeServiceImpl implements TradeService {
@@ -38,13 +35,11 @@ public class TradeServiceImpl implements TradeService {
     @Autowired
     private TransactionDao transactionDao;      // dao operating on MongoDB
     @Autowired
-    private AssetDao assetDao;                  // dao operating on MongoDB
-    @Autowired
     private UserRedisDao userRedisDao;          // dao operating on Redis
     @Autowired
     private AssetRedisDao assetRedisDao;        // dao operating on Redis
-
-    ZonedDateTime nowNY = ZonedDateTime.now(ZoneId.of("America/New_York")); // take New York zone time
+    @Autowired
+    private TradeDao tradeDao;
 
     //------------------------------------------- start: process methods -----------------------------------------------
     /**
@@ -68,27 +63,51 @@ public class TradeServiceImpl implements TradeService {
         if (transactionType != TransactionType.purchase && transactionType != TransactionType.sell)
             throw new BusinessException("Invalid transaction type, transaction canceled.");
 
+        // control check for the user, check in MongoDB. Check if user is active or suspended or deleted
+        User user = userDao.findByEmail(email).orElse(null);
+        if (user == null)       // there isn't an user with this userid
+        {
+            Transaction transaction = setNewTransaction(userId, request, false);    // create entity
+            transaction.markTransactionAsFailed(FailureReason.UNKNOWN_USER);        // update transaction
+            transactionDao.save(transaction);                                       // save transaction in MongoDB
+            return TransactionMapper.toResponseDTO(transaction);
+        }
+        else if(user.getDeleted() || user.getSuspended()) // there is the user is deleted or suspended transaction fails and user's fields have to be updated
+        {
+            FailureReason reason = user.getDeleted() ? FailureReason.USER_DELETED : FailureReason.USER_SUSPENDED;
+
+            return TransactionMapper.toResponseDTO(finalizeFailedTransaction(request, userId, reason));
+        }
+
         // get current price (last) for the wanted asset for the transaction
         Double currentPrice = assetRedisDao.getCurrentPrice(request.getSymbol());
         // control check, this information is only in Redis. It is also validation check for symbol -> SEE NOTE 0
         if (currentPrice == null)
-            throw new BusinessException("Market price not available for " + request.getSymbol());
+        {
+            // return the ResponseDTO of the failed transaction
+            return TransactionMapper.toResponseDTO(finalizeFailedTransaction(request, userId, FailureReason.ASSET_DELISTED));
+        }
 
         // check if the market is open
         if (isMarketOpen()) {
-
             // discriminate by transaction type
             if (transactionType == TransactionType.purchase)    // purchase case
             {
                 // control check SEE NOTE 1
                 if (currentPrice > request.getPricePerUnit())
-                    throw new BusinessException("Market price for " + request.getSymbol() + " higher than the maximum limit chosen by the user. Transaction canceled.");
+                {
+                    // return the ResponseDTO of the failed transaction
+                    return TransactionMapper.toResponseDTO(finalizeFailedTransaction(request, userId, FailureReason.PRICE_LIMIT_NOT_MET));
+                }
             }
             else                                                // sell case
             {
                 // control check SEE NOTE 1
                 if (currentPrice < request.getPricePerUnit())
-                    throw new BusinessException("Market price for " + request.getSymbol() + " lower than the maximum limit chosen by the user. Transaction canceled.");
+                {
+                    // return the ResponseDTO of the failed transaction
+                    return TransactionMapper.toResponseDTO(finalizeFailedTransaction(request, userId, FailureReason.PRICE_LIMIT_NOT_MET));
+                }
             }
 
             // update current price in case of a change in the current price (quick update)
@@ -97,17 +116,17 @@ public class TradeServiceImpl implements TradeService {
 
             // discriminate by transaction type
             if (transactionType == TransactionType.purchase)    // purchase case
-                return purchaseMarketOrder(email, userId, request);     // execute the purchase transactions
+                return purchaseMarketOrder(user, request);     // execute the purchase transactions
             else                                                // sell case
-                return sellMarketOrder(email, userId, request);         // execute the sell transactions
+                return sellMarketOrder(user, request);         // execute the sell transactions
 
         } else          // the market is closed
         {
             // discriminate by transaction type
             if (transactionType == TransactionType.purchase)    // purchase case
-                return purchaseLimitOrder(email, userId, request);     // execute the purchase transactions
+                return purchaseLimitOrder(user, request);     // execute the purchase transactions
             else                                                // sell case
-                return sellLimitOrder(email, userId, request);         // execute the sell transactions
+                return sellLimitOrder(user, request);         // execute the sell transactions
         }
     }
 
@@ -118,22 +137,22 @@ public class TradeServiceImpl implements TradeService {
     /**
      * Executes a market buy order for a specific asset.
      *
-     * @param email email fo the user taken by the authentication context
-     * @param userId The ID of the user performing the trade.
+     * @param user the entity of the user that made the transaction
      * @param request The DTO containing trade details (symbol, quantity, etc...).
      * @return a TransactionResponseDTO containing the result of the operation.
      */
-    private TransactionResponseDTO purchaseMarketOrder(String email, Long userId, TransactionRequestDTO request) {
+    private TransactionResponseDTO purchaseMarketOrder(User user, TransactionRequestDTO request) {
 
+        Long userId = user.getUserId();
         double totalCost = request.getTotalPrice();                     // get total cost of transaction
-        User user= null;                                                // reference of user entity get from MongoDB
+        User updatedUser;
+
         // check on Redis
         Double cash = userRedisDao.getCash(userId.toString());                  // get cash
         Double blockedCash = userRedisDao.getBlockedCash(userId.toString());    // get blocked cash
-        // check key on redis
-        if (cash == null || blockedCash == null) {
-            // redis does not have the value, it is retrieved from MongoDB
-            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User not found"));
+        // check key on redis. -> SEE NOTE 2
+        if (cash == null || blockedCash == null || cash != user.getCash() || blockedCash != user.getBlockedCash())
+        {
             // populate Redis for next time (Self-healing cache) with all user information
             userRedisDao.saveFullUserToCache(user);
             cash = user.getCash();                                      // get cash
@@ -143,60 +162,62 @@ public class TradeServiceImpl implements TradeService {
 
         // control check
         if (userAvailableCash < totalCost)
-            throw new BusinessException("Insufficient funds for this trade");
-
-        // get user by email (unique index, fast retrieve). If user is null, it means that the data was in the
-        // cache and we need to load the user now. If it is NOT null, already have it.
-        if (user == null)
-            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User session invalid"));
-
-        // consistency check
-        if ((user.getCash() - user.getBlockedCash()) < totalCost)
-            throw new BusinessException("Insufficient funds (Consistency check failed)");
-
-        // update portfolio, add quantity and modify BEP
-        user.updatePortfolioForPurchase(request.getSymbol(), request.getAssetType(), request.getQuantity(), request.getPricePerUnit());
-        user.setCash(user.getCash() - totalCost);                       // update user's cash
-
-        Transaction transaction = setNewTransaction(userId, request, false);    // set transaction
-        Transaction savedTransaction = transactionDao.save(transaction);// save transaction in MongoDB
-
-        RecentTransaction recTransaction = TransactionMapper.toRecentTransaction(savedTransaction);
-        user.addLatestTransaction(recTransaction);                      // update embedded lastTransaction in user
-        User savedUser = userDao.save(user);                            // update user in MongoDB
-
-        // update user in Redis (cache)
-        try {
-            userRedisDao.saveFullUserToCache(savedUser);                // update redis cache
-
-        } catch (Exception e) {
-            // if Redis fails -> delete to avoid inconsistent data (Cache Eviction)
-            userRedisDao.clearUserCache(userId.toString());
+        {
+            return TransactionMapper.toResponseDTO(finalizeFailedTransaction(request, userId, FailureReason.INSUFFICIENT_FUNDS));
         }
 
-        return TransactionMapper.toResponseDTO(savedTransaction);       // return transactionDTO
-    }
+        long transactionId = counterDao.getNextSequence(CounterType.transaction_id);    // crete new transaction_id
+        // set success transaction
+        Transaction newtransaction = setSuccessfulTransaction(userId, request, transactionId);
+        // check if user has already this asset
+        if (user.getWalletItemBySymbol(request.getSymbol(), request.getAssetType()) == null)
+            updatedUser = tradeDao.executeMarketPurchaseNewAtomic(userId, totalCost, request.getSymbol(),
+                    request.getAssetType(), cash, request.getQuantity(), request.getPricePerUnit(),
+                    TransactionMapper.toRecentTransaction(newtransaction));
+        else
+        {
+            // calculate new bep
+            double newBep = user.calculateNewBep(request.getSymbol(), request.getAssetType(), request.getQuantity(), request.getPricePerUnit());
+            updatedUser = tradeDao.executeMarketPurchaseExistingAtomic(userId, totalCost, request.getSymbol(),
+                    request.getAssetType(), cash, request.getQuantity(), newBep,
+                    TransactionMapper.toRecentTransaction(newtransaction));
+        }
 
+        // check if transaction is successfully done or not
+        if (updatedUser != null)
+            userRedisDao.updateUserInCacheIfActive(updatedUser);         // update Redis cache
+        else
+        {
+            // transaction failed, set transaction as failed
+            newtransaction = setFailedTransaction(userId, request, FailureReason.INSUFFICIENT_FUNDS, transactionId);
+            // update only user's recent transaction list in MongoDB (with failed transaction)
+            tradeDao.addLatestTransaction(userId, TransactionMapper.toRecentTransaction(newtransaction));
+            userRedisDao.clearUserCache(String.valueOf(userId));        // security cache delete for error cases
+        }
+
+        transactionDao.saveWithoutTime(newtransaction);     // save transaction in MongoDB, maintain correct updatedAt
+        return TransactionMapper.toResponseDTO(newtransaction);         // return response DTO
+    }
 
     /**
      * Define a closed market purchase order for a specific asset.
      *
-     * @param email email fo the user taken by the authentication context
-     * @param userId The ID of the user performing the trade.
+     * @param user the entity of the user that made the transaction
      * @param request The DTO containing trade details (symbol, quantity, etc...).
      * @return a TransactionResponseDTO containing the result of the operation.
      */
-    private TransactionResponseDTO purchaseLimitOrder(String email, Long userId, TransactionRequestDTO request) {
+    private TransactionResponseDTO purchaseLimitOrder(User user, TransactionRequestDTO request) {
 
+        Long userId = user.getUserId();
         double totalCost = request.getTotalPrice();                     // get total cost of transaction
-        User user= null;                                                // reference of user entity get from MongoDB
+        User updatedUser;
+
         // check on Redis
         Double cash = userRedisDao.getCash(userId.toString());                  // get cash
         Double blockedCash = userRedisDao.getBlockedCash(userId.toString());    // get blocked cash
-        // check key on redis
-        if (cash == null || blockedCash == null) {
-            // redis does not have the value, it is retrieved from MongoDB
-            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User not found"));
+        // check key on redis. -> SEE NOTE 2
+        if (cash == null || blockedCash == null || cash != user.getCash() || blockedCash != user.getBlockedCash())
+        {
             // populate Redis for next time (Self-healing cache) with all user information
             userRedisDao.saveFullUserToCache(user);
             cash = user.getCash();                                      // get cash
@@ -206,62 +227,52 @@ public class TradeServiceImpl implements TradeService {
 
         // control check
         if (userAvailableCash < totalCost)
-            throw new BusinessException("Insufficient funds for this trade");
-
-        // get user by email (unique index, fast retrieve). If user is null, it means that the data was in the
-        // cache and we need to load the user now. If it is NOT null, already have it.
-        if (user == null)
-            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User session invalid"));
-
-        // consistency check
-        if ((user.getCash() - user.getBlockedCash()) < totalCost)
-            throw new BusinessException("Insufficient funds (Consistency check failed)");
-
-        user.setBlockedCash(user.getBlockedCash() + totalCost);         // update user's blocked cash (add total cost)
-
-        Transaction transaction = setNewTransaction(userId, request, true); // set transaction
-        Transaction savedTransaction = transactionDao.save(transaction);              // save transaction in MongoDB
-
-        RecentTransaction recTransaction = TransactionMapper.toRecentTransaction(savedTransaction);
-        user.addLatestTransaction(recTransaction);                      // update embedded lastTransaction in user
-        User savedUser = userDao.save(user);                            // update user in MongoDB
-
-        // update user in Redis (cache)
-        try {
-            userRedisDao.saveFullUserToCache(savedUser);                // update redis cache
-        } catch (Exception e) {
-            // if Redis fails -> delete to avoid inconsistent data (Cache Eviction)
-            userRedisDao.clearUserCache(userId.toString());
+        {
+            return TransactionMapper.toResponseDTO(finalizeFailedTransaction(request, userId, FailureReason.INSUFFICIENT_FUNDS));
         }
 
-        return TransactionMapper.toResponseDTO(savedTransaction);       // return transactionDTO
+        long transactionId = counterDao.getNextSequence(CounterType.transaction_id);        // crete new transaction_id
+        Transaction newtransaction = setPendingTransaction(userId, request, transactionId); // set pending transaction
+        updatedUser = tradeDao.executeLimitPurchaseAtomic(userId, request.getTotalPrice(), cash, TransactionMapper.toRecentTransaction(newtransaction));
+
+        // check if transaction is successfully done or not
+        if (updatedUser != null)
+            userRedisDao.updateUserInCacheIfActive(updatedUser);         // update Redis cache
+        else
+        {
+            // transaction failed, set transaction as failed
+            newtransaction = setFailedTransaction(userId, request, FailureReason.INSUFFICIENT_FUNDS, transactionId);
+            // update only user's recent transaction list in MongoDB (with failed transaction)
+            tradeDao.addLatestTransaction(userId, TransactionMapper.toRecentTransaction(newtransaction));
+            userRedisDao.clearUserCache(String.valueOf(userId));        // security cache delete for error cases
+        }
+
+        transactionDao.saveWithoutTime(newtransaction);     // save transaction in MongoDB, maintain correct updatedAt
+        return TransactionMapper.toResponseDTO(newtransaction);         // return response DTO
     }
 
     /**
      * Executes a market sell order for a specific asset.
      *
-     * @param email email fo the user taken by the authentication context
-     * @param userId The ID of the user performing the trade.
+     * @param user the entity of the user that made the transaction
      * @param request The DTO containing trade details (symbol, quantity, etc...).
      * @return A TransactionResponseDTO containing the result of the operation.
      */
-    private TransactionResponseDTO sellMarketOrder(String email, Long userId, TransactionRequestDTO request)
+    private TransactionResponseDTO sellMarketOrder(User user, TransactionRequestDTO request)
     {
-        User user  = null;                                               // reference of user entity get from MongoDB
+        Long userId = user.getUserId();
+        User updatedUser;
         // check on Redis, try to retrieve the details of the specific asset from Redis (Hash)
         WalletItem cachedItem = userRedisDao.getAssetDetails(userId.toString(), request.getSymbol());
-        // check key on redis
-        if (cachedItem == null) {
-            // redis does not have the value, it is retrieved from MongoDB
-            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User not found"));
+        // get wallet from user
+        WalletItem mongoItem = user.getWalletItemBySymbol(request.getSymbol(), request.getAssetType());
+        // control check if the cache is null and if the cache is updated with MongoDB
+        if (cachedItem == null || !cachedItem.equals(mongoItem)) {
             // populate Redis for next time (Self-healing cache) with all user information
             userRedisDao.saveFullUserToCache(user);
             // get the item from the user
-            cachedItem = user.getWalletItemBySymbol(request.getSymbol(), request.getAssetType());
+            cachedItem = mongoItem;
         }
-
-        if (cachedItem == null)         // control check
-            throw new BusinessException("User doesn't have the asset for this trade");
 
         // get the information of the asset sold in the user
         double availableQuantity = cachedItem.getQuantity() - cachedItem.getBlockedQuantity();  // get available quantity
@@ -269,66 +280,60 @@ public class TradeServiceImpl implements TradeService {
 
         // control check
         if (availableQuantity < sellQuantity)
-            throw new BusinessException("Insufficient asset's quantity for this trade");
+            return TransactionMapper.toResponseDTO(finalizeFailedTransaction(request, userId, FailureReason.INSUFFICIENT_ASSET_QUANTITY));
 
-        // get user by email (unique index, fast retrieve). If userHolder[0] is null, it means that the data was in the
-        // cache and we need to load the user now. If it is NOT null, already have it.
-        if (user == null)
-            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User session invalid"));
+        long transactionId = counterDao.getNextSequence(CounterType.transaction_id);    // crete new transaction_id
+        // set success transaction
+        Transaction newtransaction = setSuccessfulTransaction(userId, request, transactionId);
+        updatedUser = tradeDao.executeMarketSellAtomic(userId, request.getTotalPrice(), user.getCash(), request.getSymbol(),
+            request.getAssetType(), request.getQuantity(), TransactionMapper.toRecentTransaction(newtransaction));
 
-        WalletItem tempWI = user.getWalletItemBySymbol(request.getSymbol(), request.getAssetType());    // get wallet from user
-        // consistency check
-        if ((tempWI == null) || (availableQuantity != (tempWI.getQuantity() - tempWI.getBlockedQuantity())))
-            throw new BusinessException("Insufficient asset's quantity (Consistency check failed)");
+        // check if transaction is successfully done or not
+        if (updatedUser != null)
+        {
+            if ((mongoItem.getQuantity() - request.getQuantity()) <= 0) {
+                User userAfterRemoval = tradeDao.removeAssetIfEmpty(userId, request.getSymbol(), request.getAssetType());
 
-        // update portfolio, remove quantity and asset if quantity = 0
-        user.updatePortfolioForSell(request.getSymbol(), request.getAssetType(), request.getQuantity(), false, false);
-        user.setCash(user.getCash() + request.getTotalPrice());                       // update user's cash
-
-        Transaction transaction = setNewTransaction(userId, request, false);    // set transaction
-        Transaction savedTransaction = transactionDao.save(transaction);// save transaction in MongoDB
-
-        RecentTransaction recTransaction = TransactionMapper.toRecentTransaction(savedTransaction);
-        user.addLatestTransaction(recTransaction);                      // update embedded lastTransaction in user
-        User savedUser = userDao.save(user);                            // update user in MongoDB
-
-        // update user in Redis (cache)
-        try {
-            userRedisDao.saveFullUserToCache(savedUser);                // update redis cache
-
-        } catch (Exception e) {
-            // if Redis fails -> delete to avoid inconsistent data (Cache Eviction)
-            userRedisDao.clearUserCache(userId.toString());
+                if (userAfterRemoval != null)
+                    updatedUser = userAfterRemoval;
+            }
+            userRedisDao.updateUserInCacheIfActive(updatedUser);            // update Redis cache
+        }
+        else
+        {
+            // transaction failed, set transaction as failed
+            newtransaction = setFailedTransaction(userId, request, FailureReason.INSUFFICIENT_ASSET_QUANTITY, transactionId);
+            // update only user's recent transaction list in MongoDB (with failed transaction)
+            tradeDao.addLatestTransaction(userId, TransactionMapper.toRecentTransaction(newtransaction));
+            userRedisDao.clearUserCache(String.valueOf(userId));        // security cache delete for error cases
         }
 
-        return TransactionMapper.toResponseDTO(savedTransaction);       // return transactionDTO
+        transactionDao.saveWithoutTime(newtransaction);     // save transaction in MongoDB, maintain correct updatedAt
+        return TransactionMapper.toResponseDTO(newtransaction);         // return response DTO
     }
 
     /**
      * Define a market sell order for a specific asset.
      *
-     * @param email email fo the user taken by the authentication context
-     * @param userId The ID of the user performing the trade.
+     * @param user the entity of the user that made the transaction
      * @param request The DTO containing trade details (symbol, quantity, etc...).
      * @return A TransactionResponseDTO containing the result of the operation.
      */
-    private TransactionResponseDTO sellLimitOrder(String email, Long userId, TransactionRequestDTO request)
+    private TransactionResponseDTO sellLimitOrder(User user, TransactionRequestDTO request)
     {
-        User user = null;                                               // reference of user entity get from MongoDB
+        Long userId = user.getUserId();
+        User updatedUser;
         // check on Redis, try to retrieve the details of the specific asset from Redis (Hash)
         WalletItem cachedItem = userRedisDao.getAssetDetails(userId.toString(), request.getSymbol());
-        // check key on redis
-        if (cachedItem == null) {
-            // redis does not have the value, it is retrieved from MongoDB
-            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User not found"));
+        // get wallet from user
+        WalletItem mongoItem = user.getWalletItemBySymbol(request.getSymbol(), request.getAssetType());
+        // control check if the cache is null and if the cache is updated with MongoDB
+        if (cachedItem == null || !cachedItem.equals(mongoItem)) {
             // populate Redis for next time (Self-healing cache) with all user information
             userRedisDao.saveFullUserToCache(user);
             // get the item from the user
-            cachedItem = user.getWalletItemBySymbol(request.getSymbol(), request.getAssetType());
+            cachedItem = mongoItem;
         }
-
-        if (cachedItem == null)         // control check
-            throw new BusinessException("User doesn't have the asset for this trade");
 
         // get the information of the asset sold in the user
         double availableQuantity = cachedItem.getQuantity() - cachedItem.getBlockedQuantity();  // get available quantity
@@ -336,38 +341,28 @@ public class TradeServiceImpl implements TradeService {
 
         // control check
         if (availableQuantity < sellQuantity)
-            throw new BusinessException("Insufficient asset's quantity for this trade");
+            return TransactionMapper.toResponseDTO(finalizeFailedTransaction(request, userId, FailureReason.INSUFFICIENT_ASSET_QUANTITY));
 
-        // get user by email (unique index, fast retrieve). If userHolder[0] is null, it means that the data was in the
-        // cache and we need to load the user now. If it is NOT null, already have it.
-        if (user == null)
-            user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("User session invalid"));
+        long transactionId = counterDao.getNextSequence(CounterType.transaction_id);    // crete new transaction_id
+        // set pending transaction
+        Transaction newtransaction = setPendingTransaction(userId, request, transactionId);
+        updatedUser = tradeDao.executeSellLimitAtomic(userId, request.getSymbol(), request.getAssetType(),
+                request.getQuantity(), TransactionMapper.toRecentTransaction(newtransaction));
 
-        WalletItem tempWI = user.getWalletItemBySymbol(request.getSymbol(), request.getAssetType());    // get wallet from user
-        // consistency check
-        if ((tempWI == null) || (availableQuantity != (tempWI.getQuantity() - tempWI.getBlockedQuantity())))
-            throw new BusinessException("Insufficient asset's quantity (Consistency check failed)");
-
-        // update portfolio, remove quantity and asset if quantity = 0
-        user.updatePortfolioForSell(request.getSymbol(), request.getAssetType(), request.getQuantity(), true, false);
-
-        Transaction transaction = setNewTransaction(userId, request, true);    // set transaction
-        Transaction savedTransaction = transactionDao.save(transaction);// save transaction in MongoDB
-
-        RecentTransaction recTransaction = TransactionMapper.toRecentTransaction(savedTransaction);
-        user.addLatestTransaction(recTransaction);                      // update embedded lastTransaction in user
-        User savedUser = userDao.save(user);                            // update user in MongoDB
-
-        // update user in Redis (cache)
-        try {
-            userRedisDao.saveFullUserToCache(savedUser);                // update redis cache
-
-        } catch (Exception e) {
-            // if Redis fails -> delete to avoid inconsistent data (Cache Eviction)
-            userRedisDao.clearUserCache(userId.toString());
+        // check if transaction is successfully done or not
+        if (updatedUser != null)
+            userRedisDao.updateUserInCacheIfActive(updatedUser);            // update Redis cache
+        else
+        {
+            // transaction failed, set transaction as failed
+            newtransaction = setFailedTransaction(userId, request, FailureReason.INSUFFICIENT_ASSET_QUANTITY, transactionId);
+            // update only user's recent transaction list in MongoDB (with failed transaction)
+            tradeDao.addLatestTransaction(userId, TransactionMapper.toRecentTransaction(newtransaction));
+            userRedisDao.clearUserCache(String.valueOf(userId));        // security cache delete for error cases
         }
 
-        return TransactionMapper.toResponseDTO(savedTransaction);       // return transactionDTO
+        transactionDao.saveWithoutTime(newtransaction);     // save transaction in MongoDB, maintain correct updatedAt
+        return TransactionMapper.toResponseDTO(newtransaction);         // return response DTO
     }
 
     //------------------------------------------------ end: methods ----------------------------------------------------
@@ -381,7 +376,7 @@ public class TradeServiceImpl implements TradeService {
      *          if false the market is closed
      */
     private boolean isMarketOpen() {
-
+        ZonedDateTime nowNY = ZonedDateTime.now(ZoneId.of("America/New_York")); // take New York zone time
         DayOfWeek day = nowNY.getDayOfWeek();   // take the current day of the week
         LocalTime time = nowNY.toLocalTime();   // take the new york local time
 
@@ -409,16 +404,85 @@ public class TradeServiceImpl implements TradeService {
     private Transaction setNewTransaction(Long userId, TransactionRequestDTO tempTransaction, boolean limitOrder)
     {
         // create a complete transaction from request
-        Transaction tx = TransactionMapper.toEntity(tempTransaction, userId);
+        Transaction transaction = TransactionMapper.toEntity(tempTransaction, userId);
         // now add remaining fields
-        tx.setTransactionId(counterDao.getNextSequence(CounterType.transaction_id));     // get and update transactionId
+        transaction.setTransactionId(counterDao.getNextSequence(CounterType.transaction_id)); // get and update transactionId
         if (limitOrder)     // market is closed
-            tx.setStatus(TransactionStatus.PENDING);                                    // set status transaction
+            transaction.setStatus(TransactionStatus.PENDING);                   // set status transaction
         else
-            tx.setStatus(TransactionStatus.EXECUTED);                                   // set status transaction
+            transaction.setStatus(TransactionStatus.EXECUTED);                  // set status transaction
 
-        return tx;
+        return transaction;
     }
+
+    /**
+     * method that contains all the steps to update and save a transaction and its user when a transaction fails.
+     *
+     * @param request failed transaction
+     * @param userId identifier of the user related to  the transaction
+     * @param reason failure reason
+     */
+    private Transaction finalizeFailedTransaction(TransactionRequestDTO request, long userId, FailureReason reason) {
+        Transaction transaction = setNewTransaction(userId, request, false);    // create entity
+        transaction.markTransactionAsFailed(reason);                        // set failed status
+        Transaction savedTransaction = transactionDao.save(transaction);    // save transaction into MongoDb
+
+        tradeDao.addLatestTransaction(userId,TransactionMapper.toRecentTransaction(savedTransaction));
+        userRedisDao.clearUserCache(String.valueOf(userId));        // security cache delete for error cases
+
+        return savedTransaction;
+    }
+
+    /**
+     * From transactionRequest create a new transaction with successful status and passed id.
+     *
+     * @param userId        the user identifier related to transaction
+     * @param request       the transaction request details.
+     * @param transactionId the identifier of the transaction
+     * @return the new Transaction created.
+     */
+    private Transaction setSuccessfulTransaction(long userId, TransactionRequestDTO request, long transactionId) {
+
+        Transaction transaction = TransactionMapper.toEntity(request, userId);  // create entity, set also updatedAt
+        transaction.setTransactionId(transactionId);                            // set new id
+        transaction.setStatus(TransactionStatus.EXECUTED);                      // set status
+
+        return transaction;
+    }
+
+    /**
+     * From transactionRequest create a new transaction with successful status and passed id.
+     *
+     * @param userId        the user identifier related to transaction
+     * @param request       the transaction request details.
+     * @param transactionId the identifier of the transaction
+     * @return the new Transaction created.
+     */
+    private Transaction setPendingTransaction(long userId, TransactionRequestDTO request, long transactionId) {
+
+        Transaction transaction = TransactionMapper.toEntity(request, userId);  // create entity, set also updatedAt
+        transaction.setTransactionId(transactionId);                            // set new id
+        transaction.setStatus(TransactionStatus.PENDING);                       // set status
+
+        return transaction;
+    }
+
+    /**
+     * From transactionRequest create a new transaction with failed status and passed id.
+     *
+     * @param userId  the user identifier related to transaction
+     * @param request the transaction request details.
+     * @param reason  the specific reason why the transaction failed.
+     * @return the new Transaction created.
+     */
+    private Transaction setFailedTransaction(long userId, TransactionRequestDTO request, FailureReason reason, long transactionId) {
+        Transaction transaction = TransactionMapper.toEntity(request, userId);  //create entity, set also updatedAt
+        transaction.setTransactionId(transactionId);                            // set new id
+        transaction.markTransactionAsFailed(reason);                            // set status
+
+        return transaction;
+    }
+
     //------------------------------------------- end: utilities methods -----------------------------------------------
 }
 
@@ -442,8 +506,8 @@ public class TradeServiceImpl implements TradeService {
  *      willing to sell for).
  *  If these conditions are not met, the transaction must be canceled.
  *
- *  NOTE 2 - PASS-BY-REFERENCE EMULATION
- *  Java passes arguments by value (copies of references). To allow this method to "return" a User object fetched
- *  during a cache miss back to the caller, we use a single-element array (userHolder). This effectively updates the
- *  caller's reference, preventing a second redundant MongoDB query later in the business logic.
+ * NOTE 2
+ *  First two elements check if there aren't the information in Redis.
+ *  Last two elements there are the information in Redis, check consistency. Theoretically, if the data is in Redis,
+ *  it should be updated. Over check.
  */

@@ -127,6 +127,27 @@ public class UserRedisDao {
     }
 
     /**
+     * Method to update information of a user passed as parameter into Redis (cache).
+     *
+     * @param user user entity with information to upload on Redis
+     */
+    public void updateUserInCacheIfActive(User user)
+    {
+        // update user in Redis (cache) if needed
+        if (user.getDeleted() || user.getSuspended())
+            clearUserCache(user.getUserId().toString());   // delete user from RedisCache
+        else
+        {
+            try {
+                saveFullUserToCache(user);                // update redis cache
+            } catch (Exception e) {
+                // if Redis fails -> delete to avoid inconsistent data (Cache Eviction)
+                clearUserCache(user.getUserId().toString());
+            }
+        }
+    }
+
+    /**
      * Deletes all user-related data from Redis (e.g., on logout).
      *
      * @param userId user identifier

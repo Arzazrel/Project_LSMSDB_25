@@ -1,6 +1,7 @@
 package it.unipi.myfuture.myfuture_backend.model;
 
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
+import it.unipi.myfuture.myfuture_backend.enums.TransactionType;
 import it.unipi.myfuture.myfuture_backend.enums.UserCurrency;
 import it.unipi.myfuture.myfuture_backend.enums.UserRole;
 import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
@@ -169,6 +170,32 @@ public class User {
     //--------------------------------------- end: recentTransactions methods ------------------------------------------
 
     //-------------------------------------------- start: wallet methods -----------------------------------------------
+
+    public double calculateNewBep(String symbol, AssetType assetType, double qty, double currentPrice)
+    {
+        // chose the right wallet and check if is null
+        if (getWalletByType(assetType) == null) {
+            setWalletByType(assetType, new java.util.ArrayList<>());    // is null, initialize
+        }
+        List<WalletItem> targetWallet = getWalletByType(assetType);     // get the correct wallet
+
+        // check if the searched asset is in the user's portfolio
+        int index = findAssetIndexInWallet(targetWallet,symbol);
+
+        if (index != -1) {      // the asset is in the portfolio
+
+            WalletItem item = targetWallet.get(index);  // take the wallet item for the asset
+            // update BEP and quantity
+            double oldTotalCost = item.getQuantity() * item.getBep();
+            double newTotalCost = qty * currentPrice;
+
+            return (oldTotalCost + newTotalCost) / item.getQuantity();
+        }
+        else {                  // the asset isn't in the portfolio
+            return currentPrice;
+        }
+    }
+
     /**
      * Helper to update user portfolio and calculate Weighted Average Price (BEP).
      *
@@ -248,6 +275,32 @@ public class User {
         }
         else {                  // the asset isn't in the portfolio
             throw new BusinessException("The user doesn't have assets for this trade");
+        }
+    }
+
+    /**
+     * method for updating user status (blocked cash, blocked quantity) in case of failed transaction
+     *
+     * @param transaction failed transaction
+     */
+    public void updateUserWhenTransactionFailed(Transaction transaction)
+    {
+        if (transaction.getTransactionType() == TransactionType.purchase)   // purchase case
+        {
+            this.setBlockedCash(this.getBlockedCash() - transaction.getTotalPrice());   // free blocked cash
+        }
+        else if(transaction.getTransactionType() == TransactionType.sell)   // sell case
+        {
+            // update only the blocked quantity for the target asset
+            WalletItem targetItem = this.getWalletItemBySymbol(transaction.getSymbol(), transaction.getAssetType());
+            if (targetItem != null)
+            {
+                double newqty = targetItem.getBlockedQuantity() - transaction.getQuantity();
+                if (newqty > 0)
+                    targetItem.setBlockedQuantity(newqty);
+                else
+                    targetItem.setBlockedQuantity(0);
+            }
         }
     }
 

@@ -25,6 +25,7 @@ public class TransactionMapper {
      */
     public static Transaction toEntity(TransactionRequestDTO transactionRequest, Long userId) {
         Transaction tx = new Transaction();
+        Instant now = Instant.now();
 
         tx.setUserId(userId);
         tx.setTransactionType(transactionRequest.getTransactionType());
@@ -37,7 +38,8 @@ public class TransactionMapper {
         tx.setPricePerUnit(transactionRequest.getPricePerUnit());
         tx.setQuantity(transactionRequest.getQuantity());
 
-        tx.setDate(Instant.now());
+        tx.setDate(now);
+        tx.setUpdatedAt(now);
 
         return tx;
     }

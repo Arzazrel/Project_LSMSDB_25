@@ -47,5 +47,17 @@ public class Transaction {
     private double pricePerUnit;
     private double quantity;
     private Instant updatedAt;
+
+    //---------------------------------------- start: complex get/set methods ------------------------------------------
+    /**
+     * update the status of a transaction to FAILED, set the reason, and save to the MongoDB
+     *
+     * @param reason the reason of the failure
+     */
+    public void markTransactionAsFailed(FailureReason reason) {
+        this.setStatus(TransactionStatus.FAILED);        // set status
+        this.setFailureReason(reason);                   // set reason
+    }
+    //----------------------------------------- end: complex get/set methods -------------------------------------------
 }
 

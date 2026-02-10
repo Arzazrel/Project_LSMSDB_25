@@ -16,5 +16,5 @@ public interface LimitOrderExecutionService {
      * @return a TransactionResponseDTO representing the outcome of the processed transaction.
      * @throws BusinessException if the symbol is invalid, user is deleted, limit price isn't respected
      */
-    TransactionResponseDTO processPendingTrade(Transaction request);
+    void processPendingTrade(Transaction request);
 }

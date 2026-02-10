@@ -29,7 +29,7 @@ public class TransactionDao {
     private MongoTemplate mongoTemplate;
 
     /**
-     * Save or update a transaction.
+     * Save or update a transaction (with update of the time).
      *
      * @param transaction the transaction to be entered(saved)
      * @return the inserted object
@@ -38,6 +38,17 @@ public class TransactionDao {
         transaction.setUpdatedAt(Instant.now());
         return mongoTemplate.save(transaction);
     }
+
+    /**
+     * Save or update a transaction (without update of the time).
+     *
+     * @param transaction the transaction to be entered(saved)
+     * @return the inserted object
+     */
+    public Transaction saveWithoutTime(Transaction transaction) {
+        return mongoTemplate.save(transaction);
+    }
+
 
     /**
      * Find a transaction by tits ID.

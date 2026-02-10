@@ -1,9 +1,11 @@
 package it.unipi.myfuture.myfuture_backend.dao.mongo.user;
 
+import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
 import it.unipi.myfuture.myfuture_backend.model.SuspensionInfo;
 import it.unipi.myfuture.myfuture_backend.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -195,4 +197,88 @@ public class UserDao {
         mongoTemplate.updateFirst(query, update, User.class);
     }
 
+    //-------------------------------------- start: methods for atomic update ------------------------------------------
+
+    //------------------------------------------ start: methods for cash -----------------------------------------------
+
+    /**
+     * Updates user cash atomically for a purchase.
+     * Checks if (cash - blockedCash) >= amount before subtracting.
+     *
+     * @param userId the user identifier
+     * @param amount the positive amount to subtract from cash
+     * @return true if the update was successful, false if insufficient funds
+     */
+    public User subtractCashAtomic(Long userId, double amount) {
+        Query query = new Query(Criteria.where("user_id").is(userId));      // get user
+
+        // Purchases can only be made if the user is active and not suspended.
+        // When a user is suspended or deleted, they cannot make purchases or withdrawals, and therefore cannot perform
+        // any transactions that take money from the account.
+        query.addCriteria(Criteria.where("deleted").ne(true));
+        query.addCriteria(Criteria.where("suspended").ne(true));
+
+        // The critical condition: sufficient cash must be available. MongoDB allows us to use the $expr operator to 7
+        // compare two fields in the same document. Constraint to purchase -> (cash - blockedCash) >= amount.
+        query.addCriteria(new Criteria("$expr").is(
+                new org.bson.Document("$gte", java.util.Arrays.asList(
+                        new org.bson.Document("$subtract", java.util.Arrays.asList("$cash", "$blockedCash")),
+                        amount
+                ))
+        ));
+
+        Update update = new Update()
+                .inc("cash", -amount)
+                .set("updatedAt", Instant.now());
+
+        // findAndModify with FindAndModifyOptions().returnNew(true) returns the updated user or null otherwise
+        return mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), User.class);
+    }
+
+    /**
+     * Updates blocked cash atomically (e.g., when placing a Limit Order).
+     * Condition: (cash - blockedCash) >= amount
+     *
+     * @param userId the user identifier
+     * @param amount the positive amount to subtract from cash
+     */
+    public User addBlockedCashAtomic(Long userId, double amount) {
+        Query query = new Query(Criteria.where("user_id").is(userId));      // get user
+
+        // control check: ensure available cash (cash - blockedCash) is enough to block
+        query.addCriteria(new Criteria("$expr").is(
+                new org.bson.Document("$gte", java.util.Arrays.asList(
+                        new org.bson.Document("$subtract", java.util.Arrays.asList("$cash", "$blockedCash")),
+                        amount
+                ))
+        ));
+
+        Update update = new Update()
+                .inc("blockedCash", amount)
+                .set("updatedAt", Instant.now());
+
+        // findAndModify with FindAndModifyOptions().returnNew(true) returns the updated user or null otherwise
+        return mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), User.class);
+    }
+
+    /**
+     * Simple atomic increment for cash (e.g., after a sale or refund).
+     * No specific condition other than user existence.
+     *
+     * @param userId the user identifier
+     * @param amount the positive amount to subtract from cash
+     */
+    public User addCashAtomic(Long userId, double amount) {
+        Query query = new Query(Criteria.where("user_id").is(userId));      // get user
+        Update update = new Update()
+                .inc("cash", amount)
+                .set("updatedAt", Instant.now());
+
+        // findAndModify with FindAndModifyOptions().returnNew(true) returns the updated user or null otherwise
+        return mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), User.class);
+    }
+
+    //------------------------------------------- end: methods for cash ------------------------------------------------
+
+    //--------------------------------------- end: methods for atomic update -------------------------------------------
 }
