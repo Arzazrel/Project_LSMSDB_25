@@ -44,10 +44,9 @@ BILL,"BILL Holdings, Inc.","BILL Holdings, Inc.",share,Information Technology,Ap
 BIO,"Bio-Rad Laboratories, Inc.","Bio-Rad Laboratories, Inc.",share,Health Care,Life Sciences Tools & Services,"Hercules, California"
 BJ,"BJ's Wholesale Club Holdings, I","BJ's Wholesale Club Holdings, Inc.",share,Consumer Staples,Consumer Staples Merchandise Retail,"Marlborough, Massachusetts"
 BKH,Black Hills Corporation,Black Hills Corporation,share,Utilities,Multi-Utilities,"Rapid City, South Dakota"
-BLD,TopBuild Corp.,TopBuild Corp.,share,Consumer Discretionary,Homebuilding,;
+BLD,TopBuild Corp.,TopBuild Corp.,share,Consumer Discretionary,Homebuilding,
 BLKB,"Blackbaud, Inc.","Blackbaud, Inc.",share,Information Technology,Application Software,"Charleston, South Carolina"
 BMRN,BioMarin Pharmaceutical Inc.,BioMarin Pharmaceutical Inc.,share,Health Care,Biotechnology,"San Rafael, California"
-BRBR,"BellRing Brands, Inc.","BellRing Brands, Inc.",share,Consumer Staples,Packaged Foods & Meats,
 BRKR,Bruker Corporation,Bruker Corporation,share,Health Care,Health Care Equipment,"Billerica, Massachusetts"
 BRX,Brixmor Property Group Inc.,Brixmor Property Group Inc.,share,Real Estate,Retail REITs,"New York City, New York"
 BSY,"Bentley Systems, Incorporated","Bentley Systems, Incorporated",share,Information Technology,Application Software,"Exton, Pennsylvania"
@@ -101,7 +100,7 @@ CVLT,"Commvault Systems, Inc.","Commvault Systems, Inc.",share,Information Techn
 CW,Curtiss-Wright Corporation,Curtiss-Wright Corporation,share,Industrials,Aerospace & Defense,"Davidson, North Carolina"
 CXT,"Crane NXT, Co.","Crane NXT, Co.",share,Information Technology,Electronic Equipment & Instruments,"Stamford, Connecticut"
 CYTK,"Cytokinetics, Incorporated","Cytokinetics, Incorporated",share,Health Care,Biotechnology,"South San Francisco, California"
-DAR,Darling Ingredients Inc.,Darling Ingredients Inc.,share,Consumer Staples,Agricultural Products & Services,;
+DAR,Darling Ingredients Inc.,Darling Ingredients Inc.,share,Consumer Staples,Agricultural Products & Services,
 DBX,"Dropbox, Inc.","Dropbox, Inc.",share,Information Technology,Application Software,"San Francisco, California"
 DCI,"Donaldson Company, Inc.","Donaldson Company, Inc.",share,Industrials,Industrial Machinery & Supplies & Components,"Bloomington, Minnesota"
 DINO,HF Sinclair Corporation,HF Sinclair Corporation,share,Energy,Oil & Gas Refining & Marketing,"Dallas, Texas"
@@ -113,7 +112,6 @@ DT,"Dynatrace, Inc.","Dynatrace, Inc.",share,Information Technology,Application 
 DTM,"DT Midstream, Inc.","DT Midstream, Inc.",share,Energy,Oil & Gas Storage & Transportation,"Detroit, Michigan"
 DUOL,"Duolingo, Inc.","Duolingo, Inc.",share,Consumer Discretionary,Education Services,"Pittsburgh, Pennsylvania"
 EEFT,"Euronet Worldwide, Inc.","Euronet Worldwide, Inc.",share,Financials,Transaction & Payment Processing Services,"Leawood, Kansas"
-EGP,"EastGroup Properties, Inc.","EastGroup Properties, Inc.",share,Real Estate,Industrial REITs,
 EHC,Encompass Health Corporation,Encompass Health Corporation,share,Health Care,Health Care Facilities,"Birmingham, Alabama"
 ELAN,Elanco Animal Health Incorporat,Elanco Animal Health Incorporated,share,Health Care,Pharmaceuticals,"Greenfield, Indiana"
 ELF,"e.l.f. Beauty, Inc.","e.l.f. Beauty, Inc.",share,Consumer Staples,Personal Care Products,"Oakland, California"
@@ -124,7 +122,7 @@ ENTG,"Entegris, Inc.","Entegris, Inc.",share,Information Technology,Semiconducto
 EPR,EPR Properties,EPR Properties,share,Real Estate,Other Specialized REITs,"Kansas City, Missouri"
 EQH,"Equitable Holdings, Inc.","Equitable Holdings, Inc.",share,Financials,Diversified Financial Services,"New York City, New York"
 ESAB,ESAB Corporation,ESAB Corporation,share,Industrials,Industrial Machinery & Supplies & Components,"North Bethesda, Maryland"
-ESNT,Essent Group Ltd.,Essent Group Ltd.,share,Financials,Commercial & Residential Mortgage Finance,;
+ESNT,Essent Group Ltd.,Essent Group Ltd.,share,Financials,Commercial & Residential Mortgage Finance,
 EVR,Evercore Inc.,Evercore Inc.,share,Financials,Investment Banking & Brokerage,"New York City, New York"
 EWBC,"East West Bancorp, Inc.","East West Bancorp, Inc.",share,Financials,Regional Banks,"Pasadena, California"
 EXEL,"Exelixis, Inc.","Exelixis, Inc.",share,Health Care,Biotechnology,"Alameda, California"
@@ -166,7 +164,6 @@ GMED,"Globus Medical, Inc.","Globus Medical, Inc.",share,Health Care,Health Care
 GNTX,Gentex Corporation,Gentex Corporation,share,Consumer Discretionary,Automotive Parts & Equipment,"Zeeland, Michigan"
 GPK,Graphic Packaging Holding Compa,Graphic Packaging Holding Company,share,Materials,Paper & Plastic Packaging Products & Materials,"Atlanta, Georgia"
 GT,The Goodyear Tire & Rubber Comp,The Goodyear Tire & Rubber Company,share,Consumer Discretionary,Tires & Rubber,"Akron, Ohio"
-GTLS,"Chart Industries, Inc.","Chart Industries, Inc.",share,Industrials,Industrial Machinery & Supplies & Components,
 GTM,ZoomInfo Technologies Inc.,ZoomInfo Technologies Inc.,share,Communication Services,Interactive Media & Services,"Vancouver, Washington"
 GWRE,"Guidewire Software, Inc.","Guidewire Software, Inc.",share,Information Technology,Application Software,"San Mateo, California"
 GXO,"GXO Logistics, Inc.","GXO Logistics, Inc.",share,Industrials,Air Freight & Logistics,"Greenwich, Connecticut"
@@ -180,7 +177,7 @@ HLNE,Hamilton Lane Incorporated,Hamilton Lane Incorporated,share,Financials,Asse
 HOG,"Harley-Davidson, Inc.","Harley-Davidson, Inc.",share,Consumer Discretionary,Motorcycle Manufacturers,"Milwaukee, Wisconsin"
 HOMB,"Home BancShares, Inc.","Home Bancshares, Inc. (Conway, AR)",share,Financials,Regional Banks,"Conway, Arkansas"
 HQY,"HealthEquity, Inc.","HealthEquity, Inc.",share,Health Care,Managed Health Care,"Draper, Utah"
-HR,Healthcare Realty Trust Incorpo,Healthcare Realty Trust Incorporated,share,Real Estate,Health Care REITs,;
+HR,Healthcare Realty Trust Incorpo,Healthcare Realty Trust Incorporated,share,Real Estate,Health Care REITs,
 HRB,"H&R Block, Inc.","H&R Block, Inc.",share,Consumer Discretionary,Specialized Consumer Services,"Kansas City, Missouri"
 HWC,Hancock Whitney Corporation,Hancock Whitney Corporation,share,Financials,Regional Banks,"Gulfport, Mississippi"
 HXL,Hexcel Corporation,Hexcel Corporation,share,Industrials,Aerospace & Defense,"Stamford, Connecticut"
@@ -190,11 +187,10 @@ ILMN,"Illumina, Inc.","Illumina, Inc.",share,Health Care,Life Sciences Tools & S
 INGR,Ingredion Incorporated,Ingredion Incorporated,share,Consumer Staples,Agricultural Products & Services,"Westchester, Illinois"
 IPGP,IPG Photonics Corporation,IPG Photonics Corporation,share,Information Technology,Electronic Manufacturing Services,"Oxford, Massachusetts"
 IRDM,Iridium Communications Inc,Iridium Communications Inc.,share,Communication Services,Alternative Carriers,"McLean, Virginia"
-IRT,"Independence Realty Trust, Inc.","Independence Realty Trust, Inc.",share,Real Estate,Multi-Family Residential REITs,
 ITT,ITT Inc.,ITT Inc.,share,Industrials,Industrial Machinery & Supplies & Components,"Stamford, Connecticut"
 JAZZ,Jazz Pharmaceuticals plc,Jazz Pharmaceuticals plc,share,Health Care,Pharmaceuticals,"Dublin, Ireland"
 JEF,Jefferies Financial Group Inc.,Jefferies Financial Group Inc.,share,Financials,Multi-Sector Holdings,"New York City, New York"
-JHG,Janus Henderson Group plc,Janus Henderson Group plc,share,Financials,Asset Management & Custody Banks,;
+JHG,Janus Henderson Group plc,Janus Henderson Group plc,share,Financials,Asset Management & Custody Banks,
 JLL,Jones Lang LaSalle Incorporated,Jones Lang LaSalle Incorporated,share,Real Estate,Real Estate Services,"Chicago, Illinois"
 KBH,KB Home,KB Home,share,Consumer Discretionary,Homebuilding,"Los Angeles, California"
 KBR,"KBR, Inc.","KBR, Inc.",share,Industrials,Diversified Support Services,"Houston, Texas"
@@ -202,10 +198,9 @@ KD,"Kyndryl Holdings, Inc.","Kyndryl Holdings, Inc.",share,Information Technolog
 KEX,Kirby Corporation,Kirby Corporation,share,Industrials,Marine Transportation,"Houston, Texas"
 KMPR,Kemper Corporation,Kemper Corporation,share,Financials,Multi-line Insurance,"Chicago, Illinois"
 KNF,Knife Riv Holding Co.,Knife River Corporation,share,Materials,Construction Materials,"Bismarck, North Dakota"
-KNSL,"Kinsale Capital Group, Inc.","Kinsale Capital Group, Inc.",share,Financials,Property & Casualty Insurance,
 KNX,Knight-Swift Transportation Hol,Knight-Swift Transportation Holdings Inc.,share,Industrials,Cargo Ground Transportation,"Phoenix, Arizona"
-KRC,Kilroy Realty Corporation,Kilroy Realty Corporation,share,Real Estate,Office REITs,;
-KRG,Kite Realty Group Trust,Kite Realty Group Trust,share,Real Estate,Retail REITs,;
+KRC,Kilroy Realty Corporation,Kilroy Realty Corporation,share,Real Estate,Office REITs,
+KRG,Kite Realty Group Trust,Kite Realty Group Trust,share,Real Estate,Retail REITs,
 KTOS,Kratos Defense & Security Solut,"Kratos Defense & Security Solutions, Inc.",share,Industrials,Aerospace & Defense,"San Diego, California"
 LAD,"Lithia Motors, Inc.","Lithia Motors, Inc.",share,Consumer Discretionary,Automotive Retail,"Medford, Oregon"
 LAMR,Lamar Advertising Company,Lamar Advertising Company,share,Real Estate,Other Specialized REITs,"Baton Rouge, Louisiana"
@@ -214,7 +209,6 @@ LECO,"Lincoln Electric Holdings, Inc.","Lincoln Electric Holdings, Inc.",share,I
 LFUS,"Littelfuse, Inc.","Littelfuse, Inc.",share,Information Technology,Electronic Components,"Chicago, Illinois"
 LITE,Lumentum Holdings Inc.,Lumentum Holdings Inc.,share,Information Technology,Communications Equipment,"San Jose, California"
 LIVN,LivaNova PLC,LivaNova PLC,share,Health Care,Health Care Equipment,"Houston, Texas"
-LNTH,"Lantheus Holdings, Inc.","Lantheus Holdings, Inc.",share,Health Care,Health Care Supplies,
 LNW,"Light & Wonder, Inc.","Light & Wonder, Inc.",share,Consumer Discretionary,Casinos & Gaming,"Las Vegas, Nevada"
 LOPE,"Grand Canyon Education, Inc.","Grand Canyon Education, Inc.",share,Consumer Discretionary,Education Services,"Phoenix, Arizona"
 LPX,Louisiana-Pacific Corporation,Louisiana-Pacific Corporation,share,Materials,Forest Products,"Nashville, Tennessee"
@@ -248,12 +242,12 @@ NJR,NewJersey Resources Corporation,New Jersey Resources Corporation,share,Utili
 NLY,Annaly Capital Management Inc.,"Annaly Capital Management, Inc.",share,Financials,Mortgage REITs,"New York City, New York"
 NNN,"NNN REIT, Inc.","NNN REIT, Inc.",share,Real Estate,Retail REITs,"Orlando, Florida"
 NOV,NOV Inc.,NOV Inc.,share,Energy,Oil & Gas Equipment & Services,"Houston, Texas"
-NOVT,Novanta Inc.,Novanta Inc.,share,Information Technology,Electronic Equipment & Instruments,;
-NSA,National Storage Affiliates Tru,National Storage Affiliates Trust,share,Real Estate,Self-Storage REITs,;
+NOVT,Novanta Inc.,Novanta Inc.,share,Information Technology,Electronic Equipment & Instruments,
+NSA,National Storage Affiliates Tru,National Storage Affiliates Trust,share,Real Estate,Self-Storage REITs,
 NSP,"Insperity, Inc.","Insperity, Inc.",share,Industrials,Human Resource & Employment Services,"Houston, Texas"
 NTNX,"Nutanix, Inc.","Nutanix, Inc.",share,Information Technology,Systems Software,"San Jose, California"
-NVST,Envista Holdings Corporation,Envista Holdings Corporation,share,Health Care,Health Care Supplies,;
-NVT,nVent Electric plc,nVent Electric plc,share,Industrials,Electrical Components & Equipment,;
+NVST,Envista Holdings Corporation,Envista Holdings Corporation,share,Health Care,Health Care Supplies,
+NVT,nVent Electric plc,nVent Electric plc,share,Industrials,Electrical Components & Equipment,
 NWE,"NorthWestern Energy Group, Inc.","NorthWestern Energy Group, Inc.",share,Utilities,Multi-Utilities,"Sioux Falls, South Dakota"
 NXST,"Nexstar Media Group, Inc.","Nexstar Media Group, Inc.",share,Communication Services,Broadcasting,"Irving, Texas"
 NXT,Nextracker Inc.,Nextracker Inc.,share,Industrials,Electrical Components & Equipment,"Fremont, California"
@@ -261,14 +255,12 @@ NYT,New York Times Company (The),The New York Times Company,share,Communication 
 OC,Owens Corning Inc,Owens Corning,share,Industrials,Building Products,"Toledo, Ohio"
 OGE,OGE Energy Corp,OGE Energy Corp.,share,Utilities,Multi-Utilities,"Oklahoma City, Oklahoma"
 OGS,"ONE Gas, Inc.","ONE Gas, Inc.",share,Utilities,Gas Utilities,"Tulsa, Oklahoma"
-OHI,"Omega Healthcare Investors, Inc","Omega Healthcare Investors, Inc.",share,Real Estate,Health Care REITs,
 OKTA,"Okta, Inc.","Okta, Inc.",share,Information Technology,Application Software,"San Francisco, California"
 OLED,Universal Display Corporation,Universal Display Corporation,share,Information Technology,Semiconductors,"Ewing, New Jersey"
 OLLI,Ollie's Bargain Outlet Holdings,"Ollie's Bargain Outlet Holdings, Inc.",share,Consumer Discretionary,Broadline Retail,"Harrisburg, Pennsylvania"
 OLN,Olin Corporation,Olin Corporation,share,Materials,Diversified Chemicals,"Clayton, Missouri"
 ONB,Old National Bancorp,Old National Bancorp,share,Financials,Regional Banks,"Evansville, Indiana"
 ONTO,Onto Innovation Inc.,Onto Innovation Inc.,share,Information Technology,Semiconductor Materials & Equipment,"Wilmington, Massachusetts"
-OPCH,"Option Care Health, Inc.","Option Care Health, Inc.",share,Health Care,Health Care Facilities,
 ORA,"Ormat Technologies, Inc.","Ormat Technologies, Inc.",share,Utilities,Renewable Electricity,"Reno, Nevada"
 ORI,Old Republic International Corp,Old Republic International Corporation,share,Financials,Property & Casualty Insurance,"Chicago, Illinois"
 OSK,Oshkosh Corporation (Holding Co,Oshkosh Corporation,share,Industrials,Construction Machinery & Heavy Transportation Equipment,"Oshkosh, Wisconsin"
@@ -300,14 +292,13 @@ QLYS,"Qualys, Inc.","Qualys, Inc.",share,Information Technology,Systems Software
 R,"Ryder System, Inc.","Ryder System, Inc.",share,Industrials,Cargo Ground Transportation,"Miami, Florida"
 RBA,"RB Global, Inc.","RB Global, Inc.",share,Industrials,Diversified Support Services,"Westchester, Illinois"
 RBC,RBC Bearings Incorporated,RBC Bearings Incorporated,share,Industrials,Industrial Machinery & Supplies & Components,"Oxford, Connecticut"
-REXR,"Rexford Industrial Realty, Inc.","Rexford Industrial Realty, Inc.",share,Real Estate,Industrial REITs,
 RGA,"Reinsurance Group of America, I","Reinsurance Group of America, Incorporated",share,Financials,Reinsurance,"Chesterfield, Missouri"
 RGEN,Repligen Corporation,Repligen Corporation,share,Health Care,Biotechnology,"Waltham, Massachusetts"
 RGLD,"Royal Gold, Inc.","Royal Gold, Inc.",share,Materials,Gold,"Denver, Colorado"
 RH,RH,RH,share,Consumer Discretionary,Homefurnishing Retail,"Corte Madera, California"
 RLI,RLI Corp.,RLI Corp.,share,Financials,Property & Casualty Insurance,"Peoria, Illinois"
 RMBS,"Rambus, Inc.",Rambus Inc.,share,Information Technology,Semiconductors,"San Jose, California"
-RNR,RenaissanceRe Holdings Ltd.,RenaissanceRe Holdings Ltd.,share,Financials,Reinsurance,Bermuda;
+RNR,RenaissanceRe Holdings Ltd.,RenaissanceRe Holdings Ltd.,share,Financials,Reinsurance,Bermuda
 ROIV,Roivant Sciences Ltd.,Roivant Sciences Ltd.,share,Health Care,Biotechnology,"London, United Kingdom"
 RPM,RPM International Inc.,RPM International Inc.,share,Materials,Specialty Chemicals,"Medina, Ohio"
 RRC,Range Resources Corporation,Range Resources Corporation,share,Energy,Oil & Gas Exploration & Production,"Fort Worth, Texas"
@@ -319,14 +310,12 @@ SAIA,"Saia, Inc.","Saia, Inc.",share,Industrials,Cargo Ground Transportation,"Jo
 SAIC,Science Applications Internatio,Science Applications International Corporation,share,Industrials,Diversified Support Services,"Reston, Virginia"
 SAM,"Boston Beer Company, Inc. (The)","The Boston Beer Company, Inc.",share,Consumer Staples,Brewers,"Boston, Massachusetts"
 SATS,EchoStar Corporation,EchoStar Corporation,share,Communication Services,Wireless Telecommunication Services,"Englewood, Colorado"
-SBRA,"Sabra Health Care REIT, Inc.","Sabra Health Care REIT, Inc.",share,Real Estate,Health Care REITs,
 SCI,Service Corporation Internation,Service Corporation International,share,Consumer Discretionary,Specialized Consumer Services,"Houston, Texas"
 SEIC,SEI Investments Company,SEI Investments Company,share,Financials,Asset Management & Custody Banks,"Oaks, Pennsylvania"
 SF,Stifel Financial Corporation,Stifel Financial Corp.,share,Financials,Investment Banking & Brokerage,"St. Louis, Missouri"
 SFM,"Sprouts Farmers Market, Inc.","Sprouts Farmers Market, Inc.",share,Consumer Staples,Food Retail,"Phoenix, Arizona"
 SGI,Somnigroup International Inc.,Somnigroup International Inc.,share,Consumer Discretionary,Home Furnishings,"Lexington, Kentucky"
 SHC,Sotera Health Company,Sotera Health Company,share,Health Care,Health Care Services,"Broadview Heights, Ohio"
-SIGI,"Selective Insurance Group, Inc.","Selective Insurance Group, Inc.",share,Financials,Property & Casualty Insurance,
 SLAB,"Silicon Laboratories, Inc.",Silicon Laboratories Inc.,share,Information Technology,Semiconductors,"Austin, Texas"
 SLGN,Silgan Holdings Inc.,Silgan Holdings Inc.,share,Materials,"Metal, Glass & Plastic Containers","Stamford, Connecticut"
 SLM,SLM Corporation,SLM Corporation,share,Financials,Consumer Finance,"Newark, Delaware"
@@ -367,7 +356,7 @@ UGI,UGI Corporation,UGI Corporation,share,Utilities,Gas Utilities,"King of Pruss
 UMBF,UMB Financial Corporation,UMB Financial Corporation,share,Financials,Regional Banks,"Kansas City, Missouri"
 UNM,Unum Group,Unum Group,share,Financials,Life & Health Insurance,"Chattanooga, Tennessee"
 USFD,US Foods Holding Corp.,US Foods Holding Corp.,share,Consumer Staples,Food Distributors,"Rosemont, Illinois"
-UTHR,United Therapeutics Corporation,United Therapeutics Corporation,share,Health Care,Biotechnology,;
+UTHR,United Therapeutics Corporation,United Therapeutics Corporation,share,Health Care,Biotechnology,
 VAC,Marriott Vacations Worldwide Co,Marriott Vacations Worldwide Corporation,share,Consumer Discretionary,"Hotels, Resorts & Cruise Lines","Orlando, Florida"
 VAL,Valaris Limited,Valaris Limited,share,Energy,Oil & Gas Drilling,"Houston, Texas"
 VC,Visteon Corporation,Visteon Corporation,share,Consumer Discretionary,Automotive Parts & Equipment,"Van Buren Township, Michigan"
@@ -1503,44 +1492,44 @@ YELP,Yelp Inc.,Yelp Inc.,share,Communication Services,Interactive Media & Servic
 YOU,"Clear Secure, Inc.","Clear Secure, Inc.",share,Information Technology,Application Software,"New York City, New York"
 ZD,"Ziff Davis, Inc.","Ziff Davis, Inc.",share,Communication Services,Advertising,"New York City, New York"
 ZWS,Zurn Elkay Water Solutions Corp,Zurn Elkay Water Solutions Corporation,share,Industrials,Industrial Machinery & Supplies & Components,"Milwaukee, Wisconsin"
-NOVO-B.CO,Novo Nordisk B A/S,Novo Nordisk A/S,share,Healthcare,Drug Manufacturers - General,Denmark;
-ASML.AS,ASML HOLDING,ASML Holding N.V.,share,Technology,Semiconductor Equipment & Materials,Netherlands;
-RMS.PA,HERMES INTL,Hermès International Société en commandite par actions,share,Consumer Cyclical,Luxury Goods,France;
-AZN.L,ASTRAZENECA PLC ORD SHS $0.25,AstraZeneca PLC,share,Healthcare,Drug Manufacturers - General,United Kingdom;
-SHEL.L,SHELL PLC ORD EUR0.07,Shell plc,share,Energy,Oil & Gas Integrated,United Kingdom;
-TTE.PA,TOTALENERGIES,TotalEnergies SE,share,Energy,Oil & Gas Integrated,France;
-HSBA.L,HSBC HOLDINGS PLC ORD $0.50 (UK,HSBC Holdings plc,share,Financial Services,Banks - Diversified,United Kingdom;
-OR.PA,L'OREAL,L'Oréal S.A.,share,Consumer Defensive,Household & Personal Products,France;
-SIE.DE,SIEMENS AG                    N,Siemens Aktiengesellschaft,share,Industrials,Specialty Industrial Machinery,Germany;
-ULVR.L,UNILEVER PLC ORD 3 1/9P,Unilever PLC,share,Consumer Defensive,Household & Personal Products,United Kingdom;
-AIR.PA,AIRBUS SE,Airbus SE,share,Industrials,Aerospace & Defense,France;
-SAN.PA,SANOFI,Sanofi,share,Healthcare,Drug Manufacturers - General,France;
+NOVO-B.CO,Novo Nordisk B A/S,Novo Nordisk A/S,share,Healthcare,Drug Manufacturers - General,Denmark
+ASML.AS,ASML HOLDING,ASML Holding N.V.,share,Technology,Semiconductor Equipment & Materials,Netherlands
+RMS.PA,HERMES INTL,Hermès International Société en commandite par actions,share,Consumer Cyclical,Luxury Goods,France
+AZN.L,ASTRAZENECA PLC ORD SHS $0.25,AstraZeneca PLC,share,Healthcare,Drug Manufacturers - General,United Kingdom
+SHEL.L,SHELL PLC ORD EUR0.07,Shell plc,share,Energy,Oil & Gas Integrated,United Kingdom
+TTE.PA,TOTALENERGIES,TotalEnergies SE,share,Energy,Oil & Gas Integrated,France
+HSBA.L,HSBC HOLDINGS PLC ORD $0.50 (UK,HSBC Holdings plc,share,Financial Services,Banks - Diversified,United Kingdom
+OR.PA,L'OREAL,L'Oréal S.A.,share,Consumer Defensive,Household & Personal Products,France
+SIE.DE,SIEMENS AG                    N,Siemens Aktiengesellschaft,share,Industrials,Specialty Industrial Machinery,Germany
+ULVR.L,UNILEVER PLC ORD 3 1/9P,Unilever PLC,share,Consumer Defensive,Household & Personal Products,United Kingdom
+AIR.PA,AIRBUS SE,Airbus SE,share,Industrials,Aerospace & Defense,France
+SAN.PA,SANOFI,Sanofi,share,Healthcare,Drug Manufacturers - General,France
 ITX.MC,INDUSTRIA DE DISE...O TEXTIL S.,"Industria de Diseño Textil, S.A.",share,Consumer Cyclical,Apparel Retail,Spain
-ALV.DE,Allianz SE                    v,Allianz SE,share,Financial Services,Insurance - Diversified,Germany;
-ENEL.MI,ENEL,Enel SpA,share,Utilities,Utilities - Diversified,Italy;
-BP.L,BP PLC $0.25,BP p.l.c.,share,Energy,Oil & Gas Integrated,United Kingdom;
-DTE.DE,DEUTSCHE TELEKOM AG           N,Deutsche Telekom AG,share,Communication Services,Telecom Services,Germany;
-ADYEN.AS,ADYEN,Adyen N.V.,share,Technology,Software - Infrastructure,Netherlands;
+ALV.DE,Allianz SE                    v,Allianz SE,share,Financial Services,Insurance - Diversified,Germany
+ENEL.MI,ENEL,Enel SpA,share,Utilities,Utilities - Diversified,Italy
+BP.L,BP PLC $0.25,BP p.l.c.,share,Energy,Oil & Gas Integrated,United Kingdom
+DTE.DE,DEUTSCHE TELEKOM AG           N,Deutsche Telekom AG,share,Communication Services,Telecom Services,Germany
+ADYEN.AS,ADYEN,Adyen N.V.,share,Technology,Software - Infrastructure,Netherlands
 MC.PA,LVMH,"LVMH Moët Hennessy - Louis Vuitton, Société Européenne",share,Consumer Cyclical,Luxury Goods,France
-VOW3.DE,VOLKSWAGEN AG                 V,Volkswagen AG,share,Consumer Cyclical,Auto Manufacturers,Germany;
-PHIA.AS,KON.PHILIPS N.V.,Koninklijke Philips N.V.,share,Healthcare,Medical Devices,Netherlands;
-REL.L,RELX PLC ORD 14 51/116P,RELX PLC,share,Industrials,Specialty Business Services,United Kingdom;
-BNP.PA,BNP PARIBAS ACT.A,BNP Paribas SA,share,Financial Services,Banks - Regional,France;
-ORA.PA,ORANGE,Orange S.A.,share,Communication Services,Telecom Services,France;
-BAYN.DE,Bayer AG                      N,Bayer Aktiengesellschaft,share,Healthcare,Drug Manufacturers - General,Germany;
-RNO.PA,RENAULT,Renault SA,share,Consumer Cyclical,Auto Manufacturers,France;
-CRH.L,CRH PLC ORD EUR 0.32 (DI),CRH plc,share,Basic Materials,Building Materials,Ireland;
-ISP.MI,INTESA SANPAOLO,Intesa Sanpaolo S.p.A.,share,Financial Services,Banks - Regional,Italy;
-STAN.L,STANDARD CHARTERED PLC ORD USD0,Standard Chartered PLC,share,Financial Services,Banks - Diversified,United Kingdom;
-SGE.L,THE SAGE GROUP PLC ORD 1 4/77P,The Sage Group plc,share,Technology,Software - Application,United Kingdom;
-KNEBV.HE,KONE Corporation,KONE Oyj,share,Industrials,Specialty Industrial Machinery,Finland;
-ENI.MI,ENI,Eni S.p.A.,share,Energy,Oil & Gas Integrated,Italy;
+VOW3.DE,VOLKSWAGEN AG                 V,Volkswagen AG,share,Consumer Cyclical,Auto Manufacturers,Germany
+PHIA.AS,KON.PHILIPS N.V.,Koninklijke Philips N.V.,share,Healthcare,Medical Devices,Netherlands
+REL.L,RELX PLC ORD 14 51/116P,RELX PLC,share,Industrials,Specialty Business Services,United Kingdom
+BNP.PA,BNP PARIBAS ACT.A,BNP Paribas SA,share,Financial Services,Banks - Regional,France
+ORA.PA,ORANGE,Orange S.A.,share,Communication Services,Telecom Services,France
+BAYN.DE,Bayer AG                      N,Bayer Aktiengesellschaft,share,Healthcare,Drug Manufacturers - General,Germany
+RNO.PA,RENAULT,Renault SA,share,Consumer Cyclical,Auto Manufacturers,France
+CRH.L,CRH PLC ORD EUR 0.32 (DI),CRH plc,share,Basic Materials,Building Materials,Ireland
+ISP.MI,INTESA SANPAOLO,Intesa Sanpaolo S.p.A.,share,Financial Services,Banks - Regional,Italy
+STAN.L,STANDARD CHARTERED PLC ORD USD0,Standard Chartered PLC,share,Financial Services,Banks - Diversified,United Kingdom
+SGE.L,THE SAGE GROUP PLC ORD 1 4/77P,The Sage Group plc,share,Technology,Software - Application,United Kingdom
+KNEBV.HE,KONE Corporation,KONE Oyj,share,Industrials,Specialty Industrial Machinery,Finland
+ENI.MI,ENI,Eni S.p.A.,share,Energy,Oil & Gas Integrated,Italy
 AENA.MC,"AENA, S.M.E., S.A.","Aena S.M.E., S.A.",share,Industrials,Airports & Air Services,Spain
-BMW.DE,BAYERISCHE MOTOREN WERKE AG   S,Bayerische Motoren Werke Aktiengesellschaft,share,Consumer Cyclical,Auto Manufacturers,Germany;
-SU.PA,SCHNEIDER ELECTRIC SE,Schneider Electric S.E.,share,Industrials,Specialty Industrial Machinery,France;
-PRU.L,PRUDENTIAL PLC ORD 5P,Prudential plc,share,Financial Services,Insurance - Life,United Kingdom;
-CPG.L,COMPASS GROUP PLC ORD 11 1/20P,Compass Group PLC,share,Consumer Cyclical,Restaurants,United Kingdom;
-SAND.ST,Sandvik AB,Sandvik AB (publ),share,Industrials,Specialty Industrial Machinery,Sweden;
-GSK.L,GSK PLC ORD 31 1/4P,GSK plc,share,Healthcare,Drug Manufacturers - General,United Kingdom;
-ABI.BR,AB INBEV,Anheuser-Busch InBev SA/NV,share,Consumer Defensive,Beverages - Brewers,Belgium;
-VOD.L,VODAFONE GROUP PLC ORD USD0.20,Vodafone Group Public Limited Company,share,Communication Services,Telecom Services,United Kingdom;
+BMW.DE,BAYERISCHE MOTOREN WERKE AG   S,Bayerische Motoren Werke Aktiengesellschaft,share,Consumer Cyclical,Auto Manufacturers,Germany
+SU.PA,SCHNEIDER ELECTRIC SE,Schneider Electric S.E.,share,Industrials,Specialty Industrial Machinery,France
+PRU.L,PRUDENTIAL PLC ORD 5P,Prudential plc,share,Financial Services,Insurance - Life,United Kingdom
+CPG.L,COMPASS GROUP PLC ORD 11 1/20P,Compass Group PLC,share,Consumer Cyclical,Restaurants,United Kingdom
+SAND.ST,Sandvik AB,Sandvik AB (publ),share,Industrials,Specialty Industrial Machinery,Sweden
+GSK.L,GSK PLC ORD 31 1/4P,GSK plc,share,Healthcare,Drug Manufacturers - General,United Kingdom
+ABI.BR,AB INBEV,Anheuser-Busch InBev SA/NV,share,Consumer Defensive,Beverages - Brewers,Belgium
+VOD.L,VODAFONE GROUP PLC ORD USD0.20,Vodafone Group Public Limited Company,share,Communication Services,Telecom Services,United Kingdom
