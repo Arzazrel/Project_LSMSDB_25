@@ -254,7 +254,7 @@ public class UserServiceImpl implements UserService {
         // Update user suspension state
         user.setSuspended(true);
         user.setSuspensionInfo(suspensionInfo);
-        user.setUpdateAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
 
         userDao.save(user);                         // save changes
     }

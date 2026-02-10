@@ -1,6 +1,5 @@
 package it.unipi.myfuture.myfuture_backend.dao.mongo;
 
-import com.mongodb.client.result.UpdateResult;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import it.unipi.myfuture.myfuture_backend.model.RecentTransaction;
 import it.unipi.myfuture.myfuture_backend.model.User;
