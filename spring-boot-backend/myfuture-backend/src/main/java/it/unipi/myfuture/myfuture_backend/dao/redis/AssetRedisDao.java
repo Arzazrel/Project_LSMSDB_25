@@ -12,7 +12,7 @@ import java.util.Set;
  * KEYSPACE DESIGN:
  * - asset:{type}:list (Hash)               -> Map of all assets of a certain type (Field: symbol, Value: name).
  * - asset:{symbol}:current_price (String)  -> The most recent real-time market price.
- * - asset:{symbol}:intraday_prices (ZSet)  -> Price history of the day. Score: Timestamp, Member: "Timestamp:Price".
+ * - asset:{symbol}:intraday_prices (ZSet)  -> Price history of the day. Score: Timestamp, Member: "Timestamp:Price". SEE NOTE 0
  * - asset:most_traded (Hash)               -> Stats of the most traded assets from the previous day.
  * - asset:top_growth (ZSet)                -> Ranking of assets with highest % growth. Score: % change.
  * - asset:worst_decline (ZSet)             -> Ranking of assets with highest % decline. Score: % change (negative).
@@ -190,3 +190,10 @@ public class AssetRedisDao {
         redisTemplate.delete(getMostTradedKey());       // reset most-traded assets
     }
 }
+/*
+NOTE 0:
+    In Redis Sorted Sets (ZSet), members must be unique. If we used only the price as a member, identical prices at
+    different times would not create new entries; Redis would simply update the score (timestamp) of the existing member.
+    To ensure we store every price point even when the price remains constant, we store a combination of 'timestamp:price'
+    as the member. This guarantees uniqueness for every data point while keeping them sorted by the ZSet score (timestamp).
+ */
