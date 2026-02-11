@@ -209,13 +209,13 @@ NOTE: OPERATIONAL GUIDE FOR MARKET DATA FEEDER
        
        to close node use:
         1. db.getSiblingDB("admin").shutdownServer()
-        2.	exit
-        3.	mongosh "mongodb://localhost:27018"
-        4.	db.getSiblingDB("admin").shutdownServer()
-        5.	exit
-        6.	mongosh "mongodb://localhost:27019"
-        7.	db.getSiblingDB("admin").shutdownServer()
-        8.	exit
+        2. exit
+        3. mongosh "mongodb://localhost:27018"
+        4. db.getSiblingDB("admin").shutdownServer()
+        5. exit
+        6. mongosh "mongodb://localhost:27019"
+        7. db.getSiblingDB("admin").shutdownServer()
+        8. exit
 
     2. START REDIS REPLICA SET (3 Terminals)
        Terminal 1 (Primary - 6379):

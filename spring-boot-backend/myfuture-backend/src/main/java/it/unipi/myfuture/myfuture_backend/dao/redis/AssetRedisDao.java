@@ -18,8 +18,8 @@ import java.util.Set;
  * - asset:worst_decline (ZSet)             -> Ranking of assets with highest % decline. Score: % change (negative).
  *
  * Explanation:
- *  * Rankings (most traded, growth, decline) are pre-calculated by an Admin/Batch process
- *  * at the start of each trading day to provide instant insights without heavy MongoDB aggregations.
+ *  Rankings (most traded, growth, decline) are pre-calculated by an Admin/Batch process at least at the start of each
+ *  trading day to provide instant insights without heavy MongoDB aggregations.
  */
 @Repository
 public class AssetRedisDao {
