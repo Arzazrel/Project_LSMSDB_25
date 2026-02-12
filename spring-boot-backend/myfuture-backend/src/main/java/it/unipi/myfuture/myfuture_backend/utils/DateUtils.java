@@ -17,17 +17,17 @@ public final class DateUtils {
      */
     public static Instant calculateStartDate(TimeWindow window) {
         if (window == null) {
-            return Instant.now().minus(365, ChronoUnit.DAYS); // Default a un anno
+            return Instant.now().minus(365, ChronoUnit.DAYS);               // Default one year
         }
 
         return switch (window) {
-            case DAY -> Instant.now().minus(1, ChronoUnit.DAYS);
-            case WEEK -> Instant.now().minus(7, ChronoUnit.DAYS);
-            case MONTH -> Instant.now().minus(30, ChronoUnit.DAYS);
-            case YEAR -> Instant.now().minus(365, ChronoUnit.DAYS);
-            case TWO_YEAR -> Instant.now().minus(365*2, ChronoUnit.DAYS);
-            case FIVE_YEAR -> Instant.now().minus(365*5, ChronoUnit.DAYS);
-            default -> Instant.now().minus(3650, ChronoUnit.DAYS);
+            case DAY -> Instant.now().minus(1, ChronoUnit.DAYS);            // one day before
+            case WEEK -> Instant.now().minus(7, ChronoUnit.DAYS);           // one week before
+            case MONTH -> Instant.now().minus(30, ChronoUnit.DAYS);         // one month before
+            case YEAR -> Instant.now().minus(365, ChronoUnit.DAYS);         // one year before
+            case TWO_YEAR -> Instant.now().minus(365*2, ChronoUnit.DAYS);   // two years before
+            case FIVE_YEAR -> Instant.now().minus(365*5, ChronoUnit.DAYS);  // five years before
+            default -> Instant.now().minus(3650, ChronoUnit.DAYS);          // ten years
         };
     }
 }

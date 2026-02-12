@@ -1,5 +1,6 @@
 package it.unipi.myfuture.myfuture_backend.dao.redis;
 
+import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
@@ -13,7 +14,7 @@ import java.util.Set;
  * - asset:{type}:list (Hash)               -> Map of all assets of a certain type (Field: symbol, Value: name).
  * - asset:{symbol}:current_price (String)  -> The most recent real-time market price.
  * - asset:{symbol}:intraday_prices (ZSet)  -> Price history of the day. Score: Timestamp, Member: "Timestamp:Price". SEE NOTE 0
- * - asset:most_traded (Hash)               -> Stats of the most traded assets from the previous day.
+ * - asset:most_traded (Hash)               -> Stats of the most traded assets from the previous day (Field: symbol, Value: json).
  * - asset:top_growth (ZSet)                -> Ranking of assets with highest % growth. Score: % change.
  * - asset:worst_decline (ZSet)             -> Ranking of assets with highest % decline. Score: % change (negative).
  *
@@ -76,6 +77,52 @@ public class AssetRedisDao {
 
     //--------------------------------------------- end: key formatter -------------------------------------------------
 
+    // -------- start: asset list --------
+
+    /**
+     * Caches the list of assets for a specific category.
+     *
+     * @param type category identifier
+     * @param symbolToNameMap map of symbol to full name
+     */
+    public void saveAssetListByType(AssetType type, Map<String, String> symbolToNameMap) {
+        redisTemplate.opsForHash().putAll(getAssetListByTypeKey(type.toString()), symbolToNameMap);
+    }
+
+    /**
+     * Retrieves the full list of assets (symbol and name) for a specific category.
+     *
+     * @param type category identifier (share, etf, crypto)
+     * @return A Map where Key is the symbol and Value is the asset name.
+     */
+    public Map<Object, Object> getAssetListByType(AssetType type) {
+        return redisTemplate.opsForHash().entries(getAssetListByTypeKey(type.toString()));  // get entire list
+    }
+
+    /**
+     * Retrieves the full name of a specific asset from the cached list.
+     *
+     * @param type category identifier
+     * @param symbol the asset symbol to look for
+     * @return The asset name or null if not found
+     */
+    public String getAssetNameFromList(AssetType type, String symbol) {
+        Object name = redisTemplate.opsForHash().get(getAssetListByTypeKey(type.toString()), symbol);   // get symbol
+        return name != null ? name.toString() : null;
+    }
+
+    /**
+     * Delete the list of assets for a specific category.
+     *
+     * @param type category identifier
+     */
+    public void deleteAssetListByType(AssetType type) {
+        redisTemplate.delete(getAssetListByTypeKey(type.toString()));
+    }
+
+    // -------- end: asset list --------
+
+    // -------- start: current price --------
     /**
      * Updates the current real-time price of an asset.
      *
@@ -96,7 +143,9 @@ public class AssetRedisDao {
         Object price = redisTemplate.opsForValue().get(getCurrentPriceKey(symbol));
         return price != null ? Double.valueOf(price.toString()) : null;
     }
+    // -------- end: current price --------
 
+    // -------- start: intraday price --------
     /**
      * Adds a price sample to the intraday ZSet.
      *
@@ -123,6 +172,29 @@ public class AssetRedisDao {
     }
 
     /**
+     * Retrieves ALL intraday prices collected for the current day.
+     * Essential for the End-of-Day consolidation task to calculate OHLC.
+     *
+     * @param symbol asset identifier
+     * @return set of all timestamped price samples "timestamp:price"
+     */
+    public Set<Object> getAllIntradayPrices(String symbol) {
+        // ZRANGE key 0 -1: gets all elements from the first (0) to the last (-1)
+        return redisTemplate.opsForZSet().range(getIntradayPriceKey(symbol), 0, -1);
+    }
+
+    /**
+     * Clears all intraday price history for an asset.
+     *
+     * @param symbol asset identifier
+     */
+    public void clearIntradayData(String symbol) {
+        redisTemplate.delete(getIntradayPriceKey(symbol));
+    }
+    // -------- end: intraday price --------
+
+    // -------- start: most growth --------
+    /**
      * Updates the ranking for highest growth assets.
      *
      * @param symbol asset identifier
@@ -132,6 +204,16 @@ public class AssetRedisDao {
         redisTemplate.opsForZSet().add(getTopGrowthKey(), symbol, percentageChange);
     }
 
+    /**
+     * Resets top growth.
+     */
+    public void clearTopGrowth() {
+        redisTemplate.delete(getTopGrowthKey());        // reset top-growth-assets
+    }
+
+    // -------- end: most growth --------
+
+    // -------- start: worst decline --------
     /**
      * Updates the ranking for worst decline assets.
      *
@@ -143,6 +225,16 @@ public class AssetRedisDao {
     }
 
     /**
+     * Resets worst decline.
+     */
+    public void clearWorstDecline() {
+        redisTemplate.delete(getWorstDeclineKey());     // reset worst-decline assets
+    }
+
+    // -------- end: worst decline --------
+
+    // -------- start: most traded --------
+    /**
      * Stores pre-calculated stats for most traded assets.
      *
      * @param symbol asset identifier
@@ -153,33 +245,21 @@ public class AssetRedisDao {
     }
 
     /**
-     * Caches the list of assets for a specific category.
+     * Stores all pre-calculated stats for most traded assets.
      *
-     * @param type category identifier
-     * @param symbolToNameMap map of symbol to full name
+     * @param allStats list of hash of the most asset
      */
-    public void saveAssetListByType(String type, Map<String, String> symbolToNameMap) {
-        redisTemplate.opsForHash().putAll(getAssetListByTypeKey(type), symbolToNameMap);
+    public void updateAllMostTraded(Map<String, String> allStats) {
+        redisTemplate.opsForHash().putAll(getMostTradedKey(), allStats);
     }
 
     /**
-     * Delete the list of assets for a specific category.
-     *
-     * @param type category identifier
-     * @param symbolToNameMap map of symbol to full name
+     * Resets most traded.
      */
-    public void deleteAssetListByType(String type, Map<String, String> symbolToNameMap) {
-        redisTemplate.delete(getAssetListByTypeKey(type));
+    public void clearMostTraded() {
+        redisTemplate.delete(getMostTradedKey());       // reset most-traded assets
     }
-
-    /**
-     * Clears all intraday price history for an asset.
-     *
-     * @param symbol asset identifier
-     */
-    public void clearIntradayData(String symbol) {
-        redisTemplate.delete(getIntradayPriceKey(symbol));
-    }
+    // -------- end: most traded --------
 
     /**
      * Resets daily rankings and stats.

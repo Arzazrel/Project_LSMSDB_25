@@ -1,10 +1,7 @@
 package it.unipi.myfuture.myfuture_backend.dao.mongo.transaction.impl;
 
 import it.unipi.myfuture.myfuture_backend.dao.mongo.transaction.TransactionAggregationDao;
-import it.unipi.myfuture.myfuture_backend.dto.analytics.MostTradedAssetDTO;
-import it.unipi.myfuture.myfuture_backend.dto.analytics.TotalInvestmentDTO;
-import it.unipi.myfuture.myfuture_backend.dto.analytics.TransactionDistributionDTO;
-import it.unipi.myfuture.myfuture_backend.dto.analytics.UserFinancialFlowDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.*;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionGroupField;
 import it.unipi.myfuture.myfuture_backend.utils.DateUtils;
@@ -18,6 +15,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -166,5 +165,31 @@ public class TransactionAggregationDaoImpl implements TransactionAggregationDao 
         );
 
         return mongoTemplate.aggregate(aggregation, "transactions", UserFinancialFlowDTO.class).getMappedResults();
+    }
+
+    /**
+     * Calculates the total monetary volume (sum of totalPrice) for each asset traded during the current day.
+     *
+     * @return A list of DailyVolumeDTO containing the symbol and its total volume.
+     */
+    @Override
+    public List<DailyVolumeDTO> getDailyVolumeBySymbol() {
+        // want the volume of all assets from the start of the current day (00:00)
+        Instant startOfToday = LocalDate.now()
+                .atStartOfDay(ZoneId.of("America/New_York"))    // use NY tie zone for project specific
+                .toInstant();
+
+        Aggregation aggregation = Aggregation.newAggregation(
+                // filter only transactions from today that have a symbol (exclude cash-only transfers)
+                Aggregation.match(Criteria.where("date").gte(startOfToday).and("symbol").ne(null)),
+                // group by symbol and sum the totalPrice
+                Aggregation.group("symbol")
+                        .sum("totalPrice").as("volume"),
+                // project to DTO fields
+                Aggregation.project("volume")
+                        .and("_id").as("symbol")
+        );
+
+        return mongoTemplate.aggregate(aggregation, "transactions", DailyVolumeDTO.class).getMappedResults();
     }
 }

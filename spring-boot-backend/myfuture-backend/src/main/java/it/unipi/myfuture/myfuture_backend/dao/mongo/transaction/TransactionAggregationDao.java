@@ -4,6 +4,7 @@ import it.unipi.myfuture.myfuture_backend.dto.analytics.MostTradedAssetDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.TotalInvestmentDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.TransactionDistributionDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserFinancialFlowDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.DailyVolumeDTO;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionGroupField;
 
@@ -51,4 +52,11 @@ public interface TransactionAggregationDao {
      * @return A list of UserFinancialFlowDTO with details of volumes per user.
      */
     List<UserFinancialFlowDTO> findUserFinancialFlow(TimeWindow window, boolean ascending);
+
+    /**
+     * Calculates the total monetary volume (sum of totalPrice) for each asset traded during the current day.
+     *
+     * @return A list of DailyVolumeDTO containing the symbol and its total volume.
+     */
+     List<DailyVolumeDTO> getDailyVolumeBySymbol();
 }
