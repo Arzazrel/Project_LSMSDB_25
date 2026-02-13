@@ -5,17 +5,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.asset.AssetDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.asset_price.AssetPriceAggregationDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.asset_price.AssetPriceDao;
+import it.unipi.myfuture.myfuture_backend.dao.mongo.news.NewsAggregationDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.transaction.TransactionAggregationDao;
-import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserAggregationDao;
 import it.unipi.myfuture.myfuture_backend.dao.redis.AssetRedisDao;
+import it.unipi.myfuture.myfuture_backend.dao.redis.NewsRedisDao;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetGrowthDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.DailyVolumeDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.MostTradedAssetDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.SectorNewsGroupDTO;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.model.Asset;
 import it.unipi.myfuture.myfuture_backend.model.AssetPrice;
+import it.unipi.myfuture.myfuture_backend.model.News;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -32,21 +36,24 @@ import java.util.stream.Collectors;
  * used by the API.
  */
 @Service
-public class MarketSchedulerService {
+public class MarketSchedulerService  implements CommandLineRunner {
 
     @Autowired
     private AssetDao assetDao;
     @Autowired
     private AssetPriceDao assetPriceDao;
+
     @Autowired
     private AssetPriceAggregationDao assetPriceAggregationDao;
     @Autowired
     private TransactionAggregationDao transactionAggregationDao;
     @Autowired
-    private UserAggregationDao userAggregationDao;
+    private NewsAggregationDao newsAggregationDao;
 
     @Autowired
     private AssetRedisDao assetRedisDao;
+    @Autowired
+    private NewsRedisDao newsRedisDao;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -68,43 +75,10 @@ public class MarketSchedulerService {
             System.out.println("[SCHEDULER] Starting Daily Tasks...");
 
             // -- assets list --
-            // get the asset list and put in Redis. the key is asset:{type}:list (Hash) -> Map (Field: symbol, Value: name)
-            List<Asset> etfAssets = assetDao.findByType(AssetType.etf);
-            List<Asset> shareAssets = assetDao.findByType(AssetType.share);
-            List<Asset> cryptoAssets = assetDao.findByType(AssetType.crypto);
+            refreshAssetLists();
 
-            // delete all list
-            assetRedisDao.deleteAssetListByType(AssetType.etf);
-            assetRedisDao.deleteAssetListByType(AssetType.share);
-            assetRedisDao.deleteAssetListByType(AssetType.crypto);
-
-            // convert Lists to Maps and save to Redis (requires a Map<Field, Value>)
-            if (!etfAssets.isEmpty())
-                assetRedisDao.saveAssetListByType(AssetType.etf, convertToMap(etfAssets));
-
-            if (!shareAssets.isEmpty())
-                assetRedisDao.saveAssetListByType(AssetType.share, convertToMap(shareAssets));
-
-            if (!cryptoAssets.isEmpty())
-                assetRedisDao.saveAssetListByType(AssetType.crypto, convertToMap(cryptoAssets));
-
-            assetRedisDao.clearGlobalDailyData();           // clear all stats
-
-            // -- most traded --
-            // calculate the top 10 trading assets in this day
-            List<MostTradedAssetDTO> topAssets = transactionAggregationDao.findMostTradedAssets(TimeWindow.DAY);
-            if (!topAssets.isEmpty())
-                convertAndSaveTopAssets(topAssets);
-
-            // -- most growth --
-            // calculate the top 10 assets with the best growth last day.
-            List<AssetGrowthDTO> topGrowthAsset = assetPriceAggregationDao.findAssetPerformance(TimeWindow.DAY, false);
-            convertAndSaveMostGrowth(topGrowthAsset);                       // save into Redis
-
-            // -- worst decline --
-            // calculate the top 10 assets with the best decline last day.
-            List<AssetGrowthDTO> topWorstAsset = assetPriceAggregationDao.findAssetPerformance(TimeWindow.DAY, true);
-            convertAndSaveWorstDecline(topWorstAsset);                      // save into Redis
+            // -- most traded -- most growth -- worst decline --
+            refreshAllAssetStatistics();
 
             System.out.println("[SCHEDULER] Start daily Tasks Completed successfully.");
         } catch (Exception e) {
@@ -144,12 +118,10 @@ public class MarketSchedulerService {
     }
 
     /**
-     * END OF DAY PERSISTENCE (Data Archiving)
-     * Execution: Every day at 23:55 PM.
-     * * Why: Redis is volatile and memory-expensive. We use it to collect 1-minute
-     * intraday prices during the day. Before the day ends, we must aggregate
-     * these points into a single OHLC (Open-High-Low-Close) record in MongoDB
-     * and clear Redis to free up space for the next day.
+     * END OF DAY PERSISTENCE (Data Archiving) -> Execution: Every day at 16:05 PM.
+     * We collect intraday prices (more or less every minute) during the day. Before the day ends, we must aggregate
+     * these points into a single OHLC (Open-High-Low-Close) record in MongoDB and clear Redis to free up space for
+     * the next day.
      */
     @Scheduled(cron = "0 5 16 * * MON-FRI", zone = "America/New_York")
     public void executeEndOfDayTasks() {
@@ -184,7 +156,118 @@ public class MarketSchedulerService {
     }
     //------------------------------------------ start: scheduled methods ----------------------------------------------
 
+    //--------------------------------------------- start: run methods -------------------------------------------------
+
+     /**
+      * This method runs automatically as soon as the Spring application context is fully loaded.
+      * Perfect for testing and initializing Redis with MongoDB data.
+     */
+    @Override
+    public void run(String... args) throws Exception {
+        System.out.println("--- [STARTUP] INITIALIZING REDIS CACHE ---");
+
+        try {
+            this.initializeSystemState();       // perform all initialization of the system
+
+            System.out.println("--- [STARTUP] REDIS CACHE INITIALIZED SUCCESSFULLY ---");
+        } catch (Exception e) {
+            System.err.println("--- [STARTUP ERROR] Cache initialization failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Internal method to encapsulate the initialization logic so it can be called both by the scheduler and at startup.
+     */
+    private void initializeSystemState() throws JsonProcessingException {
+
+        this.refreshAssetLists();           // clean and update assets list by asset types
+
+        this.refreshAllAssetStatistics();   // clean and update most traded, most growth, worst decline
+
+        this.refreshNewsCache();            // load news
+    }
+    //---------------------------------------------- end: run methods --------------------------------------------------
+
     //------------------------------------------ start: utilities methods ----------------------------------------------
+
+    /**
+     * Method to delete all news saved in Redis and update with the last news for each category (sector).
+     */
+    private void refreshNewsCache() {
+        System.out.println("[SCHEDULER] Starting News Cache Refresh...");
+
+        newsRedisDao.clearAllNewsData();            // clear all old saved news
+
+        // retrieve the last news grouped by sector (max 10 news for sector)
+        List<SectorNewsGroupDTO> groupedNews = newsAggregationDao.findLatestNewsBySector(5*365);
+
+        // scan all sector
+        for (SectorNewsGroupDTO group : groupedNews) {
+            System.out.println("[SCHEDULER] Processing sector: " + group.getSector());
+
+            // scan all news for the current sector
+            for (News n : group.getNewsList()) {
+                Map<String, String> map = new HashMap<>();      // create hash map for news information (title, summary, sector, timestamp)
+                map.put("title", n.getTitle());                 // set the title of news
+                map.put("summary", n.getSummary());             // set the summary news
+                map.put("sector", n.getSector());               // save the category(sector) news
+                map.put("timestamp", String.valueOf(n.getDate().toEpochMilli()));   // save publication date
+
+                newsRedisDao.saveNews(n.getId(), map);          // save using limit logic (implemented in DAO)
+            }
+        }
+    }
+
+    /**
+     * Method to refresh (delete and update) the value of the asset's aggregation to show to the users.
+     *
+     * @throws JsonProcessingException
+     */
+    private void refreshAllAssetStatistics() throws JsonProcessingException
+    {
+        assetRedisDao.clearGlobalDailyData();           // clear all stats
+        // -- most traded --
+        // calculate the top 10 trading assets in this day
+        List<MostTradedAssetDTO> topAssets = transactionAggregationDao.findMostTradedAssets(TimeWindow.DAY);
+        if (!topAssets.isEmpty())
+            convertAndSaveTopAssets(topAssets);
+
+        // -- most growth --
+        // calculate the top 10 assets with the best growth last day.
+        List<AssetGrowthDTO> topGrowthAsset = assetPriceAggregationDao.findAssetPerformance(TimeWindow.DAY, false);
+        convertAndSaveMostGrowth(topGrowthAsset);                       // save into Redis
+
+        // -- worst decline --
+        // calculate the top 10 assets with the best decline last day.
+        List<AssetGrowthDTO> topWorstAsset = assetPriceAggregationDao.findAssetPerformance(TimeWindow.DAY, true);
+        convertAndSaveWorstDecline(topWorstAsset);                      // save into Redis
+    }
+
+    /**
+     * Method to clear the asset lists by asset types and update them.
+     */
+    private void refreshAssetLists()
+    {
+        // get the asset list and put in Redis. the key is asset:{type}:list (Hash) -> Map (Field: symbol, Value: name)
+        List<Asset> etfAssets = assetDao.findByType(AssetType.etf);
+        List<Asset> shareAssets = assetDao.findByType(AssetType.share);
+        List<Asset> cryptoAssets = assetDao.findByType(AssetType.crypto);
+
+        // delete all list
+        assetRedisDao.deleteAssetListByType(AssetType.etf);
+        assetRedisDao.deleteAssetListByType(AssetType.share);
+        assetRedisDao.deleteAssetListByType(AssetType.crypto);
+
+        // convert Lists to Maps and save to Redis (requires a Map<Field, Value>)
+        if (!etfAssets.isEmpty())
+            assetRedisDao.saveAssetListByType(AssetType.etf, convertToMap(etfAssets));
+
+        if (!shareAssets.isEmpty())
+            assetRedisDao.saveAssetListByType(AssetType.share, convertToMap(shareAssets));
+
+        if (!cryptoAssets.isEmpty())
+            assetRedisDao.saveAssetListByType(AssetType.crypto, convertToMap(cryptoAssets));
+    }
 
     /**
      * Aggregates intraday points from Redis into a single OHLC candle and saves to MongoDB.

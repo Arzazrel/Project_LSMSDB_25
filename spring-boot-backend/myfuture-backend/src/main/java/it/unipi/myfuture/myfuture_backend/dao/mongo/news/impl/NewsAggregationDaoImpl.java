@@ -2,6 +2,7 @@ package it.unipi.myfuture.myfuture_backend.dao.mongo.news.impl;
 
 import it.unipi.myfuture.myfuture_backend.dao.mongo.news.NewsAggregationDao;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.SectorNewsCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.SectorNewsGroupDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.TopMentionedAssetDTO;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.utils.DateUtils;
@@ -13,6 +14,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Repository
@@ -69,5 +71,32 @@ public class NewsAggregationDaoImpl implements NewsAggregationDao {
         );
 
         return mongoTemplate.aggregate(aggregation, "news", TopMentionedAssetDTO.class).getMappedResults();
+    }
+
+    /**
+     * Retrieves the latest news for each sector within the last week.
+     * Organizes them by sector to facilitate Redis cache population.
+     *
+     * @param daysLimit limit on the number of days to search for information
+     */
+    @Override
+    public List<SectorNewsGroupDTO> findLatestNewsBySector(int daysLimit) {
+        Instant startDate = Instant.now().minus(daysLimit, ChronoUnit.DAYS);
+
+        Aggregation aggregation = Aggregation.newAggregation(
+                // filter by date and ensure that the sector exists
+                Aggregation.match(Criteria.where("date").gte(startDate).and("sector").exists(true)),
+                // sort by descending date (most recent first)
+                Aggregation.sort(Sort.Direction.DESC, "date"),
+                // group by sector
+                Aggregation.group("sector")
+                        .push("$$ROOT").as("newsList"),
+                // rename the field with the correct name for DTO -> SectorNewsGroupDTO has sector, newsList
+                Aggregation.project()
+                        .and("_id").as("sector")
+                        .and("newsList").slice(10).as("newsList")
+        );
+
+        return mongoTemplate.aggregate(aggregation, "news", SectorNewsGroupDTO.class).getMappedResults();
     }
 }

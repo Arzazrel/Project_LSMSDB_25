@@ -1,6 +1,7 @@
 package it.unipi.myfuture.myfuture_backend.dao.mongo.news;
 
 import it.unipi.myfuture.myfuture_backend.dto.analytics.SectorNewsCountDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.SectorNewsGroupDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.TopMentionedAssetDTO;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 
@@ -18,4 +19,12 @@ public interface NewsAggregationDao {
      * Helps track which companies are "trending" in the media.
      */
     List<TopMentionedAssetDTO> findTopMentionedAssets(TimeWindow window);
+
+    /**
+     * Retrieves the latest news for each sector within the last week.
+     * Organizes them by sector to facilitate Redis cache population.
+     *
+     * @param daysLimit limit on the number of days to search for information
+     */
+    List<SectorNewsGroupDTO> findLatestNewsBySector(int daysLimit);
 }

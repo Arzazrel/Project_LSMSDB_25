@@ -58,8 +58,13 @@ public class NewsRedisDao {
         String sector = newsMap.get("sector");                          // get sector
 
         redisTemplate.opsForHash().putAll(getNewsHashKey(newsId), newsMap);             // store the metadata hash
+
         redisTemplate.opsForZSet().add(getGlobalNewsKey(), newsId, timestamp);          // index in Global ZSet
         redisTemplate.opsForZSet().add(getSectorNewsKey(sector), newsId, timestamp);    // index in Sector ZSet
+
+        // keeps only the last 10 news items (the most recent ones)
+        cleanupOldestNews(getGlobalNewsKey());
+        cleanupOldestNews(getSectorNewsKey(sector));
     }
 
     /**
@@ -103,4 +108,47 @@ public class NewsRedisDao {
         }
         return newsList;
     }
+
+    //------------------------------------------ start: utilities methods ----------------------------------------------
+    /**
+     * Helper to identify IDs that are outside the top 10 and delete their Hashes.
+     */
+    private void cleanupOldestNews(String zsetKey) {
+        Long size = redisTemplate.opsForZSet().size(zsetKey);       // get num of element in ZSet
+        // control check of ZSet
+        if (size != null && size > 10) {
+            // Get the IDs from index 0 up to the one that makes the 11th element (everything before the last 10)
+            Set<Object> idsToRemove = redisTemplate.opsForZSet().range(zsetKey, 0, size - 11);
+
+            // control check
+            if (idsToRemove != null && !idsToRemove.isEmpty()) {
+                // scan all elements of the list and remove from news:{newsId} (Hash)
+                for (Object id : idsToRemove) {
+                    redisTemplate.delete(getNewsHashKey(id.toString()));    // delete the current data Hash
+                }
+                // remove the IDs from the ZSet index
+                redisTemplate.opsForZSet().removeRange(zsetKey, 0, size - 11);
+            }
+        }
+    }
+
+    /**
+     * Deletes a news item from all Redis structures.
+     */
+    public void deleteNews(String newsId, String sector) {
+        redisTemplate.delete(getNewsHashKey(newsId));                           // remove from hash data
+        redisTemplate.opsForZSet().remove(getGlobalNewsKey(), newsId);          // remove from global index
+        redisTemplate.opsForZSet().remove(getSectorNewsKey(sector), newsId);    // remove form index sector
+    }
+
+    /**
+     * Fully clears all news-related keys. Useful during startup or daily full refreshes.
+     */
+    public void clearAllNewsData() {
+        Set<String> keys = redisTemplate.keys("news:*");    // get all keys starting with news
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);                             // delete all keys
+        }
+    }
+    //------------------------------------------- end: utilities methods -----------------------------------------------
 }
