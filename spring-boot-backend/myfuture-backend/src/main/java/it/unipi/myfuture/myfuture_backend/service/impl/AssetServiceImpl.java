@@ -2,6 +2,7 @@ package it.unipi.myfuture.myfuture_backend.service.impl;
 
 import it.unipi.myfuture.myfuture_backend.dao.mongo.asset.AssetAggregationDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.asset.AssetDao;
+import it.unipi.myfuture.myfuture_backend.dao.redis.AssetRedisDao;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetRequestDTO;
 import it.unipi.myfuture.myfuture_backend.dto.asset.AssetResponseDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetTypeCountDTO;
@@ -10,11 +11,14 @@ import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
 import it.unipi.myfuture.myfuture_backend.mapper.AssetMapper;
 import it.unipi.myfuture.myfuture_backend.model.Asset;
+import it.unipi.myfuture.myfuture_backend.service.AssetPriceService;
 import it.unipi.myfuture.myfuture_backend.service.AssetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Asset Service implementation.
@@ -27,6 +31,12 @@ public class AssetServiceImpl implements AssetService {
 
     @Autowired
     private AssetAggregationDao assetAggregationDao;
+
+    @Autowired
+    private AssetRedisDao assetRedisDao;
+
+    @Autowired
+    private AssetPriceService assetPriceService;    // used to save the intraday prices from Redis to MongoDB
 
     //----------------------------------------- start: method for CRUD API ---------------------------------------------
 
@@ -41,6 +51,13 @@ public class AssetServiceImpl implements AssetService {
 
         Asset asset = AssetMapper.toEntityForCreate(request);   // create new entity from request data
         Asset savedAsset = assetDao.save(asset);                // save new asset entity
+
+        // create a small map with information of new asset: symbol -> name
+        Map<String, String> singleAssetMap = Collections.singletonMap(
+                savedAsset.getSymbol(),
+                savedAsset.getLongName()
+        );
+        assetRedisDao.saveAssetListByType(savedAsset.getType(), singleAssetMap);    // update Redis, added new asset
 
         return AssetMapper.toResponseDTO(savedAsset);           // return saved asset
     }
@@ -58,6 +75,13 @@ public class AssetServiceImpl implements AssetService {
         Asset asset = assetDao.findBySymbolActive(symbol).orElseThrow(() -> new BusinessException("Asset not found"));  // get asset
         AssetMapper.updateEntityFromDTO(asset, request);        // update the retrieved asset with request data
         Asset savedAsset = assetDao.save(asset);                // update asset
+
+        // create a small map with information of new asset: symbol -> name
+        Map<String, String> singleAssetMap = Collections.singletonMap(
+                savedAsset.getSymbol(),
+                savedAsset.getLongName()
+        );
+        assetRedisDao.saveAssetListByType(savedAsset.getType(), singleAssetMap);    // update Redis, added new asset
 
         return AssetMapper.toResponseDTO(savedAsset);           // return updated asset
     }
@@ -114,11 +138,12 @@ public class AssetServiceImpl implements AssetService {
      */
     @Override
     public void deleteAsset(String symbol) {
-
         // check: asset must exist and be active
-        assetDao.findBySymbolActive(symbol).orElseThrow(() -> new BusinessException("Asset not found"));
+        Asset asset = assetDao.findBySymbolActive(symbol).orElseThrow(() -> new BusinessException("Asset not found"));
 
-        assetDao.softDelete(symbol);            // soft delete the asset
+        assetDao.softDelete(symbol);                                // soft delete the asset
+        assetPriceService.consolidateIntradayData(symbol);          // save today's data before delete it
+        assetRedisDao.deleteFullAssetData(symbol, asset.getType()); // clear all Redis data related to this asset
     }
 
     /**
@@ -129,9 +154,15 @@ public class AssetServiceImpl implements AssetService {
     @Override
     public void restoreAsset(String symbol) {
         // check: asset must exist and be deleted
-        assetDao.findBySymbol(symbol).orElseThrow(() -> new BusinessException("No price available for symbol: " + symbol));
+        Asset asset = assetDao.findBySymbol(symbol).orElseThrow(() -> new BusinessException("No price available for symbol: " + symbol));
 
         assetDao.undoSoftDelete(symbol);        // removes soft delete
+        // create a small map with information of new asset: symbol -> name
+        Map<String, String> singleAssetMap = Collections.singletonMap(
+                asset.getSymbol(),
+                asset.getLongName()
+        );
+        assetRedisDao.saveAssetListByType(asset.getType(), singleAssetMap);     // update Redis, added new asset
     }
 
     //------------------------------------------ end: method for CRUD API ----------------------------------------------

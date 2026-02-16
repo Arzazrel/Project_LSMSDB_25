@@ -5,6 +5,8 @@ import it.unipi.myfuture.myfuture_backend.dto.news.NewsResponseDTO;
 import it.unipi.myfuture.myfuture_backend.model.News;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * News Mapper handles conversion between News entity and News DTOs.
@@ -34,6 +36,24 @@ public class NewsMapper {
         news.setIngestedAt(Instant.now());
 
         return news;
+    }
+
+    /**
+     * Convert News entity to a Map for Redis storage. All values are converted to String to be compatible with Redis Hash.
+     *
+     * @param news news entity
+     * @return map containing news metadata for Redis
+     */
+    public static java.util.Map<String, String> toRedisMap(News news) {
+        Map<String, String> map = new HashMap<>();
+
+        map.put("title", news.getTitle());
+        map.put("summary", news.getSummary());
+        map.put("sector", news.getSector());
+        // Convert Instant to timestamp string for Redis ZSet compatibility
+        map.put("timestamp", String.valueOf(news.getDate().toEpochMilli()));
+
+        return map;
     }
 
     // -------------------------------------- entity → response --------------------------------------

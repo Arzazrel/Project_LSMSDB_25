@@ -51,6 +51,20 @@ public class CustomerController {
     //------------------------------------------------ start: user API -------------------------------------------------
 
     /**
+     * Logout the current user and clear their session data from cache.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<ResponseWrapper<Void>> logout(Authentication authentication) {
+
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();    // get userID from authentication
+        userService.logout(principal.getId());                                      // logout and clear Redis
+
+        return ResponseEntity.ok(
+                new ResponseWrapper<>("Logout successful, cache cleared", null)
+        );
+    }
+
+    /**
      * Get authenticated customer information.
      */
     @GetMapping("/me")

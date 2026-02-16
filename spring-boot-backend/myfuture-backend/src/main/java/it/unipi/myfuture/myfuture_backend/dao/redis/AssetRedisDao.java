@@ -269,6 +269,30 @@ public class AssetRedisDao {
         redisTemplate.delete(getWorstDeclineKey());     // reset worst-decline assets
         redisTemplate.delete(getMostTradedKey());       // reset most-traded assets
     }
+
+    //------------------------------------------ start: utilities methods ----------------------------------------------
+
+    /**
+     * Completely removes all references to an asset from Redis.
+     * Clears: category list, current price, intraday history, and daily rankings.
+     *
+     * @param symbol the asset identifier
+     * @param type the asset category (needed for the Hash list)
+     */
+    public void deleteFullAssetData(String symbol, AssetType type) {
+        // remove from the category Hash list
+        redisTemplate.opsForHash().delete(getAssetListByTypeKey(type.toString()), symbol);
+        // delete real-time price and intraday history
+        redisTemplate.delete(getCurrentPriceKey(symbol));
+        redisTemplate.delete(getIntradayPriceKey(symbol));
+        // remove from rankings (ZSets)
+        redisTemplate.opsForZSet().remove(getTopGrowthKey(), symbol);
+        redisTemplate.opsForZSet().remove(getWorstDeclineKey(), symbol);
+        // remove from most traded stats (Hash)
+        redisTemplate.opsForHash().delete(getMostTradedKey(), symbol);
+    }
+
+    //------------------------------------------- end: utilities methods -----------------------------------------------
 }
 /*
 NOTE 0:

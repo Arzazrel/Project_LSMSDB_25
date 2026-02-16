@@ -3,6 +3,7 @@ package it.unipi.myfuture.myfuture_backend.service.impl;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.CounterDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserAggregationDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserDao;
+import it.unipi.myfuture.myfuture_backend.dao.redis.UserRedisDao;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.GlobalUserStatsDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserTopAssetHolderDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserVarietyDTO;
@@ -32,12 +33,13 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserDao userDao;
-
     @Autowired
     private UserAggregationDao userAggregationDao;
-
     @Autowired
     private CounterDao counterDao;
+
+    @Autowired
+    private UserRedisDao userRedisDao;
 
     @Autowired
     private PasswordEncoder passwordEncoder;    // for user authentication
@@ -63,8 +65,11 @@ public class UserServiceImpl implements UserService {
 
         String encodedPassword = passwordEncoder.encode(request.getPassword()); // encrypt the psw
         user.setPasswordHash(encodedPassword);                                  // set the encrypted psw in the entity
+        User savedUser = userDao.save(user);                                    // save and return
 
-        return UserMapper.toResponseDTO(userDao.save(user));                    // save and return
+        userRedisDao.saveFullUserToCache(savedUser);            // populate Redis cache immediately after registration
+
+        return UserMapper.toResponseDTO(savedUser);             // return DTO
     }
 
     /**
@@ -77,15 +82,27 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDTO login(String email, String psw) {
 
-        User user = userDao.findByEmailActive(email)
-                .orElseThrow(() -> new BusinessException("Invalid email or password"));
+        User user = userDao.findByEmailActive(email).orElseThrow(() -> new BusinessException("Invalid email or password"));
 
         // check if the encrypted psw passed as parameter matches with the encrypted psw saved in the DB
         if (!passwordEncoder.matches(psw, user.getPasswordHash())) {
             throw new BusinessException("Invalid email or password");
         }
 
+        userRedisDao.saveFullUserToCache(user);         // populate Redis cache with user information
+
         return UserMapper.toResponseDTO(user);
+    }
+
+    /**
+     * Handles user logout by clearing the Redis cache.
+     *
+     * @param userId user identifier retrieved from security context
+     */
+    @Override
+    public void logout(Long userId) {
+        // Clear all user-related data from Redis (cash, blocked cash, portfolio)
+        userRedisDao.clearUserCache(userId.toString());
     }
 
     /**
@@ -231,32 +248,13 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public void suspendUser(Long userId, SuspendReason reason, Instant timestamp) throws BusinessException {
-
-        // Validate suspend reason
+        // validate suspend reason
         if (reason == null) {
             throw new BusinessException("Suspend reason is required");
         }
-        // Retrieve user
-        User user = userDao.findByUserId(userId)
-                .orElseThrow(() -> new BusinessException("User not found"));
-        // check if the user is suspended
-        if (Boolean.TRUE.equals(user.getSuspended())) {
-            throw new BusinessException("User is already suspended");
-        }
 
-        // Create suspension info
-        SuspensionInfo suspensionInfo = new SuspensionInfo();
-        suspensionInfo.setSuspendReason(reason);
-        suspensionInfo.setSuspendedAt(
-                timestamp != null ? timestamp : Instant.now()
-        );
-
-        // Update user suspension state
-        user.setSuspended(true);
-        user.setSuspensionInfo(suspensionInfo);
-        user.setUpdatedAt(Instant.now());
-
-        userDao.save(user);                         // save changes
+        userDao.suspendUser(userId, reason, timestamp);     // suspend user
+        userRedisDao.clearUserCache(userId.toString());     // clear redis cache
     }
 
     /**
@@ -266,7 +264,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public void unSuspendUser(Long userId) {
-        userDao.undoSuspendUser(userId);
+        userDao.undoSuspendUser(userId);        // reactivate the user
     }
 
     /**
@@ -276,7 +274,18 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public void softDeleteUser(Long userId) {
-        userDao.softDelete(userId);
+        userDao.softDelete(userId);                         // delete the user
+        userRedisDao.clearUserCache(userId.toString());     // clear redis cache
+    }
+
+    /**
+     * Remove spft delete from a user. Admin only.
+     *
+     * @param userId user ID
+     */
+    @Override
+    public void unDeletedUser(Long userId) {
+        userDao.undoSoftDelete(userId);        // reactivate the user
     }
 
     //------------------------------------------ end: method for CRUD API ----------------------------------------------

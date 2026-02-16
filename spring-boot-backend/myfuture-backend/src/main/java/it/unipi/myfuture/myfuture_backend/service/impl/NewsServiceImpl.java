@@ -36,7 +36,7 @@ public class NewsServiceImpl implements NewsService {
 
     //----------------------------------------- start: method for CRUD API ---------------------------------------------
     /**
-     * Create or update a news entry. Used by admin.
+     * Create or update a news entry. After saving to MongoDB, it updates the Redis cache. Used by admin.
      *
      * @param requestDTO data of the news to be created or updated
      * @return saved news as response DTO
@@ -44,9 +44,10 @@ public class NewsServiceImpl implements NewsService {
     @Override
     public NewsResponseDTO saveNews(NewsRequestDTO requestDTO) {
 
-        return NewsMapper.toResponseDTO(
-                newsDao.save(NewsMapper.toEntity(requestDTO))
-        );
+        News savedNews = newsDao.save(NewsMapper.toEntity(requestDTO));             // save to MongoDB
+        newsRedisDao.saveNews(savedNews.getId(), NewsMapper.toRedisMap(savedNews)); // update Redis
+
+        return NewsMapper.toResponseDTO(savedNews);                                 // return the response DTO
     }
 
     /**
@@ -118,6 +119,7 @@ public class NewsServiceImpl implements NewsService {
         if (newsDao.existsById(id)) {
             throw new BusinessException("Cannot delete: News not found with id " + id);
         }
+        newsRedisDao.deleteNews(id);    // delete from redis
         newsDao.softDelete(id);         // soft delete the retrieved news
     }
 

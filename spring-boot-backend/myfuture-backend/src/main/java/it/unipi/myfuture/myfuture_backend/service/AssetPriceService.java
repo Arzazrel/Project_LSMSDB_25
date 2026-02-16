@@ -15,7 +15,7 @@ import java.util.List;
  */
 public interface AssetPriceService {
 
-    //------------------------------------ start: method for aggregation API -------------------------------------------
+    //------------------------------------ start: method for CRUD API -------------------------------------------
     /**
      * Insert or update an asset price entry. Used by admin.
      *
@@ -49,7 +49,7 @@ public interface AssetPriceService {
      */
     void deletePrices(String symbol);
 
-    //------------------------------------- end: method for aggregation API --------------------------------------------
+    //------------------------------------- end: method for CRUD API --------------------------------------------
 
     //------------------------------------- start: method for aggregation API ------------------------------------------
 
@@ -84,4 +84,17 @@ public interface AssetPriceService {
     List<AssetStableTrendDTO> getNegativeStableTrendAnalytics();
 
     //-------------------------------------- end: method for aggregation API -------------------------------------------
+
+    //-------------------------------- start: method for save from Redis to MongoDB ------------------------------------
+
+    /**
+     * Methd to consolidate intraday Redis data into a MongoDB OHLC record.
+     * Take all the value of the current_price on Redis and data volume from MongoDB to aggregate and calculate the
+     * daily price data for an asset and put into MongoDB.
+     *
+     * @param symbol identifier of the asset
+     */
+     void consolidateIntradayData(String symbol);
+
+    //--------------------------------- end: method for save from Redis to MongoDB -------------------------------------
 }

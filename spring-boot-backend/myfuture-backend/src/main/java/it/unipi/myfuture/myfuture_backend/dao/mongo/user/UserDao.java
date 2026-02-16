@@ -2,6 +2,7 @@ package it.unipi.myfuture.myfuture_backend.dao.mongo.user;
 
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
+import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
 import it.unipi.myfuture.myfuture_backend.model.SuspensionInfo;
 import it.unipi.myfuture.myfuture_backend.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -149,7 +150,7 @@ public class UserDao {
         Update update = new Update()
                 .set("deleted", false)
                 .unset("deletedAt")
-                .set("updateAt", java.time.Instant.now());
+                .set("updatedAt", Instant.now());
 
         mongoTemplate.updateFirst(query, update, User.class);
     }
@@ -160,18 +161,25 @@ public class UserDao {
      * @param userId id of the user
      * @param reason contain the data and the reason of the suspension
      */
-    public void suspendUser(Long userId, SuspendReason reason) {
-        Query query = new Query(Criteria.where("user_id").is(userId));
-        User user = mongoTemplate.findOne(query, User.class);
+    public void suspendUser(Long userId, SuspendReason reason, Instant timestamp) {
+
+        // Retrieve user
+        User user = findByUserId(userId).orElseThrow(() -> new BusinessException("User not found"));
 
         if (user != null) {
-            user.setSuspended(true);
-            // control check for null SuspensionInfo, case of user never suspended before
-            if (user.getSuspensionInfo() == null)
-                user.setSuspensionInfo(new SuspensionInfo());
+            // check if the user is suspended
+            if (Boolean.TRUE.equals(user.getSuspended())) {
+                throw new BusinessException("User is already suspended");
+            }
 
-            user.getSuspensionInfo().setSuspendedAt(Instant.now());
-            user.getSuspensionInfo().setSuspendReason(reason);
+            // Create suspension info
+            SuspensionInfo suspensionInfo = new SuspensionInfo();
+            suspensionInfo.setSuspendReason(reason);
+            suspensionInfo.setSuspendedAt(timestamp != null ? timestamp : Instant.now());
+
+            // Update user suspension state
+            user.setSuspended(true);
+            user.setSuspensionInfo(suspensionInfo);
             user.setUpdatedAt(Instant.now());
             mongoTemplate.save(user);
         }
@@ -192,7 +200,7 @@ public class UserDao {
         Update update = new Update()
                 .set("suspended", false)
                 .unset("suspensionInfo")
-                .set("updateAt", java.time.Instant.now());
+                .set("updatedAt", Instant.now());
 
         mongoTemplate.updateFirst(query, update, User.class);
     }

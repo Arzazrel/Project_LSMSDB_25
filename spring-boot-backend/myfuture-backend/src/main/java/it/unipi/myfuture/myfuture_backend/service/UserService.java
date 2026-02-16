@@ -36,6 +36,13 @@ public interface UserService {
     UserResponseDTO login(String email, String psw);
 
     /**
+     * Handles user logout by clearing the Redis cache.
+     *
+     * @param userId user identifier retrieved from security context
+     */
+    void logout(Long userId);
+
+    /**
      * Retrieve user by application-level ID.
      *
      * @param userId user ID
@@ -129,6 +136,13 @@ public interface UserService {
      * @param userId user ID
      */
     void softDeleteUser(Long userId);
+
+    /**
+     * Remove spft delete from a user. Admin only.
+     *
+     * @param userId user ID
+     */
+     void unDeletedUser(Long userId);
 
     //------------------------------------------ end: method for CRUD API ----------------------------------------------
 

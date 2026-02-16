@@ -122,6 +122,22 @@ public class NewsRedisDao {
         return newsList;
     }
 
+    /**
+     * Deletes a news item from all Redis structures.
+     */
+    public void deleteNews(String newsId) {
+        String hashKey = getNewsHashKey(newsId);                                    // get hash key for the news
+        // retrieve the sector to know which ZSet to clean
+        String sector = (String) redisTemplate.opsForHash().get(hashKey, "sector");
+        redisTemplate.opsForZSet().remove(getGlobalNewsKey(), newsId);              // remove from global index
+
+        // control check
+        if (sector != null)
+            redisTemplate.opsForZSet().remove(getSectorNewsKey(sector), newsId);    // remove from index sector
+
+        redisTemplate.delete(hashKey);                                              // remove from hash data
+    }
+
     //------------------------------------------ start: utilities methods ----------------------------------------------
     /**
      * Helper to identify IDs that are outside the top 10 and delete their Hashes.
@@ -160,15 +176,6 @@ public class NewsRedisDao {
                 }
             }
         }
-    }
-
-    /**
-     * Deletes a news item from all Redis structures.
-     */
-    public void deleteNews(String newsId, String sector) {
-        redisTemplate.delete(getNewsHashKey(newsId));                           // remove from hash data
-        redisTemplate.opsForZSet().remove(getGlobalNewsKey(), newsId);          // remove from global index
-        redisTemplate.opsForZSet().remove(getSectorNewsKey(sector), newsId);    // remove form index sector
     }
 
     /**

@@ -18,13 +18,12 @@ import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.model.Asset;
 import it.unipi.myfuture.myfuture_backend.model.AssetPrice;
 import it.unipi.myfuture.myfuture_backend.model.News;
+import it.unipi.myfuture.myfuture_backend.service.AssetPriceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -57,6 +56,9 @@ public class MarketSchedulerService  implements CommandLineRunner {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private AssetPriceService assetPriceService;    // used to save the intraday prices from Redis to MongoDB
 
     //------------------------------------------ start: scheduled methods ----------------------------------------------
     /**
@@ -121,10 +123,6 @@ public class MarketSchedulerService  implements CommandLineRunner {
     public void executeEndOfDayTasks() {
         System.out.println("[SCHEDULER] Starting End-of-Day Persistence...");
 
-        // get daily volume and put into a map for easier retrieval
-        List<DailyVolumeDTO> dailyVolumes = transactionAggregationDao.getDailyVolumeBySymbol();
-        Map<String, Double> volumeMap = dailyVolumes.stream().collect(Collectors.toMap(DailyVolumeDTO::getSymbol, DailyVolumeDTO::getVolume));
-
         // define the types of assets to process
         AssetType[] types = {AssetType.share, AssetType.etf, AssetType.crypto};
 
@@ -136,10 +134,9 @@ public class MarketSchedulerService  implements CommandLineRunner {
             // scan all assets in the list
             for (Object symbolObj : assetMap.keySet()) {
                 String symbol = (String) symbolObj;             // get symbol
-                // get volume from map (default to 0.0 if no trades happened)
-                Double totalVolume = volumeMap.getOrDefault(symbol, 0.0);
                 try {
-                    processAndPersistAssetIntraday(symbol, totalVolume);     // search intraday for the symbol, process and save into MongoDB
+                    // search intraday for the symbol, process and save into MongoDB
+                    assetPriceService.consolidateIntradayData(symbol);
                 } catch (Exception e) {
                     System.err.println("[SCHEDULER ERROR] Failed to persist " + symbol + ": " + e.getMessage());
                 }
@@ -261,44 +258,6 @@ public class MarketSchedulerService  implements CommandLineRunner {
 
         if (!cryptoAssets.isEmpty())
             assetRedisDao.saveAssetListByType(AssetType.crypto, convertToMap(cryptoAssets));
-    }
-
-    /**
-     * Aggregates intraday points from Redis into a single OHLC candle and saves to MongoDB.
-     */
-    private void processAndPersistAssetIntraday(String symbol, double dailyVolume) {
-        // fetch all intraday prices from Redis ZSet (Score: Timestamp, Member: "Timestamp:Price")
-        Set<Object> intradayData = assetRedisDao.getAllIntradayPrices(symbol);
-
-        // control check
-        if (intradayData == null || intradayData.isEmpty())
-            return;                     // skip there aren't data for today
-
-        List<Double> prices = new ArrayList<>();                    // list of the prices
-        // scan all obtained values
-        for (Object entry : intradayData) {
-            String[] parts = entry.toString().split(":");    // extract price from "timestamp:price" string
-            if (parts.length == 2) {
-                prices.add(Double.parseDouble(parts[1]));           // get the price
-            }
-        }
-
-        // calculate values for asset_prices entity
-        if (!prices.isEmpty()) {
-            double open = prices.get(0);                    // get open price of the day
-            double close = prices.get(prices.size() - 1);   // get close price of the day
-            double high = Collections.max(prices);          // get max
-            double low = Collections.min(prices);           // get min
-
-            // create asset_prices entity
-            AssetPrice historicalPrice = new AssetPrice(LocalDate.now().atStartOfDay(ZoneId.of("America/New_York")).toInstant(),
-                    symbol, open, high, low, close, (long)dailyVolume);
-
-            assetPriceDao.save(historicalPrice);        // Save to MongoDB collection 'asset_prices'
-            assetRedisDao.clearIntradayData(symbol);    // if save was successful, delete from Redis
-
-            System.out.println("[SCHEDULER] Persisted and cleared intraday data for: " + symbol);
-        }
     }
 
     /**
