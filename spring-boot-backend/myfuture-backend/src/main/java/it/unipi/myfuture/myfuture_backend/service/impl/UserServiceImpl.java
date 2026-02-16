@@ -233,8 +233,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDTO updateAccountByEmail(String email, UserRequestDTO request)
     {
-        User user = userDao.findByEmail(email)
-                .orElseThrow(() -> new BusinessException("User not found"));
+        User user = userDao.findByEmail(email).orElseThrow(() -> new BusinessException("User not found"));
 
         UserMapper.updateEntity(user, request);
         return UserMapper.toResponseDTO(userDao.save(user));

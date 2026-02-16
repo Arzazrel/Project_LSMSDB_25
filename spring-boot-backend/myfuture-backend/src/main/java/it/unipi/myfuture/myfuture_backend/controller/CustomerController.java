@@ -145,12 +145,11 @@ public class CustomerController {
     public ResponseEntity<ResponseWrapper<TransactionResponseDTO>> createTransaction(
             @RequestBody TransactionRequestDTO request, Authentication authentication) {
 
-        String email = authentication.getName();            // retrieve the email address of the logged-in user from the security context
-        Long userId = userService.getUserIdByEmail(email);  // get user_id
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();    // get userID from authentication
 
         return ResponseEntity.ok(
                 new ResponseWrapper<>("Transaction created successfully",
-                        transactionService.createTransaction(request, userId))
+                        transactionService.createTransaction(request, principal.getId()))
         );
     }
 
@@ -160,12 +159,11 @@ public class CustomerController {
     @GetMapping("/me/transactions")
     public ResponseEntity<ResponseWrapper<List<TransactionResponseDTO>>> getMyTransactions(Authentication authentication) {
 
-        String email = authentication.getName();            // retrieve the email address of the logged-in user from the security context
-        Long userId = userService.getUserIdByEmail(email);  // get user_id
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();    // get userID from authentication
 
         return ResponseEntity.ok(
                 new ResponseWrapper<>("Transactions retrieved successfully",
-                        transactionService.getTransactionsByUser(userId))
+                        transactionService.getTransactionsByUser(principal.getId()))
         );
     }
 
@@ -180,12 +178,11 @@ public class CustomerController {
             @RequestParam(required = false) Instant to,
             Authentication authentication) {
 
-        String email = authentication.getName();            // retrieve the email address of the logged-in user from the security context
-        Long userId = userService.getUserIdByEmail(email);  // get user_id
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();    // get userID from authentication
 
         return ResponseEntity.ok(
                 new ResponseWrapper<>("Transactions retrieved successfully",
-                        transactionService.searchTransactions(status, type, userId, from, to))
+                        transactionService.searchTransactions(status, type, principal.getId(), from, to))
         );
     }
 
