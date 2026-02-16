@@ -3,6 +3,7 @@ package it.unipi.myfuture.myfuture_backend.dao.mongo.news;
 import it.unipi.myfuture.myfuture_backend.model.Asset;
 import it.unipi.myfuture.myfuture_backend.model.News;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -154,5 +155,68 @@ public class NewsDao {
     public boolean existsById(String id) {
         Query query = new Query(Criteria.where("_id").is(id));
         return mongoTemplate.exists(query, News.class);
+    }
+
+    /**
+     * Retrieves the most recent news articles that have not been soft-deleted. (user)
+     *
+     * @param offset the number of documents to skip
+     * @param limit the maximum number of documents to return
+     * @return a list of active News entities
+     */
+    public List<News> findLatestActive(int offset, int limit) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("deleted").is(false));
+        query.with(Sort.by(Sort.Direction.DESC, "date"));
+        query.skip(offset);                                                 // get news start from offset
+        query.limit(limit);                                                 // get news until limit
+        return mongoTemplate.find(query, News.class);
+    }
+
+    /**
+     * Retrieves the most recent news articles, including those that are soft-deleted. (admin only)
+     *
+     * @param offset the number of documents to skip
+     * @param limit the maximum number of documents to return
+     * @return a list of all News entities
+     */
+    public List<News> findLatest(int offset, int limit) {
+        Query query = new Query();
+        query.with(Sort.by(Sort.Direction.DESC, "date"));
+        query.skip(offset);                                                 // get news start from offset
+        query.limit(limit);                                                 // get news until limit
+        return mongoTemplate.find(query, News.class);
+    }
+
+    /**
+     * Retrieves the most recent active news articles filtered by market sector. (customer)
+     *
+     * @param sector the market sector to filter by
+     * @param offset number of documents to skip
+     * @param limit maximum number of documents to return
+     */
+    public List<News> findLatestBySectorActive(String sector, int offset, int limit) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("deleted").is(false).and("sector").is(sector));
+        query.with(Sort.by(Sort.Direction.DESC, "date"));
+        query.skip(offset);                                                 // get news start from offset
+        query.limit(limit);                                                 // get news until limit
+        return mongoTemplate.find(query, News.class);
+    }
+
+    /**
+     * Retrieves the most recent news articles for a sector, including deleted ones. (admin only)
+     *
+     * @param sector the market sector to filter by
+     * @param offset number of documents to skip
+     * @param limit maximum number of documents to return
+     */
+    public List<News> findLatestBySector(String sector, int offset, int limit) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("sector").is(sector));
+        query.with(Sort.by(Sort.Direction.DESC, "date"));
+        query.skip(offset);                                                 // get news start from offset
+        query.limit(limit);                                                 // get news until limit
+        return mongoTemplate.find(query, News.class);
     }
 }

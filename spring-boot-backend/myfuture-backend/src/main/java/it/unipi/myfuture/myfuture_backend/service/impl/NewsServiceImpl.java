@@ -2,6 +2,7 @@ package it.unipi.myfuture.myfuture_backend.service.impl;
 
 import it.unipi.myfuture.myfuture_backend.dao.mongo.news.NewsAggregationDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.news.NewsDao;
+import it.unipi.myfuture.myfuture_backend.dao.redis.NewsRedisDao;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.SectorNewsCountDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.TopMentionedAssetDTO;
 import it.unipi.myfuture.myfuture_backend.dto.news.NewsRequestDTO;
@@ -9,11 +10,13 @@ import it.unipi.myfuture.myfuture_backend.dto.news.NewsResponseDTO;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
 import it.unipi.myfuture.myfuture_backend.mapper.NewsMapper;
+import it.unipi.myfuture.myfuture_backend.model.News;
 import it.unipi.myfuture.myfuture_backend.service.NewsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -27,6 +30,9 @@ public class NewsServiceImpl implements NewsService {
 
     @Autowired
     private NewsAggregationDao newsAggregationDao;
+
+    @Autowired
+    private NewsRedisDao newsRedisDao;
 
     //----------------------------------------- start: method for CRUD API ---------------------------------------------
     /**
@@ -116,6 +122,87 @@ public class NewsServiceImpl implements NewsService {
     }
 
     //------------------------------------------ end: method for CRUD API ----------------------------------------------
+
+    //--------------------------------------- start: paginated news methods --------------------------------------------
+    /**
+     * Retrieves a paginated list of active news using offset and limit. (user)
+     * If offset is 0 and limit is <= 10, it attempts to fetch data from Redis cache.
+     *
+     * @param offset the number of news to skip
+     * @param limit the maximum number of news to return
+     * @return list of active news DTOs
+     */
+    @Override
+    public List<NewsResponseDTO> getLimitActiveNews(int offset, int limit){
+        // Cache Layer: Try Redis for the initial feed
+        if (offset == 0 && limit <= 10) {
+            List<Map<Object, Object>> rawNews = newsRedisDao.getLatestNews(limit);
+            if (!rawNews.isEmpty()) {
+                return rawNews.stream()
+                        .map(NewsMapper::fromRedisMap)
+                        .toList();
+            }
+        }
+        // DB layer: Fallback to MongoDB for deeper pages or cache miss
+        return newsDao.findLatestActive(offset, limit).stream()
+                .map(NewsMapper::toResponseDTO)
+                .toList();
+    }
+
+    /**
+     * Retrieves a paginated list of all news (including soft-deleted) using offset and limit. (admin only)
+     * Primarily used for administrative purposes.
+     *
+     * @param offset the number of news to skip
+     * @param limit the maximum number of news to return
+     * @return list of all news DTOs
+     */
+    @Override
+    public List<NewsResponseDTO> getLimitNews(int offset, int limit){
+        return newsDao.findLatest(offset, limit).stream()
+                .map(NewsMapper::toResponseDTO)
+                .toList();
+    }
+
+    /**
+     * Retrieves a paginated list of active news filtered by sector using offset and limit. (customer)
+     * Uses Redis cache for the first 10 items if available.
+     *
+     * @param sector the market sector to filter by
+     * @param offset the number of news to skip
+     * @param limit the maximum number of news to return
+     * @return list of active news DTOs for the specified sector
+     */
+    @Override
+    public List<NewsResponseDTO> getLimitActiveNewsBySector(String sector, int offset, int limit){
+        if (offset == 0 && limit <= 10) {
+            List<Map<Object, Object>> rawNews = newsRedisDao.getLatestNewsBySector(sector,limit);
+            if (!rawNews.isEmpty()) {
+                return rawNews.stream()
+                        .map(NewsMapper::fromRedisMap)
+                        .toList();
+            }
+        }
+        return newsDao.findLatestBySectorActive(sector, offset, limit).stream()
+                .map(NewsMapper::toResponseDTO)
+                .toList();
+    }
+
+    /**
+     * Retrieves a paginated list of news for a specific sector, including deleted ones. (admin only)
+     *
+     * @param sector the market sector to filter by
+     * @param offset the number of news to skip
+     * @param limit the maximum number of news to return
+     * @return list of all news DTOs for the specified sector
+     */
+    @Override
+    public List<NewsResponseDTO> getLimitNewsBySector(String sector, int offset, int limit){
+        return newsDao.findLatestBySector(sector, offset, limit).stream()
+                .map(NewsMapper::toResponseDTO)
+                .toList();
+    }
+    //---------------------------------------- end: paginated news methods ---------------------------------------------
 
     //------------------------------------- start: method for aggregation API ------------------------------------------
 

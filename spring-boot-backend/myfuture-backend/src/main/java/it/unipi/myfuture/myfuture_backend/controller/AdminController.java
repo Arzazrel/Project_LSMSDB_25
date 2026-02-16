@@ -393,6 +393,29 @@ public class AdminController {
         );
     }
 
+    /**
+     * Get paginated full news history for admin review.
+     */
+    @GetMapping("/news/latest")
+    public ResponseEntity<ResponseWrapper<List<NewsResponseDTO>>> getLimitNews(
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(new ResponseWrapper<>("Full news history retrieved",
+                newsService.getLimitNews(offset, limit)));
+    }
+
+    /**
+     * Get paginated full news history by sector for admin review.
+     */
+    @GetMapping("/news/latest/sector/{sector}")
+    public ResponseEntity<ResponseWrapper<List<NewsResponseDTO>>> getLimitNewsBySector(
+            @PathVariable String sector,
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(new ResponseWrapper<>("Full sector news history retrieved",
+                newsService.getLimitNewsBySector(sector, offset, limit)));
+    }
+
     //------------------------------------------------ end: news API ---------------------------------------------------
     //------------------------------------------------ end: CRUD API ---------------------------------------------------
 

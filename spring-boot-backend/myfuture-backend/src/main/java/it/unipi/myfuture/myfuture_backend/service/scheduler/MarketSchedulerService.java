@@ -99,17 +99,11 @@ public class MarketSchedulerService  implements CommandLineRunner {
         try {
             System.out.println("[SCHEDULER] Starting hourly tasks...");
 
-            // -- most growth --
-            assetRedisDao.clearTopGrowth();                     // clear Redis cache
-            // calculate the top 10 assets with the best growth last day.
-            List<AssetGrowthDTO> topGrowthAsset = assetPriceAggregationDao.findAssetPerformance(TimeWindow.DAY, false);
-            convertAndSaveMostGrowth(topGrowthAsset);           // save into Redis
-
-            // -- worst decline --
-            assetRedisDao.clearWorstDecline();                  // clear Redis cache
-            // calculate the top 10 assets with the best decline last day.
-            List<AssetGrowthDTO> topWorstAsset = assetPriceAggregationDao.findAssetPerformance(TimeWindow.DAY, true);
-            convertAndSaveWorstDecline(topWorstAsset);           // save into Redis
+            // -- most traded --
+            assetRedisDao.clearMostTraded();                     // clear Redis cache
+            List<MostTradedAssetDTO> topAssets = transactionAggregationDao.findMostTradedAssets(TimeWindow.DAY);
+            if (!topAssets.isEmpty())
+                convertAndSaveTopAssets(topAssets);
 
             System.out.println("[SCHEDULER] Hourly Tasks Completed successfully.");
         } catch (Exception e) {
@@ -227,18 +221,18 @@ public class MarketSchedulerService  implements CommandLineRunner {
     {
         assetRedisDao.clearGlobalDailyData();           // clear all stats
         // -- most traded --
-        // calculate the top 10 trading assets in this day
+        // calculate the top 10 trading assets in this day (operate on transactions)
         List<MostTradedAssetDTO> topAssets = transactionAggregationDao.findMostTradedAssets(TimeWindow.DAY);
         if (!topAssets.isEmpty())
             convertAndSaveTopAssets(topAssets);
 
         // -- most growth --
-        // calculate the top 10 assets with the best growth last day.
+        // calculate the top 10 assets with the best growth last day (operate on asset_prices)
         List<AssetGrowthDTO> topGrowthAsset = assetPriceAggregationDao.findAssetPerformance(TimeWindow.DAY, false);
         convertAndSaveMostGrowth(topGrowthAsset);                       // save into Redis
 
         // -- worst decline --
-        // calculate the top 10 assets with the best decline last day.
+        // calculate the top 10 assets with the best decline last day (operate on asset_prices)
         List<AssetGrowthDTO> topWorstAsset = assetPriceAggregationDao.findAssetPerformance(TimeWindow.DAY, true);
         convertAndSaveWorstDecline(topWorstAsset);                      // save into Redis
     }

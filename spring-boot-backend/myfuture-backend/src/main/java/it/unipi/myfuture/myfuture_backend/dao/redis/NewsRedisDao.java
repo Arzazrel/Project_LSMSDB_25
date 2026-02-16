@@ -83,6 +83,19 @@ public class NewsRedisDao {
     }
 
     /**
+     * Retrieves the latest global news details regardless of the sector.
+     * Uses the global ZSet index to find the most recent news IDs.
+     *
+     * @param count number of items to retrieve (usually 10)
+     * @return list of maps containing news details
+     */
+    public List<Map<Object, Object>> getLatestNews(int count) {
+        // take the latest count ids from the global ZSet
+        Set<Object> ids = redisTemplate.opsForZSet().reverseRange(getGlobalNewsKey(), 0, count - 1);
+        return fetchNewsDetails(ids);
+    }
+
+    /**
      * Internal helper to fetch multiple hashes from a set of IDs.
      * Transform a list of ids in a list of object (news data).
      *
@@ -112,22 +125,39 @@ public class NewsRedisDao {
     //------------------------------------------ start: utilities methods ----------------------------------------------
     /**
      * Helper to identify IDs that are outside the top 10 and delete their Hashes.
+     * If news:latest (ZSet) you can't delete news information if this news is in the list of the last news for its sector.
      */
     private void cleanupOldestNews(String zsetKey) {
         Long size = redisTemplate.opsForZSet().size(zsetKey);       // get num of element in ZSet
         // control check of ZSet
         if (size != null && size > 10) {
-            // Get the IDs from index 0 up to the one that makes the 11th element (everything before the last 10)
+            // get the IDs from index 0 up to the one that makes the 11th element (everything before the last 10)
             Set<Object> idsToRemove = redisTemplate.opsForZSet().range(zsetKey, 0, size - 11);
 
             // control check
             if (idsToRemove != null && !idsToRemove.isEmpty()) {
+                boolean isGlobalStack = zsetKey.equals(getGlobalNewsKey()); // check if delete from general last news
+
                 // scan all elements of the list and remove from news:{newsId} (Hash)
                 for (Object id : idsToRemove) {
-                    redisTemplate.delete(getNewsHashKey(id.toString()));    // delete the current data Hash
+                    String newsId = id.toString();      // convert news id
+
+                    // case of Global cleanup, check sector before deleting data
+                    if (isGlobalStack) {
+                        // get the sector of the news
+                        String sector = (String) redisTemplate.opsForHash().get(getNewsHashKey(newsId), "sector");
+                        // check if the news is still relevant for its sector
+                        Double sectorScore = (sector != null) ? redisTemplate.opsForZSet().score(getSectorNewsKey(sector), newsId) : null;
+                        // delete hash only if it's not in the sector list
+                        if (sectorScore == null) {
+                            redisTemplate.delete(getNewsHashKey(newsId));
+                        }
+                    }
+                    else            // case of Sector cleanup no extra hash deletion logic here
+                        redisTemplate.delete(getNewsHashKey(newsId));
+
+                    redisTemplate.opsForZSet().remove(zsetKey, newsId); // remove the ID from the current ZSet index
                 }
-                // remove the IDs from the ZSet index
-                redisTemplate.opsForZSet().removeRange(zsetKey, 0, size - 11);
             }
         }
     }

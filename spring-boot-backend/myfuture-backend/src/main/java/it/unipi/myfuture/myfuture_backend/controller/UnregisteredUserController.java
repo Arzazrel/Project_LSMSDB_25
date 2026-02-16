@@ -143,5 +143,16 @@ public class UnregisteredUserController {
                 new ResponseWrapper<>("News retrieved successfully", newsService.getActiveNewsById(id))
         );
     }
+
+    /**
+     * Get list of news (from offset to limit, using Redis cache if possible).
+     */
+    @GetMapping("/news/latest")
+    public ResponseEntity<ResponseWrapper<List<NewsResponseDTO>>> getLatestActiveNews(
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(new ResponseWrapper<>("Active news retrieved",
+                newsService.getLimitActiveNews(offset, limit)));
+    }
     //------------------------------------------------ end: news API --------------------------------------------------
 }

@@ -63,6 +63,49 @@ public interface NewsService {
 
     //------------------------------------------ end: method for CRUD API ----------------------------------------------
 
+    //--------------------------------------- start: paginated news methods --------------------------------------------
+    /**
+     * Retrieves a paginated list of active news using offset and limit. (user)
+     * If offset is 0 and limit is <= 10, it attempts to fetch data from Redis cache.
+     *
+     * @param offset the number of news to skip
+     * @param limit the maximum number of news to return
+     * @return list of active news DTOs
+     */
+    List<NewsResponseDTO> getLimitActiveNews(int offset, int limit);
+
+    /**
+     * Retrieves a paginated list of all news (including soft-deleted) using offset and limit. (admin only)
+     * Primarily used for administrative purposes.
+     *
+     * @param offset the number of news to skip
+     * @param limit the maximum number of news to return
+     * @return list of all news DTOs
+     */
+    List<NewsResponseDTO> getLimitNews(int offset, int limit);
+
+    /**
+     * Retrieves a paginated list of active news filtered by sector using offset and limit. (customer)
+     * Uses Redis cache for the first 10 items if available.
+     *
+     * @param sector the market sector to filter by
+     * @param offset the number of news to skip
+     * @param limit the maximum number of news to return
+     * @return list of active news DTOs for the specified sector
+     */
+    List<NewsResponseDTO> getLimitActiveNewsBySector(String sector, int offset, int limit);
+
+    /**
+     * Retrieves a paginated list of news for a specific sector, including deleted ones. (admin only)
+     *
+     * @param sector the market sector to filter by
+     * @param offset the number of news to skip
+     * @param limit the maximum number of news to return
+     * @return list of all news DTOs for the specified sector
+     */
+    List<NewsResponseDTO> getLimitNewsBySector(String sector, int offset, int limit);
+    //---------------------------------------- end: paginated news methods ---------------------------------------------
+
     //------------------------------------- start: method for aggregation API ------------------------------------------
 
     /**

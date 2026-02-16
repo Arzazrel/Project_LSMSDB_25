@@ -61,4 +61,33 @@ public class NewsMapper {
 
         return dto;
     }
+
+    /**
+     * Convert a Redis Hash Map to NewsResponseDTO.
+     * Handles type conversion for timestamp and ID correlation.
+     *
+     * @param map the raw data from Redis
+     * @return news response DTO
+     */
+    public static NewsResponseDTO fromRedisMap(java.util.Map<Object, Object> map) {
+        if (map == null || map.isEmpty())
+            return null;
+
+        NewsResponseDTO dto = new NewsResponseDTO();
+        // Redis values are stored as Strings in your DAO, we parse them back
+        dto.setId(map.get("id") != null ? map.get("id").toString() : null);
+        dto.setTitle(map.get("title") != null ? map.get("title").toString() : "");
+        dto.setSummary(map.get("summary") != null ? map.get("summary").toString() : "");
+        dto.setSector(map.get("sector") != null ? map.get("sector").toString() : "");
+
+        // handle timestamp conversion
+        if (map.get("timestamp") != null) {
+            long ts = Long.parseLong(map.get("timestamp").toString());
+            dto.setDate(Instant.ofEpochMilli(ts));
+        }
+
+        dto.setDeleted(false);          // if it's in Redis, it's active by design
+
+        return dto;
+    }
 }
