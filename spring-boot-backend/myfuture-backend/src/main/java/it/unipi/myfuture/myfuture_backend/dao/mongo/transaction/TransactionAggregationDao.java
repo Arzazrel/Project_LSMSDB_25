@@ -7,6 +7,7 @@ import it.unipi.myfuture.myfuture_backend.dto.analytics.UserFinancialFlowDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.DailyVolumeDTO;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionGroupField;
+import it.unipi.myfuture.myfuture_backend.model.Transaction;
 
 import java.util.List;
 /**
@@ -59,4 +60,11 @@ public interface TransactionAggregationDao {
      * @return A list of DailyVolumeDTO containing the symbol and its total volume.
      */
      List<DailyVolumeDTO> getDailyVolumeBySymbol();
+
+    /**
+     * Retrieve all the pending transactions which must be executed at market opening.
+     *
+     * @return A list of pending transactions
+     */
+    List<Transaction> findAllPendingLimitOrders();
 }

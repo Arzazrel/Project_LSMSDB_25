@@ -4,6 +4,8 @@ import it.unipi.myfuture.myfuture_backend.dao.mongo.transaction.TransactionAggre
 import it.unipi.myfuture.myfuture_backend.dto.analytics.*;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.enums.TransactionGroupField;
+import it.unipi.myfuture.myfuture_backend.enums.TransactionStatus;
+import it.unipi.myfuture.myfuture_backend.model.Transaction;
 import it.unipi.myfuture.myfuture_backend.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -12,6 +14,7 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
@@ -191,5 +194,19 @@ public class TransactionAggregationDaoImpl implements TransactionAggregationDao 
         );
 
         return mongoTemplate.aggregate(aggregation, "transactions", DailyVolumeDTO.class).getMappedResults();
+    }
+
+    /**
+     * Retrieve all the pending transactions which must be executed at market opening.
+     *
+     * @return A list of pending transactions
+     */
+    @Override
+    public List<Transaction> findAllPendingLimitOrders()
+    {
+        // filter only transaction that are pending
+        Query query = new Query(Criteria.where("status").is(TransactionStatus.PENDING));
+
+        return mongoTemplate.find(query, Transaction.class);
     }
 }

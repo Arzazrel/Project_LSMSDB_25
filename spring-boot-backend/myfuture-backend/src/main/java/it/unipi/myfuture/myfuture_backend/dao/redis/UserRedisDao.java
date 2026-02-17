@@ -1,8 +1,12 @@
 package it.unipi.myfuture.myfuture_backend.dao.redis;
 
+import io.lettuce.core.ReadFrom;
+import io.lettuce.core.masterreplica.StatefulRedisMasterReplicaConnection;
 import it.unipi.myfuture.myfuture_backend.model.User;
 import it.unipi.myfuture.myfuture_backend.model.WalletItem;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.lettuce.LettuceConnection;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -164,9 +168,25 @@ public class UserRedisDao {
         redisTemplate.delete(getPortfolioSetKey(userId));       // delete assets list
     }
 
+    /**
+     * Method to force connection that read from Redis Master.
+     *
+     * @param connection redis connection
+     */
+    private void forceMaster(RedisConnection connection) {
+        // force reading from the MASTER for this specific operation
+        LettuceConnection lc = (LettuceConnection) connection;
+        Object nativeConn = lc.getNativeConnection();
+        // access the native Stateful connection and set ReadFrom
+        if (nativeConn instanceof StatefulRedisMasterReplicaConnection) {
+            ((StatefulRedisMasterReplicaConnection<?, ?>) nativeConn).setReadFrom(ReadFrom.MASTER);
+        }
+    }
+
     //--------------------------------------------- end: utils methods -------------------------------------------------
 
     //----------------------------------------------- start: methods ---------------------------------------------------
+    //---- start: cash ----
     /**
      * Saves or updates the cash of the user.
      *
@@ -185,14 +205,23 @@ public class UserRedisDao {
      * @param userId user identifier
      */
     public Double getCash(String userId) {
-        Double cash = (Double)redisTemplate.opsForValue().get(getCashKey(userId));
+        // use execute to access the native connection and force the Master
+        Double cash = redisTemplate.execute((RedisConnection connection) -> {
+            forceMaster(connection);
+            // serialyze the key
+            byte[] key = redisTemplate.getStringSerializer().serialize(getCashKey(userId));
+            // deserialize the value into the correct type (Double)
+            return (Double) redisTemplate.getValueSerializer().deserialize(connection.get(key));
+        });
 
         if (cash != null)                   // check if exist the key in Redis
             refreshUserTTL(userId);         // every time get, synchronize the TTL of everything else.
 
         return cash;                        // return the retrieved value or null
     }
+    //---- end: cash ----
 
+    //---- start: blocked cash ----
     /**
      * Saves or updates the blocked cash of the user.
      *
@@ -211,14 +240,23 @@ public class UserRedisDao {
      * @param userId user identifier
      */
     public Double getBlockedCash(String userId) {
-        Double blockedCash = (Double)redisTemplate.opsForValue().get(getBlockedCashKey(userId));
+        // use execute to access the native connection and force the Master
+        Double blockedCash = redisTemplate.execute((RedisConnection connection) -> {
+            forceMaster(connection);
+            // serialyze the key
+            byte[] key = redisTemplate.getStringSerializer().serialize(getBlockedCashKey(userId));
+            // deserialize the value into the correct type (Double)
+            return (Double) redisTemplate.getValueSerializer().deserialize(connection.get(key));
+        });
 
         if (blockedCash != null)                   // check if exist the key in Redis
             refreshUserTTL(userId);         // every time get, synchronize the TTL of everything else.
 
         return blockedCash;                        // return the retrieved value or null
     }
+    //---- end: blocke cash ----
 
+    //---- start: portfolio ----
     /**
      * Updates an asset in the user's portfolio. Uses a Set for the list of symbols and a Hash for the specific details.
      *
@@ -255,6 +293,31 @@ public class UserRedisDao {
     }
 
     /**
+     * method to retrieve the portfolio of the user.
+     *
+     * @param userId user identifier
+     * @return the list of symbols ind the portfolio
+     */
+    public Set<String> getPortfolioAssets(String userId) {
+        String key = getPortfolioSetKey(userId);
+
+        Set<byte[]> rawSymbols = redisTemplate.execute((RedisConnection connection) -> {
+            forceMaster(connection);
+            return connection.sMembers(redisTemplate.getStringSerializer().serialize(key));
+        });
+
+        if (rawSymbols == null || rawSymbols.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        Set<String> symbols = new HashSet<>();
+        for (byte[] b : rawSymbols) {
+            symbols.add((String) redisTemplate.getValueSerializer().deserialize(b));
+        }
+        return symbols;
+    }
+
+    /**
      * Retrieves specific asset details (quantity, bep, blockedQty) from the user's portfolio in Redis.
      *
      * @param userId user identifier
@@ -263,11 +326,25 @@ public class UserRedisDao {
      */
     public WalletItem getAssetDetails(String userId, String symbol) {
         String assetKey = getAssetHashKey(userId, symbol);                          // get key
-        Map<Object, Object> entries = redisTemplate.opsForHash().entries(assetKey); // retrieve all entities from hash
-        // assets are empty
-        if (entries.isEmpty()) {
+        // retrieve the entire hash map from the master to ensure consistency in terms of quantity and blocks.
+        Map<byte[], byte[]> rawEntries = redisTemplate.execute((RedisConnection connection) -> {
+            forceMaster(connection);
+            // serialyze the key
+            byte[] keyBytes = redisTemplate.getStringSerializer().serialize(assetKey);
+            return connection.hGetAll(keyBytes);
+        });
+        // control check
+        if (rawEntries == null || rawEntries.isEmpty()) {
             return null;
         }
+
+        // convert the byte[] into the correct types using the template serializers.
+        Map<String, String> entries = new HashMap<>();
+        rawEntries.forEach((k, v) -> {
+            String field = (String) redisTemplate.getHashKeySerializer().deserialize(k);
+            String value = (String) redisTemplate.getHashValueSerializer().deserialize(v);
+            entries.put(field, value);
+        });
 
         // convert the values from String (as saved in saveFullUserToCache) to Double for calculation
         WalletItem details = new WalletItem();
@@ -279,7 +356,7 @@ public class UserRedisDao {
 
         return details;
     }
-
+    //---- end: portfolio ----
     //------------------------------------------------ end: methods ----------------------------------------------------
 }
 /**

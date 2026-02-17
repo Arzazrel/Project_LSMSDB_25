@@ -1,7 +1,11 @@
 package it.unipi.myfuture.myfuture_backend.dao.redis;
 
+import io.lettuce.core.ReadFrom;
+import io.lettuce.core.masterreplica.StatefulRedisMasterReplicaConnection;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.lettuce.LettuceConnection;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -140,8 +144,15 @@ public class AssetRedisDao {
      * @return current price or null if not available
      */
     public Double getCurrentPrice(String symbol) {
-        Object price = redisTemplate.opsForValue().get(getCurrentPriceKey(symbol));
-        return price != null ? Double.valueOf(price.toString()) : null;
+        return redisTemplate.execute((RedisConnection connection) -> {
+            forceMaster(connection);                // force read form master
+            byte[] key = redisTemplate.getStringSerializer().serialize(getCurrentPriceKey(symbol)); // serialize key
+            byte[] value = connection.get(key);     // get information from master
+            // check value
+            if (value == null)
+                return null;
+            return (Double) redisTemplate.getValueSerializer().deserialize(value);  // deserialize and return the value
+        });
     }
     // -------- end: current price --------
 
@@ -290,6 +301,21 @@ public class AssetRedisDao {
         redisTemplate.opsForZSet().remove(getWorstDeclineKey(), symbol);
         // remove from most traded stats (Hash)
         redisTemplate.opsForHash().delete(getMostTradedKey(), symbol);
+    }
+
+    /**
+     * Method to force connection that read from Redis Master.
+     *
+     * @param connection redis connection
+     */
+    private void forceMaster(RedisConnection connection) {
+        // force reading from the MASTER for this specific operation
+        LettuceConnection lc = (LettuceConnection) connection;
+        Object nativeConn = lc.getNativeConnection();
+        // access the native Stateful connection and set ReadFrom
+        if (nativeConn instanceof StatefulRedisMasterReplicaConnection) {
+            ((StatefulRedisMasterReplicaConnection<?, ?>) nativeConn).setReadFrom(ReadFrom.MASTER);
+        }
     }
 
     //------------------------------------------- end: utilities methods -----------------------------------------------

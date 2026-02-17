@@ -16,7 +16,9 @@ import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.model.Asset;
 import it.unipi.myfuture.myfuture_backend.model.News;
+import it.unipi.myfuture.myfuture_backend.model.Transaction;
 import it.unipi.myfuture.myfuture_backend.service.AssetPriceService;
+import it.unipi.myfuture.myfuture_backend.service.LimitOrderExecutionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -52,6 +54,8 @@ public class MarketSchedulerService  implements CommandLineRunner {
 
     @Autowired
     private AssetPriceService assetPriceService;    // used to save the intraday prices from Redis to MongoDB
+    @Autowired
+    private LimitOrderExecutionService limitOrderExecutionService;  // used to execute pending transactions
 
     //------------------------------------------ start: scheduled methods ----------------------------------------------
     /**
@@ -64,10 +68,20 @@ public class MarketSchedulerService  implements CommandLineRunner {
      * - calculate asset:most_growth (perform aggregation on MongoDB and save results on Redis)
      * - calculate asset:worst_decline (perform aggregation on MongoDB and save results to Redis)
      */
-    @Scheduled(cron = "0 30 9 * * MON-FRI", zone = "America/New_York")
+    @Scheduled(cron = "0 35 9 * * MON-FRI", zone = "America/New_York")
     public void executeDailyTasks() {
         try {
             System.out.println("[SCHEDULER] Starting Daily Tasks...");
+
+            // execute the pending transaction
+            List<Transaction> pendingTransaction = transactionAggregationDao. findAllPendingLimitOrders();  // get
+            // control check
+            if (pendingTransaction != null && !pendingTransaction.isEmpty())
+            {
+                // scan all pendingTransaction
+                for (Transaction current : pendingTransaction)
+                    limitOrderExecutionService.processPendingTrade(current);    // execute pending transaction
+            }
 
             // -- assets list --
             refreshAssetLists();
