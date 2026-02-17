@@ -10,13 +10,11 @@ import it.unipi.myfuture.myfuture_backend.dao.mongo.transaction.TransactionAggre
 import it.unipi.myfuture.myfuture_backend.dao.redis.AssetRedisDao;
 import it.unipi.myfuture.myfuture_backend.dao.redis.NewsRedisDao;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.AssetGrowthDTO;
-import it.unipi.myfuture.myfuture_backend.dto.analytics.DailyVolumeDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.MostTradedAssetDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.SectorNewsGroupDTO;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
 import it.unipi.myfuture.myfuture_backend.model.Asset;
-import it.unipi.myfuture.myfuture_backend.model.AssetPrice;
 import it.unipi.myfuture.myfuture_backend.model.News;
 import it.unipi.myfuture.myfuture_backend.service.AssetPriceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +22,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Service responsible for scheduled tasks related to market data and analytics.
@@ -39,8 +34,6 @@ public class MarketSchedulerService  implements CommandLineRunner {
 
     @Autowired
     private AssetDao assetDao;
-    @Autowired
-    private AssetPriceDao assetPriceDao;
 
     @Autowired
     private AssetPriceAggregationDao assetPriceAggregationDao;

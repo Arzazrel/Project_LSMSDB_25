@@ -89,7 +89,7 @@ public class TradeServiceImpl implements TradeService {
         }
 
         // check if the market is open
-        if (isMarketOpen()) {
+        if (isMarketOpen() || request.getAssetType().equals(AssetType.crypto)) {
             // discriminate by transaction type
             if (transactionType == TransactionType.purchase)    // purchase case
             {

@@ -32,6 +32,15 @@ def create_indexes(extra_index: bool = False):
         )
     else:
         print("  -> Index already exists, skipped.")
+        
+    if "user_id_1" not in users_indexes:
+        db.users.create_index(
+            [("user_id", 1)],
+            unique=True,
+            name="user_id_1"
+        )
+    else:
+        print("  -> Index already exists, skipped.")
 
     # -- ASSET PRICES --
     print("Creating indexes working on asset_prices collection...") # UI print
@@ -72,6 +81,15 @@ def create_indexes(extra_index: bool = False):
         db.transactions.create_index(
             [("status", 1), ("date", 1)],
             name="status_1_date_1"
+        )
+    else:
+        print("  -> Index already exists, skipped.")
+    
+    if "transaction_id_1" not in users_indexes:
+        db.transactions.create_index(
+            [("transaction_id", 1)],
+            unique=True,
+            name="transaction_id_1"
         )
     else:
         print("  -> Index already exists, skipped.")
