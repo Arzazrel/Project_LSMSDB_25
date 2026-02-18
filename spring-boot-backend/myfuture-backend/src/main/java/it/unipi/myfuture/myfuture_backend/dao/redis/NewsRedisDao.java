@@ -97,6 +97,31 @@ public class NewsRedisDao {
     }
 
     /**
+     * Updates news data in Redis.
+     * If the sector has changed, it removes the news ID from the old sector's ZSet before updating the new one.
+     *
+     * @param newsId database identifier
+     * @param newsMap map containing new news data
+     * @param oldSector the sector before the update (null if not changed or unknown)
+     */
+    public void updateNews(String newsId, Map<String, String> newsMap, String oldSector) {
+        String newSector = newsMap.get("sector");
+
+        // if the sector has changed, remove the news ID from the old sector ZSet
+        if (oldSector != null && !oldSector.equals(newSector)) {
+            redisTemplate.execute((RedisConnection connection) -> {
+                byte[] rawId = redisTemplate.getStringSerializer().serialize(newsId);
+                byte[] oldSectorKey = redisTemplate.getStringSerializer().serialize(getSectorNewsKey(oldSector));
+                connection.zRem(oldSectorKey, rawId);                       // remove from the old sector index
+                return null;
+            });
+        }
+
+        // Now save the updated data (this handles Hash and new ZSet entries)
+        saveNews(newsId, newsMap);
+    }
+
+    /**
      * Retrieves a list of news details for a specific sector. Based on the sector and counter passed as parameters,
      * it retrieves the IDs of the latest count news belonging to that sector.
      * The IDs will be used to obtain information using the news:{newsId} hash.

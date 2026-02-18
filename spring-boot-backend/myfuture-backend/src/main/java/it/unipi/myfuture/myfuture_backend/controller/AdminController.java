@@ -343,6 +343,23 @@ public class AdminController {
     }
 
     /**
+     * Update news.
+     */
+    @PutMapping("/news/{id}")
+    public ResponseEntity<ResponseWrapper<NewsResponseDTO>> updateNews(
+            @PathVariable String id,
+            @Valid @RequestBody NewsRequestDTO requestDTO) {
+
+        // Chiamata al service per aggiornamento logico e cache
+        NewsResponseDTO updatedNews = newsService.updateNews(id, requestDTO);
+
+        return ResponseEntity.ok(new ResponseWrapper<>(
+                "News updated successfully",
+                updatedNews
+        ));
+    }
+
+    /**
      * Get all news.
      */
     @GetMapping("/news")

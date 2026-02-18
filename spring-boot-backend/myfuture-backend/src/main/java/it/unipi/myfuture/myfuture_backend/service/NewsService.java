@@ -16,12 +16,21 @@ public interface NewsService {
 
     //----------------------------------------- start: method for CRUD API ---------------------------------------------
     /**
-     * Create or update a news entry. Used by admin.
+     * Create a news entry. Used by admin.
      *
-     * @param requestDTO data of the news to be created or updated
+     * @param requestDTO data of the news to be created
      * @return saved news as response DTO
      */
     NewsResponseDTO saveNews(NewsRequestDTO requestDTO);
+
+    /**
+     * Update a news entry. Used by admin.
+     *
+     * @param id news identifier
+     * @param requestDTO data of the news to be updated
+     * @return
+     */
+    NewsResponseDTO updateNews(String id, NewsRequestDTO requestDTO);
 
     /**
      * Retrieve an active news by its ID. Used by users and customers.

@@ -36,7 +36,7 @@ public class NewsServiceImpl implements NewsService {
 
     //----------------------------------------- start: method for CRUD API ---------------------------------------------
     /**
-     * Create or update a news entry. After saving to MongoDB, it updates the Redis cache. Used by admin.
+     * Create a news entry. After saving to MongoDB, it updates the Redis cache. Used by admin.
      *
      * @param requestDTO data of the news to be created or updated
      * @return saved news as response DTO
@@ -48,6 +48,32 @@ public class NewsServiceImpl implements NewsService {
         newsRedisDao.saveNews(savedNews.getId(), NewsMapper.toRedisMap(savedNews)); // update Redis
 
         return NewsMapper.toResponseDTO(savedNews);                                 // return the response DTO
+    }
+
+    /**
+     * Update a news entry. After saving to MongoDB, it updates the Redis cache. Used by admin.
+     *
+     * @param id news identifier
+     * @param requestDTO data of the news to be updated
+     * @return
+     */
+    @Override
+    public NewsResponseDTO updateNews(String id, NewsRequestDTO requestDTO) {
+        // check if the news exist
+        News existingNews = newsDao.findById(id)
+                .orElseThrow(() -> new BusinessException("Cannot update: News not found with id " + id));
+
+        String oldSector = existingNews.getSector();            // get the sector of the news before the update
+
+        // map new data keeping the original ID
+        News newsToUpdate = NewsMapper.toEntity(requestDTO);
+        newsToUpdate.setId(id);                                 // set id
+
+        News updatedNews = newsDao.save(newsToUpdate);          // save on MongoDB
+
+        newsRedisDao.updateNews(updatedNews.getId(), NewsMapper.toRedisMap(updatedNews), oldSector);    // Redis update
+
+        return NewsMapper.toResponseDTO(updatedNews);
     }
 
     /**
