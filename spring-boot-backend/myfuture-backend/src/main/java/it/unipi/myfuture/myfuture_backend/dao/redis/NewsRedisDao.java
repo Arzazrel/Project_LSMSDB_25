@@ -1,13 +1,14 @@
 package it.unipi.myfuture.myfuture_backend.dao.redis;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
+import static org.apache.commons.lang3.SerializationUtils.deserialize;
 
 /**
  * Data Access Object for News in Redis.
@@ -57,14 +58,42 @@ public class NewsRedisDao {
         long timestamp = Long.parseLong(newsMap.get("timestamp"));      // get timestamp
         String sector = newsMap.get("sector");                          // get sector
 
-        redisTemplate.opsForHash().putAll(getNewsHashKey(newsId), newsMap);             // store the metadata hash
+        // save metadata to Hash using Raw Connection to avoid quotes in values
+        redisTemplate.execute((RedisConnection connection) -> {
+            byte[] hashKey = redisTemplate.getStringSerializer().serialize(getNewsHashKey(newsId));
 
-        redisTemplate.opsForZSet().add(getGlobalNewsKey(), newsId, timestamp);          // index in Global ZSet
-        redisTemplate.opsForZSet().add(getSectorNewsKey(sector), newsId, timestamp);    // index in Sector ZSet
+            Map<byte[], byte[]> rawMap = new HashMap<>();
+            newsMap.forEach((k, v) -> {
+                if (v != null) {
+                    rawMap.put(
+                            redisTemplate.getStringSerializer().serialize(k),
+                            redisTemplate.getStringSerializer().serialize(v)
+                    );
+                }
+            });
 
-        // keeps only the last 10 news items (the most recent ones)
-        cleanupOldestNews(getGlobalNewsKey());
-        cleanupOldestNews(getSectorNewsKey(sector));
+            connection.hMSet(hashKey, rawMap);
+            return null;
+        });
+
+        // save to ZSets using direct connection to avoid Object serialisation
+        redisTemplate.execute((RedisConnection connection) -> {
+            byte[] rawId = redisTemplate.getStringSerializer().serialize(newsId);
+            byte[] globalKey = redisTemplate.getStringSerializer().serialize(getGlobalNewsKey());
+
+            connection.zAdd(globalKey, (double) timestamp, rawId);                      // add to global key
+
+            // add to sector kay, only if the sector is valid
+            if (sector != null && !sector.isEmpty()) {
+                byte[] sectorKey = redisTemplate.getStringSerializer().serialize(getSectorNewsKey(sector));
+                connection.zAdd(sectorKey, (double) timestamp, rawId);
+            }
+            return null;
+        });
+
+        cleanupOldestNews(getGlobalNewsKey());          // clean the global key (check if there are more than 10 object)
+        if (sector != null)
+            cleanupOldestNews(getSectorNewsKey(sector));// clean the sector key (check if there are more than 10 object)
     }
 
     /**
@@ -77,8 +106,18 @@ public class NewsRedisDao {
      * @return list of maps containing news details
      */
     public List<Map<Object, Object>> getLatestNewsBySector(String sector, int count) {
-        // take the latest count ids from the specific ZSet
-        Set<Object> ids = redisTemplate.opsForZSet().reverseRange(getSectorNewsKey(sector), 0, count - 1);  // 0 is the index for the last element
+        // take the latest ids from the specific ZSet, execute to fetch IDs as raw bytes and avoid Jackson's JSON parsing error
+        Set<Object> ids = redisTemplate.execute((RedisConnection connection) -> {
+            byte[] rawKey = redisTemplate.getStringSerializer().serialize(getSectorNewsKey(sector));
+            // Fetch last 'count' IDs as raw bytes (from index 0 to count-1 in reverse order)
+            Set<byte[]> rawIds = connection.zRevRange(rawKey, 0, count - 1);
+            // control check
+            if (rawIds == null)
+                return new HashSet<>();
+            // Convert to Set<Object> to match fetchNewsDetails signature
+            return new HashSet<>(rawIds);
+        });
+
         return fetchNewsDetails(ids);           // retrieve the information about the news from the ids and hash
     }
 
@@ -90,8 +129,17 @@ public class NewsRedisDao {
      * @return list of maps containing news details
      */
     public List<Map<Object, Object>> getLatestNews(int count) {
-        // take the latest count ids from the global ZSet
-        Set<Object> ids = redisTemplate.opsForZSet().reverseRange(getGlobalNewsKey(), 0, count - 1);
+        // take the latest ids from the specific ZSet, execute to fetch IDs as raw bytes and avoid Jackson's JSON parsing error
+        Set<Object> ids = redisTemplate.execute((RedisConnection connection) -> {
+            byte[] rawKey = redisTemplate.getStringSerializer().serialize(getGlobalNewsKey());
+            // fetch the latest count IDs as raw bytes
+            Set<byte[]> rawIds = connection.zRevRange(rawKey, 0, count - 1);
+            // control check
+            if (rawIds == null)
+                return new HashSet<>();
+            return new HashSet<>(rawIds);
+        });
+
         return fetchNewsDetails(ids);
     }
 
@@ -109,13 +157,41 @@ public class NewsRedisDao {
         if (ids != null) {
             // iterate each ids
             for (Object id : ids) {
-                // take all the information for the current id and put them into Map
-                Map<Object, Object> details = redisTemplate.opsForHash().entries(getNewsHashKey(id.toString()));
+                try {
+                    String cleanId = null;
+                    if (id instanceof byte[]) {
+                        // direct conversion from byte to UTF-8 string
+                        cleanId = new String((byte[]) id, java.nio.charset.StandardCharsets.UTF_8);
+                    } else {
+                        // security fallback, remove any JSON residues
+                        cleanId = id.toString().replace("\"", "");
+                    }
+                    // control check
+                    if (cleanId != null) {
+                        final String finalId = cleanId;     // create an effectively final variable for the lambda
+                        // take all the information for the current id and put them into Map
+                        Map<Object, Object> details = redisTemplate.execute((RedisConnection connection) -> {
+                            byte[] rawKey = redisTemplate.getStringSerializer().serialize(getNewsHashKey(finalId));
+                            Map<byte[], byte[]> rawMap = connection.hGetAll(rawKey);
 
-                // control check. If it is empty, it means that the news item has been deleted but its ID has accidentally remained.
-                if (!details.isEmpty()) {
-                    details.put("id", id);          // add ID to the map to correlate data to the ID
-                    newsList.add(details);          // add the map object to the list to return
+                            Map<Object, Object> result = new HashMap<>();
+                            if (rawMap != null && !rawMap.isEmpty()) {
+                                rawMap.forEach((k, v) -> {
+                                    String field = (String) redisTemplate.getStringSerializer().deserialize(k);
+                                    String value = (String) redisTemplate.getStringSerializer().deserialize(v);
+                                    result.put(field, value);
+                                });
+                            }
+                            return result;
+                        });
+                        // control check. If it is empty, it means that the news item has been deleted but its ID has accidentally remained.
+                        if (!details.isEmpty()) {
+                            details.put("id", cleanId);     // add ID to the map to correlate data to the ID
+                            newsList.add(details);          // add the map object to the list to return
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("[REDIS ERROR] Failed to process ID: " + id + " Error: " + e.getMessage());
                 }
             }
         }
@@ -144,38 +220,57 @@ public class NewsRedisDao {
      * If news:latest (ZSet) you can't delete news information if this news is in the list of the last news for its sector.
      */
     private void cleanupOldestNews(String zsetKey) {
-        Long size = redisTemplate.opsForZSet().size(zsetKey);       // get num of element in ZSet
-        // control check of ZSet
-        if (size != null && size > 10) {
-            // get the IDs from index 0 up to the one that makes the 11th element (everything before the last 10)
-            Set<Object> idsToRemove = redisTemplate.opsForZSet().range(zsetKey, 0, size - 11);
+        // Use execute to interact directly with the connection and avoid JSON serialization issues
+        redisTemplate.execute((org.springframework.data.redis.connection.RedisConnection connection) -> {
+            byte[] rawZsetKey = redisTemplate.getStringSerializer().serialize(zsetKey);
+            Long size = connection.zCard(rawZsetKey); // get num of element in ZSet
 
-            // control check
-            if (idsToRemove != null && !idsToRemove.isEmpty()) {
-                boolean isGlobalStack = zsetKey.equals(getGlobalNewsKey()); // check if delete from general last news
+            // control check of ZSet
+            if (size != null && size > 10) {
+                // get the IDs from index 0 up to the one that makes the 11th element (everything before the last 10)
+                // fetch them as byte arrays to avoid the "Unexpected character" error
+                Set<byte[]> idsToRemove = connection.zRange(rawZsetKey, 0, size - 11);
 
-                // scan all elements of the list and remove from news:{newsId} (Hash)
-                for (Object id : idsToRemove) {
-                    String newsId = id.toString();      // convert news id
+                // control check
+                if (idsToRemove != null && !idsToRemove.isEmpty()) {
+                    boolean isGlobalStack = zsetKey.equals(getGlobalNewsKey()); // check if delete from general last news
 
-                    // case of Global cleanup, check sector before deleting data
-                    if (isGlobalStack) {
-                        // get the sector of the news
-                        String sector = (String) redisTemplate.opsForHash().get(getNewsHashKey(newsId), "sector");
-                        // check if the news is still relevant for its sector
-                        Double sectorScore = (sector != null) ? redisTemplate.opsForZSet().score(getSectorNewsKey(sector), newsId) : null;
-                        // delete hash only if it's not in the sector list
-                        if (sectorScore == null) {
-                            redisTemplate.delete(getNewsHashKey(newsId));
+                    // scan all elements of the list and remove from news:{newsId} (Hash)
+                    for (byte[] rawId : idsToRemove) {
+                        // convert the raw byte ID to a clean String
+                        String newsId = new String(rawId, java.nio.charset.StandardCharsets.UTF_8);
+                        byte[] rawHashKey = redisTemplate.getStringSerializer().serialize(getNewsHashKey(newsId));
+
+                        // case of Global cleanup, check sector before deleting data
+                        if (isGlobalStack) {
+                            // get the sector of the news
+                            byte[] sectorField = redisTemplate.getStringSerializer().serialize("sector");
+                            byte[] rawSector = connection.hGet(rawHashKey, sectorField);
+                            String sector = (rawSector != null) ? new String(rawSector, java.nio.charset.StandardCharsets.UTF_8) : null;
+
+                            // check if the news is still relevant for its sector
+                            // Note: use redisTemplate here for logic, which is fine for Hashes and specific Scores
+                            Double sectorScore = null;
+                            if (sector != null) {
+                                byte[] rawSectorKey = redisTemplate.getStringSerializer().serialize(getSectorNewsKey(sector));
+                                sectorScore = connection.zScore(rawSectorKey, rawId);
+                            }
+
+                            // delete hash only if it's not in the sector list
+                            if (sectorScore == null) {
+                                connection.del(rawHashKey);
+                            }
+                        } else {
+                            // case of Sector cleanup: delete the hash data as it's no longer in the top 10 of this sector
+                            connection.del(rawHashKey);
                         }
+                        // remove the ID from the current ZSet using the raw connection
+                        connection.zRem(rawZsetKey, rawId);
                     }
-                    else            // case of Sector cleanup no extra hash deletion logic here
-                        redisTemplate.delete(getNewsHashKey(newsId));
-
-                    redisTemplate.opsForZSet().remove(zsetKey, newsId); // remove the ID from the current ZSet index
                 }
             }
-        }
+            return null;
+        });
     }
 
     /**

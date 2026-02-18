@@ -89,7 +89,7 @@ class DataBridge:
     def update_redis_price(self, symbol: str, price: float):
         # Update current price string
         price_key = f"asset:{symbol}:current_price"
-        self.redis_client.set(price_key, price)                     # put on redis current price
+        self.redis_client.set(price_key, float(price))              # put on redis current price
         
         # Update intraday ZSet history (Score: Timestamp, Member: "Timestamp:Price")
         intraday_key = f"asset:{symbol}:intraday_prices"            # set the key for the asset

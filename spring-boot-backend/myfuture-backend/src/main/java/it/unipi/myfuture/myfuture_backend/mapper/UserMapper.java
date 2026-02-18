@@ -37,7 +37,7 @@ public class UserMapper {
         user.setRegistrationDate(Instant.now());
         user.setDeleted(false);
         user.setSuspended(false);
-        user.setUpdateAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
 
         return user;
     }
@@ -52,7 +52,7 @@ public class UserMapper {
         user.setFirstName(userRequest.getFirstName());
         user.setLastName(userRequest.getLastName());
         user.setPhone(userRequest.getPhone());
-        user.setUpdateAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
     }
 
     // -------------------------------------- entity → response --------------------------------------
@@ -99,7 +99,7 @@ public class UserMapper {
         if (user.getDeleted())
             dto.setDeletedAt(user.getDeletedAt());
 
-        dto.setUpdateAt(user.getUpdateAt());
+        dto.setUpdateAt(user.getUpdatedAt());
 
         return dto;
     }

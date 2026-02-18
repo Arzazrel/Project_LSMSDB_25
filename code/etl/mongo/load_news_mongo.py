@@ -18,6 +18,14 @@ COLLECTION_NAME = "news"
 # -- path --
 CSV_PATH = "dataset/news/processed_ds/final_news_ds.csv"
 
+# -- standard sectors list --
+VALID_SECTORS = {
+    'Transportation', 'Agriculture', 'Technology', 'Automotive', 'Materials',
+    'Industrials', 'Utilities', 'Real Estate', 'Media & Entertainment',
+    'Aerospace & Defense', 'Energy', 'Retail', 'Telecommunications',
+    'Healthcare', 'Consumer Goods', 'Construction', 'Finance', 'Pharmaceuticals'
+}
+
 # ------------------------------------ start: utils methods ------------------------------------
 
 """
@@ -46,6 +54,13 @@ def clean_value(value):
     if isinstance(value, str) and value.strip() == "":
         return None
     return value
+    
+# Validates and maps the sector to a standard list or 'unknown'
+def map_sector(value):
+    val = clean_value(value)
+    if val in VALID_SECTORS:
+        return val
+    return "unknown"
 
 # Convert date string to datetime. Adjust format if needed.
 def parse_date(value):
@@ -76,7 +91,7 @@ def load_news():
             "title": clean_value(row.get("Title")),
             "summary": clean_value(row.get("Summary")),
             "text": clean_value(row.get("Text")),
-            "sector": clean_value(row.get("Sector")),
+            "sector": map_sector(row.get("Sector")),
             "index": clean_value(row.get("Index")),
             "company": clean_value(row.get("Company")),
             "ingestedAt": datetime.utcnow(),                # add the injection date 
