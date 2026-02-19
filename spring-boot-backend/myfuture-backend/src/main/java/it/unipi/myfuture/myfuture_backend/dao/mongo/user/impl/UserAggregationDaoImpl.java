@@ -1,21 +1,27 @@
 package it.unipi.myfuture.myfuture_backend.dao.mongo.user.impl;
 
 import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserAggregationDao;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.UserStatsDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserTopAssetHolderDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserVarietyDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.GlobalUserStatsDTO;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
+import it.unipi.myfuture.myfuture_backend.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * class that implements aggregations that work on the users collection
@@ -104,5 +110,30 @@ public class UserAggregationDaoImpl implements UserAggregationDao {
         );
         // no rename needed -> GlobalUserStatsDTO has avgDistinctAssets, minAssetHeld, maxAssetsHeld
         return mongoTemplate.aggregate(aggregation, "users", GlobalUserStatsDTO.class).getUniqueMappedResult();
+    }
+
+    /**
+     * Counts users using a single aggregation pipeline for better performance.
+     */
+    @Override
+    public UserStatsDTO countUsersByStatusAggregation() {
+        // 1. Total users
+        long total = mongoTemplate.count(new Query(), User.class);
+
+        // 2. Deleted users
+        long deleted = mongoTemplate.count(
+                new Query(Criteria.where("deleted").is(true)), User.class);
+
+        // 3. Suspended users (suspended=true AND deleted!=true)
+        long suspended = mongoTemplate.count(
+                new Query(Criteria.where("suspended").is(true)
+                        .and("deleted").ne(true)), User.class);
+
+        // 4. Active users (suspended!=true AND deleted!=true)
+        long active = mongoTemplate.count(
+                new Query(Criteria.where("suspended").ne(true)
+                        .and("deleted").ne(true)), User.class);
+
+        return new UserStatsDTO(total, active, suspended, deleted);
     }
 }

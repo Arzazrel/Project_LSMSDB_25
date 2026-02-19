@@ -1,11 +1,13 @@
 package it.unipi.myfuture.myfuture_backend.dao.mongo.user;
 
 import it.unipi.myfuture.myfuture_backend.dto.analytics.GlobalUserStatsDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.UserStatsDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserTopAssetHolderDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserVarietyDTO;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * class that define aggregations that work on the users collection
@@ -34,4 +36,9 @@ public interface UserAggregationDao {
      * @return list of the user
      */
     GlobalUserStatsDTO getGlobalUsageStats();
+
+    /**
+     * Counts users using a single aggregation pipeline for better performance.
+     */
+    UserStatsDTO countUsersByStatusAggregation();
 }

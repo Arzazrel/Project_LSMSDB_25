@@ -1,6 +1,7 @@
 package it.unipi.myfuture.myfuture_backend.service;
 
 import it.unipi.myfuture.myfuture_backend.dto.analytics.GlobalUserStatsDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.UserStatsDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserTopAssetHolderDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserVarietyDTO;
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
@@ -170,6 +171,13 @@ public interface UserService {
      * @return list of the user
      */
     GlobalUserStatsDTO getGlobalPortfolioStats();
+
+    /**
+     * retrieves general statistics about users status.
+     *
+     * @return a dto containing counts for total, active and suspended users
+     */
+    public UserStatsDTO getUserStats();
 
     //------------------------------------- end: method for aggregation API --------------------------------------------
 }

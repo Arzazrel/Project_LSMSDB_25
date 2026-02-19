@@ -5,6 +5,7 @@ import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserAggregationDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.user.UserDao;
 import it.unipi.myfuture.myfuture_backend.dao.redis.UserRedisDao;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.GlobalUserStatsDTO;
+import it.unipi.myfuture.myfuture_backend.dto.analytics.UserStatsDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserTopAssetHolderDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserVarietyDTO;
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
@@ -327,6 +328,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public GlobalUserStatsDTO getGlobalPortfolioStats(){
         return userAggregationDao.getGlobalUsageStats();
+    }
+
+    /**
+     * retrieves general statistics about users status.
+     *
+     * @return a dto containing counts for total, active and suspended users
+     */
+    @Override
+    public UserStatsDTO getUserStats() {
+        return userAggregationDao.countUsersByStatusAggregation();  // get user statistics from dao
     }
 
     //------------------------------------- end: method for aggregation API --------------------------------------------

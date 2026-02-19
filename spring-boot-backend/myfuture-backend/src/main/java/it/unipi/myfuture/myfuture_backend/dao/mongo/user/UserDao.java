@@ -205,8 +205,19 @@ public class UserDao {
         mongoTemplate.updateFirst(query, update, User.class);
     }
 
-    //-------------------------------------- start: methods for atomic update ------------------------------------------
+    //--------------------------------------- start: methods for analytics ---------------------------------------------
+    /**
+     * counts the total number of users in the collection.
+     *
+     * @return total count
+     */
+    public long countAll() {
+        return mongoTemplate.count(new Query(), User.class);
+    }
 
+    //---------------------------------------- end: methods for analytics ----------------------------------------------
+
+    //-------------------------------------- start: methods for atomic update ------------------------------------------
     //------------------------------------------ start: methods for cash -----------------------------------------------
 
     /**
@@ -287,6 +298,5 @@ public class UserDao {
     }
 
     //------------------------------------------- end: methods for cash ------------------------------------------------
-
     //--------------------------------------- end: methods for atomic update -------------------------------------------
 }

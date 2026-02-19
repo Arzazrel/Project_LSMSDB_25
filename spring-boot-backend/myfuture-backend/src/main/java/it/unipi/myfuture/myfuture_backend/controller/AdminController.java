@@ -348,7 +348,7 @@ public class AdminController {
     @PutMapping("/news/{id}")
     public ResponseEntity<ResponseWrapper<NewsResponseDTO>> updateNews(
             @PathVariable String id,
-            @Valid @RequestBody NewsRequestDTO requestDTO) {
+            @RequestBody NewsRequestDTO requestDTO) {
 
         // Chiamata al service per aggiornamento logico e cache
         NewsResponseDTO updatedNews = newsService.updateNews(id, requestDTO);
@@ -466,6 +466,18 @@ public class AdminController {
     public ResponseEntity<ResponseWrapper<GlobalUserStatsDTO>> getGlobalStats() {
         return ResponseEntity.ok(new ResponseWrapper<>("Global assets stats retrieved",
                 userService.getGlobalPortfolioStats()));
+    }
+
+    /**
+     * gets global user statistics for administrative purposes.
+     *
+     * @return response wrapper containing user statistics
+     */
+    @GetMapping("/analytics/user-status-stats")
+    public ResponseEntity<ResponseWrapper<UserStatsDTO>> getUserStats() {
+        UserStatsDTO stats = userService.getUserStats();    // call the service to get calculated statistics
+
+        return ResponseEntity.ok(new ResponseWrapper<>("user statistics retrieved successfully", stats));
     }
     //----------------------------------------------- end: users API ---------------------------------------------------
     //---------------------------------------------- start: asset API --------------------------------------------------
