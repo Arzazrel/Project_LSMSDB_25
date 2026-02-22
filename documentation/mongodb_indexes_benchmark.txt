@@ -215,8 +215,8 @@ Insert penalty (if positive -> no index better than index): -40.26%
 
 -- WITH INDEX --
 - executionTimeMillis (internal query execution time): 0
-- totalDocsExamined (total number of documents read by the engine): 0
-- totalKeysExamined (number of entries in the index read): 0
+- totalDocsExamined (total number of documents read by the engine): 1
+- totalKeysExamined (number of entries in the index read): 1
 - stage (main stage of the implementation plan): FETCH
 
 -------- Benchmark: users_email , iterations: 10 , insert_batch_size: 100, drop_indexes: False --------
@@ -263,7 +263,7 @@ Insert penalty (if positive -> no index better than index): -0.99%
 
 -- WITH INDEX --
 - executionTimeMillis (internal query execution time): 0
-- totalDocsExamined (total number of documents read by the engine): 0
+- totalDocsExamined (total number of documents read by the engine): 1
 - totalKeysExamined (number of entries in the index read): 1
 - stage (main stage of the implementation plan): FETCH
 
