@@ -26,6 +26,8 @@ public class NewsAggregationDaoImpl implements NewsAggregationDao {
     /**
      * Counts how many news articles were published for each sector in a given window.
      * Useful for identifying which market areas are currently most active.
+     *
+     * @param window time window considered
      */
     @Override
     public List<SectorNewsCountDTO> countNewsBySector(TimeWindow window) {
@@ -50,6 +52,8 @@ public class NewsAggregationDaoImpl implements NewsAggregationDao {
     /**
      * Identifies the top 5 assets (symbols) most frequently mentioned in news articles.
      * Helps track which companies are "trending" in the media.
+     *
+     * @param window time window considered
      */
     @Override
     public List<TopMentionedAssetDTO> findTopMentionedAssets(TimeWindow window) {

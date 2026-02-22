@@ -644,7 +644,7 @@ def explain_user_query(db):
         {
             "find": "users",
             "filter": {
-                "email": "test@example.com"
+                "email": "dossiantonio@example.org"
             }
         },
         verbosity="executionStats"
@@ -1033,7 +1033,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--insert_batch_size",
         type=int,
-        default=1000,
+        default=10,
         help="Number of documents that must be inserted in insert test (default: 1000)"
     )
 
@@ -1078,21 +1078,21 @@ if __name__ == "__main__":
 
 """
 Usage examples:
-    python -m code.db.benchmark_indexes --list-tests
+    python -m code.test.benchmark_indexes --list-tests
     
-    python -m code.db.benchmark_indexes --test asset_prices --write-res 
-    python -m code.db.benchmark_indexes --test asset_prices --iterations 20 --insert_batch_size 10000
+    python -m code.test.benchmark_indexes --test asset_prices --write-res 
+    python -m code.test.benchmark_indexes --test asset_prices --iterations 20 --insert_batch_size 10000
     
-    python -m code.db.benchmark_indexes --test transactions_user_date
-    python -m code.db.benchmark_indexes --test transactions_type_date
-    python -m code.db.benchmark_indexes --test transactions_status_date
+    python -m code.test.benchmark_indexes --test transactions_user_date
+    python -m code.test.benchmark_indexes --test transactions_type_date
+    python -m code.test.benchmark_indexes --test transactions_status_date
     
-    python -m code.db.benchmark_indexes --test users_email  
+    python -m code.test.benchmark_indexes --test users_email  
     
-    python -m code.db.benchmark_indexes --test news_date_category
+    python -m code.test.benchmark_indexes --test news_date_category
     
-    python -m code.db.benchmark_indexes --run-all
-    python -m code.db.benchmark_indexes --run-all --write-res 
+    python -m code.test.benchmark_indexes --run-all
+    python -m code.test.benchmark_indexes --run-all --write-res 
         
 NOTE 0:
     To evaluate index performance, the benchmark framework supports two distinct execution modes controlled by a configuration flag.

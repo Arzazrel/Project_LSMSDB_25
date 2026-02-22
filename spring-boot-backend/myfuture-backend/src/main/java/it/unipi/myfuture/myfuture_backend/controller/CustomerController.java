@@ -351,7 +351,7 @@ public class CustomerController {
     /**
      * calculate the top 10 assets with the best growth decline last day/week/month.
      */
-    @GetMapping("/analytics/assets_prices/top-growth-assets")
+    @GetMapping("/analytics/assets-prices/top-growth-assets")
     public ResponseEntity<ResponseWrapper<List<AssetGrowthDTO>>> getTopGrowth(@RequestParam TimeWindow window) {
         return ResponseEntity.ok(new ResponseWrapper<>("Top growth assets retrieved", assetPriceService.getGrowthAnalytics(window)));
     }
@@ -359,7 +359,7 @@ public class CustomerController {
     /**
      *  calculate the top 10 assets with the best worst decline last day/week/month.
      */
-    @GetMapping("/analytics/assets_prices/worst-decline-assets")
+    @GetMapping("/analytics/assets-prices/worst-decline-assets")
     public ResponseEntity<ResponseWrapper<List<AssetGrowthDTO>>> getWorstGrowth(@RequestParam TimeWindow window) {
         return ResponseEntity.ok(new ResponseWrapper<>("Worst decline assets retrieved", assetPriceService.getWorstAnalytics(window)));
     }
@@ -367,7 +367,7 @@ public class CustomerController {
     /**
      * See the 10 assets that have consistently raisen over the past week and their average daily growth/descent rate.
      */
-    @GetMapping("/analytics/assets_prices/top-stable-raisen")
+    @GetMapping("/analytics/assets-prices/top-stable-raisen")
     public ResponseEntity<ResponseWrapper<List<AssetStableTrendDTO>>> getStableRaisen() {
         return ResponseEntity.ok(new ResponseWrapper<>("Consistent rising assets retrieved", assetPriceService.getPositiveStableTrendAnalytics()));
     }
@@ -375,7 +375,7 @@ public class CustomerController {
     /**
      * See the 10 assets that have consistently fell over the past week and their average daily growth/descent rate.
      */
-    @GetMapping("/analytics/assets_prices/worst-stable-fell")
+    @GetMapping("/analytics/assets-prices/worst-stable-fell")
     public ResponseEntity<ResponseWrapper<List<AssetStableTrendDTO>>> getStableFell() {
         return ResponseEntity.ok(new ResponseWrapper<>("Consistent falling assets retrieved", assetPriceService.getNegativeStableTrendAnalytics()));
     }
