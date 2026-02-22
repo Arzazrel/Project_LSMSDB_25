@@ -9,15 +9,13 @@ import it.unipi.myfuture.myfuture_backend.dto.analytics.UserStatsDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserTopAssetHolderDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserVarietyDTO;
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
-import it.unipi.myfuture.myfuture_backend.enums.AssetType;
-import it.unipi.myfuture.myfuture_backend.enums.CounterType;
-import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
-import it.unipi.myfuture.myfuture_backend.enums.UserRole;
+import it.unipi.myfuture.myfuture_backend.enums.*;
 import it.unipi.myfuture.myfuture_backend.exception.BusinessException;
 import it.unipi.myfuture.myfuture_backend.mapper.UserMapper;
 import it.unipi.myfuture.myfuture_backend.model.SuspensionInfo;
 import it.unipi.myfuture.myfuture_backend.model.User;
 import it.unipi.myfuture.myfuture_backend.service.UserService;
+import it.unipi.myfuture.myfuture_backend.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -338,6 +336,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserStatsDTO getUserStats() {
         return userAggregationDao.countUsersByStatusAggregation();  // get user statistics from dao
+    }
+
+    /**
+     * Gets the detailed profiles of users who joined the platform within the specified window.
+     *
+     * @param window The selected TimeWindow enum (DAY, WEEK, etc.)
+     * @return List of UserResponseDTO for administrative analysis
+     */
+    @Override
+    public List<UserResponseDTO> getNewUsersByWindow(TimeWindow window) {
+
+        Instant startDate = DateUtils.calculateStartDate(window);           // convert enum to Instant
+        return userAggregationDao.findRecentRegistrations(startDate);
     }
 
     //------------------------------------- end: method for aggregation API --------------------------------------------

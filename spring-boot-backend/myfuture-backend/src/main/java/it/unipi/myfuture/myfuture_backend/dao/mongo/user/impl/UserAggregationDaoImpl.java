@@ -5,7 +5,9 @@ import it.unipi.myfuture.myfuture_backend.dto.analytics.UserStatsDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserTopAssetHolderDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserVarietyDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.GlobalUserStatsDTO;
+import it.unipi.myfuture.myfuture_backend.dto.user.UserResponseDTO;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
+import it.unipi.myfuture.myfuture_backend.enums.UserRole;
 import it.unipi.myfuture.myfuture_backend.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -13,15 +15,13 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * class that implements aggregations that work on the users collection
@@ -135,5 +135,34 @@ public class UserAggregationDaoImpl implements UserAggregationDao {
                         .and("deleted").ne(true)), User.class);
 
         return new UserStatsDTO(total, active, suspended, deleted);
+    }
+
+    /**
+     * Retrieves a detailed list of users registered within a specific time window.
+     *
+     * @param startDate The starting point in time to filter registrations
+     * @return List of UserResponseDTO containing full public profile information
+     */
+    @Override
+    public List<UserResponseDTO> findRecentRegistrations(Instant startDate) {
+        Aggregation aggregation = Aggregation.newAggregation(
+                // filter, get only the recent new users
+                Aggregation.match(Criteria.where("registrationDate").gte(startDate)
+                        .and("role").is(UserRole.user)
+                        .and("deleted").is(false)),
+                // sort by newest registration first
+                Aggregation.sort(Sort.Direction.DESC, "registrationDate"),
+                // map to UserResponseDTO fields
+                Aggregation.project()
+                        .and("user_id").as("userId")                // field name mapping (DB -> DTO)
+                        .andInclude("firstName", "lastName", "email", "role", "birthDate",
+                                "phone", "address", "city", "province", "cap",
+                                "registrationDate", "suspended", "suspensionInfo",
+                                "cash", "blockedCash", "currency", "shareWallet",
+                                "etfWallet", "cryptoWallet", "recentTransactions",
+                                "deleted", "deletedAt", "updateAt")
+        );
+
+        return mongoTemplate.aggregate(aggregation, "users", UserResponseDTO.class).getMappedResults();
     }
 }

@@ -4,10 +4,11 @@ import it.unipi.myfuture.myfuture_backend.dto.analytics.GlobalUserStatsDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserStatsDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserTopAssetHolderDTO;
 import it.unipi.myfuture.myfuture_backend.dto.analytics.UserVarietyDTO;
+import it.unipi.myfuture.myfuture_backend.dto.user.UserResponseDTO;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 
+import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 /**
  * class that define aggregations that work on the users collection
@@ -41,4 +42,12 @@ public interface UserAggregationDao {
      * Counts users using a single aggregation pipeline for better performance.
      */
     UserStatsDTO countUsersByStatusAggregation();
+
+    /**
+     * Retrieves a detailed list of users registered within a specific time window.
+     *
+     * @param startDate The starting point in time to filter registrations
+     * @return List of UserResponseDTO containing full public profile information
+     */
+    List<UserResponseDTO> findRecentRegistrations(Instant startDate);
 }

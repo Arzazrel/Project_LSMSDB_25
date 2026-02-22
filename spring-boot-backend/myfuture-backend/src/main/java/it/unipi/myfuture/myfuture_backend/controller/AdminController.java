@@ -479,6 +479,21 @@ public class AdminController {
 
         return ResponseEntity.ok(new ResponseWrapper<>("user statistics retrieved successfully", stats));
     }
+
+    /**
+     * View detailed profiles of new users registered within a specific time window.
+     *
+     * @param window The time window for the analytics (defaults to WEEK)
+     * @return ResponseWrapper containing the list of new UserResponseDTOs
+     */
+    @GetMapping("/analytics/users/new-users")
+    public ResponseEntity<ResponseWrapper<List<UserResponseDTO>>> getNewUsers(
+            @RequestParam(value = "window", required = false, defaultValue = "WEEK") TimeWindow window) {
+
+        return ResponseEntity.ok(new ResponseWrapper<>(
+                "New user profiles registered in the last " + window + " retrieved successfully",
+                userService.getNewUsersByWindow(window)));
+    }
     //----------------------------------------------- end: users API ---------------------------------------------------
     //---------------------------------------------- start: asset API --------------------------------------------------
     /**

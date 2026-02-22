@@ -7,6 +7,8 @@ import it.unipi.myfuture.myfuture_backend.dto.analytics.UserVarietyDTO;
 import it.unipi.myfuture.myfuture_backend.dto.user.*;
 import it.unipi.myfuture.myfuture_backend.enums.AssetType;
 import it.unipi.myfuture.myfuture_backend.enums.SuspendReason;
+import it.unipi.myfuture.myfuture_backend.enums.TimeWindow;
+import it.unipi.myfuture.myfuture_backend.utils.DateUtils;
 
 import java.time.Instant;
 import java.util.List;
@@ -177,7 +179,15 @@ public interface UserService {
      *
      * @return a dto containing counts for total, active and suspended users
      */
-    public UserStatsDTO getUserStats();
+    UserStatsDTO getUserStats();
+
+    /**
+     * Gets the detailed profiles of users who joined the platform within the specified window.
+     *
+     * @param window The selected TimeWindow enum (DAY, WEEK, etc.)
+     * @return List of UserResponseDTO for administrative analysis
+     */
+    List<UserResponseDTO> getNewUsersByWindow(TimeWindow window);
 
     //------------------------------------- end: method for aggregation API --------------------------------------------
 }
