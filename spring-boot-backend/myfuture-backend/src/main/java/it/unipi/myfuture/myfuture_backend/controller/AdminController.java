@@ -175,7 +175,7 @@ public class AdminController {
     /**
      * Delete transaction.
      */
-    @DeleteMapping("/transaction/{id}")
+    @DeleteMapping("/transactions/{id}")
     public ResponseEntity<ResponseWrapper<Void>> deleteTransaction(
             @PathVariable Long id) {
 
@@ -502,6 +502,15 @@ public class AdminController {
     @GetMapping("/analytics/assets/asset-type-count")
     public ResponseEntity<ResponseWrapper<List<AssetTypeCountDTO>>> getTypeCount() {
         return ResponseEntity.ok(new ResponseWrapper<>("Asset distribution retrieved", assetService.getAssetTypeDistribution()));
+    }
+
+    /**
+     * Get the current price (last price) for an asset identified by the symbol. if there isn't current price in redis
+     * generate an error.
+     */
+    @GetMapping("/assets/asset_current_price/{symbol}")
+    public ResponseEntity<Double> getPrice(@PathVariable String symbol) {
+        return ResponseEntity.ok(assetService.getCurrentPrice(symbol));
     }
 
     /**

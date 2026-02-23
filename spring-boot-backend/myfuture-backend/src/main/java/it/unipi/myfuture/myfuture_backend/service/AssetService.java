@@ -32,6 +32,15 @@ public interface AssetService {
     AssetResponseDTO updateAsset(String symbol, AssetRequestDTO request);
 
     /**
+     * Retrieves the most recent price for a given asset identified by the symbol. if there isn't current price in redis
+     * generate an error.
+     *
+     * @param symbol The unique identifier (ticker) of the asset.
+     * @return The current price of the asset.
+     */
+    Double getCurrentPrice(String symbol);
+
+    /**
      * Retrieve an active asset by symbol. Used by users and customers.
      *
      * @param symbol asset symbol

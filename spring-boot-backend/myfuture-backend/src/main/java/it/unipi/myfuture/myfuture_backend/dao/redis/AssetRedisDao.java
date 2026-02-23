@@ -309,12 +309,17 @@ public class AssetRedisDao {
      * @param connection redis connection
      */
     private void forceMaster(RedisConnection connection) {
-        // force reading from the MASTER for this specific operation
-        LettuceConnection lc = (LettuceConnection) connection;
-        Object nativeConn = lc.getNativeConnection();
-        // access the native Stateful connection and set ReadFrom
-        if (nativeConn instanceof StatefulRedisMasterReplicaConnection) {
-            ((StatefulRedisMasterReplicaConnection<?, ?>) nativeConn).setReadFrom(ReadFrom.MASTER);
+        // Check if the connection is a LettuceConnection (or a proxy of it)
+        if (connection instanceof LettuceConnection lettuceConn) {
+            Object nativeConn = lettuceConn.getNativeConnection();
+
+            // Access the native Stateful connection and set ReadFrom to MASTER
+            if (nativeConn instanceof StatefulRedisMasterReplicaConnection<?, ?> masterReplicaConn) {
+                masterReplicaConn.setReadFrom(ReadFrom.MASTER);
+            }
+        } else {
+            // Log a warning if the connection type is unexpected
+            System.err.println("[REDIS WARN] Could not force MASTER: Connection is not a LettuceConnection");
         }
     }
 

@@ -1,14 +1,12 @@
 package it.unipi.myfuture.myfuture_backend.dao.redis;
 
+import it.unipi.myfuture.myfuture_backend.model.News;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.util.*;
-
-import static org.apache.commons.lang3.SerializationUtils.deserialize;
 
 /**
  * Data Access Object for News in Redis.
@@ -91,9 +89,9 @@ public class NewsRedisDao {
             return null;
         });
 
-        cleanupOldestNews(getGlobalNewsKey());          // clean the global key (check if there are more than 10 object)
-        if (sector != null)
-            cleanupOldestNews(getSectorNewsKey(sector));// clean the sector key (check if there are more than 10 object)
+        //cleanupOldestNews(getGlobalNewsKey());          // clean the global key (check if there are more than 10 object)
+        //if (sector != null)
+        //    cleanupOldestNews(getSectorNewsKey(sector));// clean the sector key (check if there are more than 10 object)
     }
 
     /**
@@ -169,6 +167,83 @@ public class NewsRedisDao {
     }
 
     /**
+     * Synchronizes the global index with a batch of news.
+     *
+     * @param newsList List of News entities to be synchronized
+     */
+    public void syncGlobalNewsBulk(List<News> newsList) {
+        // check if the list is null or empty to avoid unnecessary processing
+        if (newsList == null || newsList.isEmpty()) return;
+
+        redisTemplate.execute((RedisConnection connection) -> {
+            // serialize the key for the global news sorted set
+            byte[] globalKey = redisTemplate.getStringSerializer().serialize(getGlobalNewsKey());
+
+            for (int i = 0; i < newsList.size(); i++) {
+                News n = newsList.get(i);
+                String newsId = n.getId();
+
+                // serialize the news id to be used as value in the sorted set
+                byte[] rawId = redisTemplate.getStringSerializer().serialize(newsId);
+
+                // create the specific hash key for this news item like news:id
+                byte[] hashKey = redisTemplate.getStringSerializer().serialize(getNewsHashKey(newsId));
+
+                // calculate the base timestamp from the news date
+                long baseTimestamp = n.getDate().toEpochMilli();
+
+                // add a small offset based on the loop index to ensure a unique score
+                // this prevents redis from reordering news with the same identical date
+                // by forcing a deterministic order that matches the mongodb result list
+                long uniqueScore = baseTimestamp + (newsList.size() - i);
+
+                // initialize the map to store all news fields as byte arrays
+                Map<byte[], byte[]> rawMap = new HashMap<>();
+
+                // add title to the map if it is not null to prevent serialization errors
+                if (n.getTitle() != null) {
+                    rawMap.put(
+                            redisTemplate.getStringSerializer().serialize("title"),
+                            redisTemplate.getStringSerializer().serialize(n.getTitle())
+                    );
+                }
+
+                // add summary to the map only if present since mongodb often has null summaries
+                if (n.getSummary() != null) {
+                    rawMap.put(
+                            redisTemplate.getStringSerializer().serialize("summary"),
+                            redisTemplate.getStringSerializer().serialize(n.getSummary())
+                    );
+                }
+
+                // add sector information to allow the api to display categorical data
+                if (n.getSector() != null) {
+                    rawMap.put(
+                            redisTemplate.getStringSerializer().serialize("sector"),
+                            redisTemplate.getStringSerializer().serialize(n.getSector())
+                    );
+                }
+
+                // store the unique timestamp string in the hash for easy dto conversion
+                rawMap.put(
+                        redisTemplate.getStringSerializer().serialize("timestamp"),
+                        redisTemplate.getStringSerializer().serialize(String.valueOf(uniqueScore))
+                );
+
+                // write the entire hash map to redis using hmset for atomic field updates
+                if (!rawMap.isEmpty()) {
+                    connection.hMSet(hashKey, rawMap);
+                }
+
+                // insert or update the news id in the global sorted set with the unique score
+                // this ensures the global index always points to existing and updated hash data
+                connection.zAdd(globalKey, (double) uniqueScore, rawId);
+            }
+            return null;
+        });
+    }
+
+    /**
      * Internal helper to fetch multiple hashes from a set of IDs.
      * Transform a list of ids in a list of object (news data).
      *
@@ -214,6 +289,8 @@ public class NewsRedisDao {
                             details.put("id", cleanId);     // add ID to the map to correlate data to the ID
                             newsList.add(details);          // add the map object to the list to return
                         }
+                        else
+                            System.out.println("[DEBUG] Hash missing for ID: " + cleanId + " | Expected Key: news:" + cleanId);
                     }
                 } catch (Exception e) {
                     System.err.println("[REDIS ERROR] Failed to process ID: " + id + " Error: " + e.getMessage());
@@ -244,7 +321,7 @@ public class NewsRedisDao {
      * Helper to identify IDs that are outside the top 10 and delete their Hashes.
      * If news:latest (ZSet) you can't delete news information if this news is in the list of the last news for its sector.
      */
-    private void cleanupOldestNews(String zsetKey) {
+    public void cleanupOldestNews(String zsetKey) {
         // Use execute to interact directly with the connection and avoid JSON serialization issues
         redisTemplate.execute((org.springframework.data.redis.connection.RedisConnection connection) -> {
             byte[] rawZsetKey = redisTemplate.getStringSerializer().serialize(zsetKey);
@@ -266,28 +343,38 @@ public class NewsRedisDao {
                         String newsId = new String(rawId, java.nio.charset.StandardCharsets.UTF_8);
                         byte[] rawHashKey = redisTemplate.getStringSerializer().serialize(getNewsHashKey(newsId));
 
+                        boolean shouldDeleteHash = false;                               // safety check
                         // case of Global cleanup, check sector before deleting data
                         if (isGlobalStack) {
-                            // get the sector of the news
+                            // We are cleaning the Global index.
+                            // Delete Hash ONLY IF it's not in its Sector index.
                             byte[] sectorField = redisTemplate.getStringSerializer().serialize("sector");
                             byte[] rawSector = connection.hGet(rawHashKey, sectorField);
-                            String sector = (rawSector != null) ? new String(rawSector, java.nio.charset.StandardCharsets.UTF_8) : null;
 
-                            // check if the news is still relevant for its sector
-                            // Note: use redisTemplate here for logic, which is fine for Hashes and specific Scores
-                            Double sectorScore = null;
-                            if (sector != null) {
+                            if (rawSector != null) {
+                                String sector = new String(rawSector, java.nio.charset.StandardCharsets.UTF_8);
                                 byte[] rawSectorKey = redisTemplate.getStringSerializer().serialize(getSectorNewsKey(sector));
-                                sectorScore = connection.zScore(rawSectorKey, rawId);
-                            }
-
-                            // delete hash only if it's not in the sector list
-                            if (sectorScore == null) {
-                                connection.del(rawHashKey);
+                                // Check if it still exists in the sector ZSet
+                                if (connection.zScore(rawSectorKey, rawId) == null) {
+                                    shouldDeleteHash = true;
+                                }
+                            } else {
+                                // No sector found, safe to delete
+                                shouldDeleteHash = true;
                             }
                         } else {
-                            // case of Sector cleanup: delete the hash data as it's no longer in the top 10 of this sector
+                            // We are cleaning a Sector index.
+                            // Delete Hash ONLY IF it's not in the Global index.
+                            byte[] globalKey = redisTemplate.getStringSerializer().serialize(getGlobalNewsKey());
+                            if (connection.zScore(globalKey, rawId) == null) {
+                                shouldDeleteHash = true;
+                            }
+                        }
+
+                        // 3. Final execution of deletion
+                        if (shouldDeleteHash) {
                             connection.del(rawHashKey);
+                            // Optional: System.out.println("[REDIS CLEANUP] Evicted data for: " + newsId);
                         }
                         // remove the ID from the current ZSet using the raw connection
                         connection.zRem(rawZsetKey, rawId);

@@ -87,6 +87,27 @@ public class AssetServiceImpl implements AssetService {
     }
 
     /**
+     * Retrieves the most recent price for a given asset identified by the symbol. if there isn't current price in redis
+     * generate an error.
+     *
+     * @param symbol The unique identifier (ticker) of the asset.
+     * @return The current price of the asset.
+     */
+    @Override
+    public Double getCurrentPrice(String symbol) {
+        // attempt to retrieve the real-time price exclusively from the Redis cache
+        Double cachedPrice = assetRedisDao.getCurrentPrice(symbol);
+        // validation: If the price is not present in Redis, the system treats it as an error
+        if (cachedPrice == null) {
+            System.err.println("[REDIS MISS] Real-time price not available for symbol: " + symbol);
+            // throw business exception as the price must be available in the cache layer
+            throw new BusinessException("Asset not found");
+        }
+
+        return cachedPrice;         // return the verified price from the cache
+    }
+
+    /**
      * Retrieve an active asset by symbol. Used by users and customers.
      *
      * @param symbol asset symbol
@@ -123,12 +144,50 @@ public class AssetServiceImpl implements AssetService {
      */
     @Override
     public List<AssetResponseDTO> getAssetsByType(AssetType type) {
+        // try the retrieve from Redis
+        Map<Object, Object> cachedAssets = assetRedisDao.getAssetListByType(type);
+        // check if there are assets in Redis
+        if (cachedAssets != null && !cachedAssets.isEmpty()) {
+            // convert retrieved assets list
+            return cachedAssets.entrySet().stream()
+                    .map(entry -> {
+                        AssetResponseDTO dto = new AssetResponseDTO();
+                        dto.setSymbol((String) entry.getKey());
+                        dto.setShortName((String) entry.getValue());
+                        dto.setType(type);
+                        return dto;
+                    })
+                    .toList();
+        }
 
-        // retrieve all active asset filtered by type and convert in AssetResponseDTO and put in a list
-        return assetDao.findByTypeActive(type)
-                .stream()
-                .map(AssetMapper::toResponseDTO)
+        // cache miss: Retrieve active assets from MongoDB
+        List<Asset> assetsFromDb = assetDao.findByTypeActive(type);
+        // map entities to DTOs with null-safe fallback for names
+        List<AssetResponseDTO> assetsFromDbDto = assetsFromDb.stream()
+                .map(asset -> {
+                    AssetResponseDTO dto = AssetMapper.toResponseDTO(asset);
+                    // if the name is missing in DB (e.g., BRK.B), use the symbol to prevent downstream NullPointerExceptions
+                    if (dto.getShortName() == null) {
+                        dto.setShortName(asset.getSymbol());
+                    }
+                    return dto;
+                })
                 .toList();
+
+        // update Redis cache
+        if (!assetsFromDbDto.isEmpty()) {
+            Map<String, String> symbolToNameMap = new java.util.HashMap<>();
+            for (AssetResponseDTO dto : assetsFromDbDto) {
+                if (dto.getSymbol() != null) {
+                    // Ensure we never put a null value into the map
+                    String name = (dto.getShortName() != null) ? dto.getShortName() : dto.getSymbol();
+                    symbolToNameMap.put(dto.getSymbol(), name);
+                }
+            }
+            assetRedisDao.saveAssetListByType(type, symbolToNameMap);
+        }
+
+        return assetsFromDbDto;
     }
 
     /**

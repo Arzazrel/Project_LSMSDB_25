@@ -166,8 +166,8 @@ public class NewsDao {
      */
     public List<News> findLatestActive(int offset, int limit) {
         Query query = new Query();
-        query.addCriteria(Criteria.where("deleted").is(false));
-        query.with(Sort.by(Sort.Direction.DESC, "date"));
+        query.addCriteria(Criteria.where("deleted").ne(true));
+        query.with(Sort.by(Sort.Direction.DESC, "date", "_id"));
         query.skip(offset);                                                 // get news start from offset
         query.limit(limit);                                                 // get news until limit
         return mongoTemplate.find(query, News.class);
@@ -182,7 +182,7 @@ public class NewsDao {
      */
     public List<News> findLatest(int offset, int limit) {
         Query query = new Query();
-        query.with(Sort.by(Sort.Direction.DESC, "date"));
+        query.with(Sort.by(Sort.Direction.DESC, "date", "_id"));
         query.skip(offset);                                                 // get news start from offset
         query.limit(limit);                                                 // get news until limit
         return mongoTemplate.find(query, News.class);

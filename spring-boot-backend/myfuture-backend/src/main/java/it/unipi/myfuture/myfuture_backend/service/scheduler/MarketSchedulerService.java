@@ -6,6 +6,7 @@ import it.unipi.myfuture.myfuture_backend.dao.mongo.asset.AssetDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.asset_price.AssetPriceAggregationDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.asset_price.AssetPriceDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.news.NewsAggregationDao;
+import it.unipi.myfuture.myfuture_backend.dao.mongo.news.NewsDao;
 import it.unipi.myfuture.myfuture_backend.dao.mongo.transaction.TransactionAggregationDao;
 import it.unipi.myfuture.myfuture_backend.dao.redis.AssetRedisDao;
 import it.unipi.myfuture.myfuture_backend.dao.redis.NewsRedisDao;
@@ -36,6 +37,8 @@ public class MarketSchedulerService  implements CommandLineRunner {
 
     @Autowired
     private AssetDao assetDao;
+    @Autowired
+    private NewsDao newsDao;
 
     @Autowired
     private AssetPriceAggregationDao assetPriceAggregationDao;
@@ -193,27 +196,31 @@ public class MarketSchedulerService  implements CommandLineRunner {
      */
     private void refreshNewsCache() {
         System.out.println("[SCHEDULER] Starting News Cache Refresh...");
-
         newsRedisDao.clearAllNewsData();            // clear all old saved news
 
         // retrieve the last news grouped by sector (max 10 news for sector)
         List<SectorNewsGroupDTO> groupedNews = newsAggregationDao.findLatestNewsBySector(5*365);
-
         // scan all sector
         for (SectorNewsGroupDTO group : groupedNews) {
             System.out.println("[SCHEDULER] Processing sector: " + group.getSector());
-
             // scan all news for the current sector
             for (News n : group.getNewsList()) {
-                Map<String, String> map = new HashMap<>();      // create hash map for news information (title, summary, sector, timestamp)
-                map.put("title", n.getTitle());                 // set the title of news
-                map.put("summary", n.getSummary());             // set the summary news
-                map.put("sector", n.getSector());               // save the category(sector) news
-                map.put("timestamp", String.valueOf(n.getDate().toEpochMilli()));   // save publication date
-
-                newsRedisDao.saveNews(n.getId(), map);          // save using limit logic (implemented in DAO)
+                newsRedisDao.saveNews(n.getId(), createNewsMap(n));
             }
         }
+
+        // ensure Global Index is consistent with MongoDB's latest 10
+        System.out.println("[SCHEDULER] Synchronizing Global Index with MongoDB...");
+        List<News> absoluteLatest = newsDao.findLatestActive(0, 10);        // get the last 10 news
+        // mapping to pass data in mongoDB, this ensures the global "news:latest" ZSet is perfectly aligned
+        newsRedisDao.syncGlobalNewsBulk(absoluteLatest);
+        newsRedisDao.cleanupOldestNews("news:latest");          // celan global
+        // clean each sector
+        for (SectorNewsGroupDTO group : groupedNews) {
+            newsRedisDao.cleanupOldestNews("news:latest:sector:" + group.getSector());
+        }
+
+        System.out.println("[SCHEDULER] Cache Refresh Completed.");
     }
 
     /**
@@ -341,6 +348,18 @@ public class MarketSchedulerService  implements CommandLineRunner {
         for (AssetGrowthDTO dto : declineAssets) {
             assetRedisDao.updateWorstDecline(dto.getSymbol(), dto.getPercentageChange());
         }
+    }
+
+    /**
+     * Helper method to transform a News entity into a Redis-compatible Map.
+     */
+    private Map<String, String> createNewsMap(News n) {
+        Map<String, String> map = new HashMap<>();      // create hash map for news information (title, summary, sector, timestamp)
+        map.put("title", n.getTitle());                 // set the title of news
+        map.put("summary", n.getSummary());             // set the summary news
+        map.put("sector", n.getSector());               // save the category(sector) news
+        map.put("timestamp", String.valueOf(n.getDate().toEpochMilli()));   // save publication date
+        return map;
     }
     //------------------------------------------- end: utilities methods -----------------------------------------------
 }

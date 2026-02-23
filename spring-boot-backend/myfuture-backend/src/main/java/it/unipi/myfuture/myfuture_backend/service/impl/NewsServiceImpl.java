@@ -15,6 +15,7 @@ import it.unipi.myfuture.myfuture_backend.service.NewsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -171,10 +172,27 @@ public class NewsServiceImpl implements NewsService {
                         .toList();
             }
         }
+
         // DB layer: Fallback to MongoDB for deeper pages or cache miss
-        return newsDao.findLatestActive(offset, limit).stream()
+        List<NewsResponseDTO> newsFromMongoDB = newsDao.findLatestActive(offset, limit).stream()
                 .map(NewsMapper::toResponseDTO)
                 .toList();
+
+        // update redis if is requested the first page (last 10 news)
+        if (offset == 0 && limit <= 10 && !newsFromMongoDB.isEmpty()) {
+            // update Redis Cache
+            for (NewsResponseDTO dto : newsFromMongoDB) {
+                Map<String, String> newsMap = new HashMap<>();
+                newsMap.put("title", dto.getTitle());
+                newsMap.put("summary", dto.getSummary());
+                newsMap.put("sector", dto.getSector());
+                newsMap.put("timestamp", String.valueOf(dto.getDate().toEpochMilli()));
+
+                newsRedisDao.saveNews(dto.getId(), newsMap);        // save on redis
+            }
+        }
+
+        return newsFromMongoDB;             // return requested news
     }
 
     /**

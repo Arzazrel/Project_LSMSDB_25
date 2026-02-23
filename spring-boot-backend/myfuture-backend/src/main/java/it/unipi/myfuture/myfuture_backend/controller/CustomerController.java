@@ -339,6 +339,15 @@ public class CustomerController {
     }
 
     /**
+     * Get the current price (last price) for an asset identified by the symbol. if there isn't current price in redis
+     * generate an error.
+     */
+    @GetMapping("/assets/asset_current_price/{symbol}")
+    public ResponseEntity<Double> getPrice(@PathVariable String symbol) {
+        return ResponseEntity.ok(assetService.getCurrentPrice(symbol));
+    }
+
+    /**
      * Calculate top 10 sectors by number of listed share
      */
     @GetMapping("/analytics/assets/top-asset-sector")
