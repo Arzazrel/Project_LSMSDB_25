@@ -7,8 +7,8 @@ MongoDB is used as the primary operational database, while Redis is used for cac
 The repository is organized into distinct modules to separate data engineering, backend logic, and performance analysis.
 
 - api_specs/: Contains the technical documentation for the REST APIs, including the Postman collection and Swagger/OpenAPI definitions.
--- Images_API/: Screen of the used API.
--- Postman_collection.json: Ready-to-use collection for testing all endpoints (Auth, Assets, Transactions, Analytics).
+  - Images_API/: Screen of the used API.
+  - Postman_collection.json: Ready-to-use collection for testing all endpoints (Auth, Assets, Transactions, Analytics).
 
 - code/: The core of the data engineering logic, containing Python scripts for data collection, ETL, and database management.
 -- data_collector_generator/: Scripts to fetch real-time data from external APIs (Yahoo Finance, CoinGecko) and generators for synthetic user/trade data.
