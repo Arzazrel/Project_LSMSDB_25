@@ -4,6 +4,8 @@ This project simulates a financial trading platform (MyFuture) developed for the
 MongoDB is used as the primary operational database, while Redis is used for caching and fast-access features.
 
 
+
+
 # MongoDB WSL2 Installation
 This guide shows you how to install MongoDB, start a standalone node or a local replica set, and manage nodes and replicas.
 Open the terminal and first update Ubuntu.
@@ -141,7 +143,7 @@ Leave this terminal open as well.
 
 Open a fourth terminal to connect to the first node (PRIMARY):
 ```bash
-mongosh "mongodb://localhost:27017,localhost:27018,localhost:27019/?replicaSet=rs0"
+mongosh "mongodb://localhost:27017,localhost:27018,localhost:27019/myfuture_lsmsdb_2025?replicaSet=rs0&w=majority&readPreference=primary&retryWrites=true"
 ```
 Inside the MongoDB shell (initialize the replica set):
 ```mongosh
@@ -404,7 +406,7 @@ show collections
 
 If you are using a MongoDB configuration with multiple replicas, ensure that you connect to the primary replica:
 ```bash
-mongosh "mongodb://localhost:27017,localhost:27018,localhost:27019/?replicaSet=rs0"
+mongosh "mongodb://localhost:27017,localhost:27018,localhost:27019/myfuture_lsmsdb_2025?replicaSet=rs0&w=majority&readPreference=primary&retryWrites=true"
 ```
 To run the scripts for data ingestion, open the command line in the main project folder and follow the commands below.
 The commands for verifying data uploaded to MongoDB all refer to the myfuture_lsmsdb_2025 database.
@@ -636,7 +638,7 @@ If you want to test the effectiveness of indexes and obtain performance data rel
 This script allows you to run tests and obtain results (including MongoDB explain) for an index, passed as a parameter.
 Examples of commands for its operation are shown below:
 
-```MongoDB shell
+```Bash
 python -m code.db.benchmark_indexes --list-tests
     
 python -m code.db.benchmark_indexes --test asset_prices --write-res 
@@ -657,6 +659,34 @@ python -m code.db.benchmark_indexes --run-all --write-res
 If the tests on the indexes have been completed, I recommend running the programme again to enter all the indexes designed for the project.
 ```bash
 python -m code.db.create_indexes
+```
+
+# - Enabling Sharding --
+To activate the sharding configuration as designed, execute the following commands in mongosh through the mongos router.
+
+## Enable Sharding for the Database
+First, the database must be authorized to distribute its data:
+```Mongosh
+sh.enableSharding("myfuture_lsmsdb_2025");
+```
+
+## Configure Shard Keys
+Apply the sharding logic to the target collections. Note: The corresponding indexes must exist before running these commands.
+Sharding Asset Prices for Symbol and Date (Compound)
+```Mongosh
+sh.shardCollection("myfuture_lsmsdb_2025.asset_prices", { "symbol": 1, "date": 1 });
+```
+Sharding Transactions by User ID
+```Mongosh
+sh.shardCollection("myfuture_lsmsdb_2025.transactions", { "user_id": 1 });
+```
+
+## Verification
+To monitor the distribution of data chunks and ensure the balancer is working correctly:
+
+```Mongosh
+sh.status();
+db.printShardingStatus();
 ```
 
 # Backend Setup and API Documentation
@@ -737,3 +767,77 @@ Asset Browsing: GET /api/assets (Filter by type or sector).
 News Feed: GET /api/news (Filter by category).
 
 Validation: Ensure no critical fields (like price or title) are null
+
+# RUN APPLICATION
+Start the MongoDB and Redis instances (as seen above).
+
+Start the system, navigate to the backend project directory and use the Maven Wrapper to clean and start the service:
+```Bash
+# Navigate to the backend folder
+cd Project_LSMSDB_25/spring-boot-backend/myfuture-backend
+
+# Clean previous builds and compile
+./mvnw clean compile
+
+# Run the Spring Boot application
+./mvnw spring-boot:run
+```
+If the system starts correctly, it will attempt to enter the data into Redis and you should see the tasks performed with the tag [SCHEDULER] in the terminal.
+To check that the system is starting up correctly, you can check the latest news items that have been saved in Redis.
+```Redis Bash
+ZRANGE news:latest 0 -1
+ZRANGE news:latest:sector:Agriculture 0 -1
+HGETALL news:699579026bbde3a9b3427a50
+```     
+
+Start the live_price_tracker programme to begin collecting asset prices in real time.
+```Bash
+python -m code.etl.market_data_feeder
+```
+
+If you want execute with optional parameters:
+```Bash
+python -m code.etl.market_data_feeder --refresh 10 --force
+```
+       
+If you want verufy and clean the data from Redis you can test with this commands.
+Verify last price for main assets:
+```Redis Bash
+# Apple
+GET asset:AAPL:current_price
+
+# Nvidia
+GET asset:NVDA:current_price
+
+# Per Tesla
+GET asset:TSLA:current_price
+```
+        
+Verify last 10 price in history for main assets:
+```Redis Bash
+# Apple
+ZRANGE asset:AAPL:intraday_prices -10 -1 WITHSCORES
+
+# Nvidia
+ZRANGE asset:NVDA:intraday_prices 0 -1 WITHSCORES
+
+# Tesla
+ZRANGE asset:TSLA:intraday_prices 0 -1
+```
+        
+If you want verify the number of the element:
+```Redis Bash
+ZCARD asset:TSLA:intraday_prices
+```
+
+If you want delete the used DB:
+```Redis Bash
+FLUSHDB
+```
+
+If you want delete all the DB on Redis:
+```Redis Bash
+FLUSHALL
+```     
+
+Then start Swagger or Postman to interact with the system.
