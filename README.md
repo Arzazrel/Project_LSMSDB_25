@@ -352,6 +352,12 @@ redis-server /etc/redis/redis-6380/redis.conf
 ```bash
 redis-server /etc/redis/redis-6381/redis.conf
 ```
+
+Start redis server cli
+```bash
+redis-cli -p 6379
+```
+
 Replicas automatically connect to the primary.
 Stop the nodes:
 ```bash
