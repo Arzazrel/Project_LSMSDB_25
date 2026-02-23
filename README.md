@@ -3,8 +3,39 @@ Project for the Large Scale and Multi-Structured Data Bases  exam of the AIDE ma
 This project simulates a financial trading platform (MyFuture) developed for the LSMSDB 2025 course.
 MongoDB is used as the primary operational database, while Redis is used for caching and fast-access features.
 
+# Project Structured
+The repository is organized into distinct modules to separate data engineering, backend logic, and performance analysis.
 
+- api_specs/: Contains the technical documentation for the REST APIs, including the Postman collection and Swagger/OpenAPI definitions.
+-- Images_API/: Screen of the used API.
+-- Postman_collection.json: Ready-to-use collection for testing all endpoints (Auth, Assets, Transactions, Analytics).
 
+- code/: The core of the data engineering logic, containing Python scripts for data collection, ETL, and database management.
+-- data_collector_generator/: Scripts to fetch real-time data from external APIs (Yahoo Finance, CoinGecko) and generators for synthetic user/trade data.
+-- db/: Automation scripts to manage MongoDB indexes (create_indexes.py, drop_all_indexes.py).
+-- etl/: The Extract, Transform, Load logic. Contains market_data_feeder.py to populate MongoDB from the datasets.
+-- utils/: Shared helper functions for CSV normalization, database connectivity, and consistency checking.
+-- test/: Specialized Python tests for benchmarking trading logic and index performance
+
+- dataset/: A collection of raw and processed data (CSV/JSON) used to seed the databases.
+-- asset_lists/: Versioned lists of symbols (v0, v1, v2) for different market sectors.
+-- assets/: Historical price data and metadata organized by index (S&P 400, 500, 600) and type (Crypto, ETF).
+-- news/: Raw news datasets and the cleaned/processed versions ready for ingestion.
+-- user/ & user_transaction/: Generated CSV files used for mass population of user profiles and trading history.
+
+- documentation/: Academic and technical reports, presentations, and visual assets explaining the project's architecture and results.
+-- documentation_images/: Diagrams showing the database schema, system architecture, and UI mockups.
+-- LSMSDB_Project_...pdf: The final technical report detailing the LSMSDB (Large Scale Storage and Management of Data) project implementation.
+-- mongodb_indexes_benchmark.txt: Raw results of performance queries before and after indexing.
+
+- spring-boot-backend/: The main Java application providing the backend services and API implementation.
+-- myfuture-backend/: The Maven-based Spring Boot project.
+-- src/main/java: Contains the Controller-Service-DAO layers, Redis integration logic, and security configurations.
+-- pom.xml: Project dependencies including Spring Data MongoDB, Redis, and JWT Security.
+
+- test/: Performance benchmarks and visual results of structural tests.
+-- Structural_performance/: Charts and screenshots (PNG) showing the system's response times and throughput.
+-- live_tracker/: Logs and visual results of the real-time price tracking system with different update frequencies (1s to 30s).
 
 # MongoDB WSL2 Installation
 This guide shows you how to install MongoDB, start a standalone node or a local replica set, and manage nodes and replicas.
