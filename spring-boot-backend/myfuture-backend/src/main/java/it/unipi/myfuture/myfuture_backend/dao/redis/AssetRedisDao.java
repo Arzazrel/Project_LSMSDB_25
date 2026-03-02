@@ -18,7 +18,8 @@ import java.util.Set;
  * - asset:{type}:list (Hash)               -> Map of all assets of a certain type (Field: symbol, Value: name).
  * - asset:{symbol}:current_price (String)  -> The most recent real-time market price.
  * - asset:{symbol}:intraday_prices (ZSet)  -> Price history of the day. Score: Timestamp, Member: "Timestamp:Price". SEE NOTE 0
- * - asset:most_traded (Hash)               -> Stats of the most traded assets from the previous day (Field: symbol, Value: json).
+ * - asset:most_traded (Hash)               -> Stats of the most traded assets from the previous day (Field: symbol, Value: json of MostTradedAssetDTO).
+ *                                              MostTradedAssetDTO -> symbol, transactionCount, totalQuantity, totalVolume.
  * - asset:top_growth (ZSet)                -> Ranking of assets with highest % growth. Score: % change.
  * - asset:worst_decline (ZSet)             -> Ranking of assets with highest % decline. Score: % change (negative).
  *
