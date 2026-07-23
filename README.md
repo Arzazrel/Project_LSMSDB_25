@@ -1,7 +1,30 @@
 # Project_LSMSDB_25
-Project for the Large Scale and Multi-Structured Data Bases  exam of the AIDE master's degree at the University of Pisa, year 2024-2025.
+Project for the Large Scale and Multi-Structured Data Bases exam of the AIDE master's degree at the University of Pisa, year 2024-2025.
 This project simulates a financial trading platform (MyFuture) developed for the LSMSDB 2025 course.
 MongoDB is used as the primary operational database, while Redis is used for caching and fast-access features.
+
+MyFuture is a web-based trading platform (stocks, ETFs, cryptocurrencies) built to explore NoSQL and multi-model data architecture end to end. 
+**Goal**: 
+Design and implement the complete data-intensive backend of a realistic trading system — from requirements and use cases, through data modeling and schema design, to indexing, replication, and sharding strategies — driven by a query-driven design methodology rather than relational normalization.
+
+**Architecture**: 
+A hybrid persistence layer: MongoDB as the system of record and Redis as a low-latency, in-memory layer for real-time prices, user session state, and precomputed market rankings. 
+The backend is a layered Spring Boot application (Controller / Service / DAO, with DTO isolation and JWT security).
+
+**Data modeling highlights** 
+Each relationship was chosen from an explicit analysis of workload and cardinality, comparing embedding vs. linking vs. join-table trade-offs against MongoDB's 16MB document limit:
+- User ↔ Portfolio: embedding, for single-read dashboard access (the 99%-frequency query);
+- Transactions: a dedicated collection (linking) plus a small embedded "buffer" of the 10 most recent transactions — the Extended Reference pattern — to serve recent activity with zero extra I/O;
+- Asset Prices: a flat time-series collection with a compound {symbol, date} index instead of unbounded embedded arrays.
+
+**Empirical validation**: 
+Every architectural and indexing decision was benchmarked (100 runs/scenario). Notable results: the compound index on asset prices cut a query from a COLLSCAN over 11.5M documents (~11.8s) to ~2ms (+99.99%), and reduced the transaction-generation pipeline from ~4.5 days to under 1 hour; the separate-collection design for transaction history yielded up to 97.8% latency improvement over full embedding for active users.
+
+**Distribution & consistency**: 
+Three-node MongoDB replica set (w=majority, primary reads) and Redis master-replica cluster, with a deliberate CP positioning for transactional data and eventual consistency (via Redis replicas) for non-critical market insights — an explicit reading of the CAP trade-off for a financial system.
+
+**Tech stack** 
+Java, Spring Boot, Spring Data MongoDB, Spring Data Redis (Lettuce), Spring Security + JWT; MongoDB, Redis; Python (data ingestion/ETL from Yahoo Finance, CoinGecko, Kaggle).
 
 # Project Structured
 The repository is organized into distinct modules to separate data engineering, backend logic, and performance analysis.
